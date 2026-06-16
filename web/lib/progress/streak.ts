@@ -6,11 +6,15 @@
 import { MAX_FREEZES, type StreakState } from "@/lib/progress/schema";
 import { daysBetween } from "@/lib/review/schedule";
 
+/** Earn back one freeze at every Nth day of streak (until the cap). */
+export const FREEZE_EARN_EVERY = 5;
+
 /**
- * Fold "the learner completed a session today" into the streak.
+ * Fold "the learner trained today" into the streak.
  * - Same day already counted → unchanged (one session/day is enough).
  * - Consecutive day → +1.
  * - Gap → spend one freeze per missed day; if freezes can't cover it, reset to 1.
+ * - Every Nth streak day earns a freeze back (capped) — gentle, no pay-to-restore.
  */
 export function completeSession(streak: StreakState, today: string): StreakState {
   if (streak.lastActiveDate === today) return streak; // already done today
@@ -35,6 +39,11 @@ export function completeSession(streak: StreakState, today: string): StreakState
         current = 1; // gap too big — streak resets
       }
     }
+  }
+
+  // Earn a freeze back at each streak milestone (capped).
+  if (current > 0 && current % FREEZE_EARN_EVERY === 0 && freezes < MAX_FREEZES) {
+    freezes += 1;
   }
 
   return {

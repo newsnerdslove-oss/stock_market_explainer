@@ -27,7 +27,7 @@ export function QuizCard({
   questions: Question[];
   next?: { slug: string; title: string } | null;
 }) {
-  const { recordQuizAttempt, recordReview } = useProgress();
+  const { recordQuizAttempt, recordReview, markActiveToday } = useProgress();
   // Stable for the component's life; the UI only renders single-answer choice types.
   const pool = useMemo(
     () => questions.filter(isChoiceQuestion) as ChoiceQuestion[],
@@ -48,6 +48,7 @@ export function QuizCard({
   function complete(correctCount: number, total: number) {
     const score = total > 0 ? Math.min(1, Math.max(0, correctCount / total)) : 0;
     recordQuizAttempt(lessonSlug, score);
+    markActiveToday(); // finishing a lesson quiz counts as training today (streak credit)
     setFinalScore(score);
     setPhase("results");
   }

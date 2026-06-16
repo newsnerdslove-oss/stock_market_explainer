@@ -18,7 +18,9 @@ interface ProgressContextValue {
   recordQuizAttempt: (lessonSlug: string, score: number) => void;
   /** Record one answer to a question into the spaced-repetition schedule. */
   recordReview: (questionId: string, correct: boolean) => void;
-  /** Mark today's daily review session complete (advances the streak). */
+  /** Count today as a training day for the streak, without marking the daily review done. */
+  markActiveToday: () => void;
+  /** Mark today's daily review session complete (advances the streak AND the review). */
   completeDailySession: () => void;
 }
 
@@ -88,6 +90,17 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const markActiveToday = useCallback(() => {
+    if (!hydratedRef.current) return;
+    setProgress((prev) => {
+      const tz = prev.tz || resolvedTz();
+      const today = todayInTz(tz);
+      const streak = completeSession(prev.streak, today);
+      if (streak === prev.streak) return prev; // already counted today — no-op
+      return { ...prev, tz, streak, updatedAt: new Date().toISOString() };
+    });
+  }, []);
+
   const completeDailySession = useCallback(() => {
     if (!hydratedRef.current) return;
     setProgress((prev) => {
@@ -105,7 +118,14 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
 
   return (
     <ProgressContext.Provider
-      value={{ progress, hydrated, recordQuizAttempt, recordReview, completeDailySession }}
+      value={{
+        progress,
+        hydrated,
+        recordQuizAttempt,
+        recordReview,
+        markActiveToday,
+        completeDailySession,
+      }}
     >
       {children}
     </ProgressContext.Provider>
