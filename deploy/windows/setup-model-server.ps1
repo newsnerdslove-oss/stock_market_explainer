@@ -14,7 +14,7 @@
 #>
 [CmdletBinding()]
 param(
-  [int]$Port = 8000,
+  [int]$Port = 8082,
   [string]$HealthPath = "/v1/models"
 )
 
