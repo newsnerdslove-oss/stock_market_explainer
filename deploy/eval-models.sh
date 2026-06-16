@@ -101,7 +101,7 @@ PY
   outroot="$BENCH/results/eval-$key"
   echo ">> Benching grounded suite (runs=2) ..."
   ( cd "$BENCH" && python3 run.py --config "$tmpcfg" --suite "$SUITE" \
-      --runs 2 --max-tokens 1024 --temperature 0.2 --timeout 180 --out "$outroot" ) 2>&1 | tail -4
+      --runs "${RUNS:-3}" --max-tokens 1024 --temperature 0.2 --timeout 180 --out "$outroot" ) 2>&1 | tail -4
   resdir="$(ls -dt "$outroot"/*/ 2>/dev/null | head -1)"
   printf '%s\t%s\t%s\n' "$key" "${resdir%/}" "$vram" >> "$MANIFEST"
   rm -f "$tmpcfg"
