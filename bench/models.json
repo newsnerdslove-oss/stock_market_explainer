@@ -1,48 +1,50 @@
 {
   "default_system": "You are a patient finance tutor for beginners. Be accurate, clear, and concise. Never give financial advice.",
 
-  "_comment": "Candidate models to race on the 5090 (32GB VRAM). Run one (or several) on your box via llama.cpp/Ollama/vLLM/LM Studio exposing an OpenAI-compatible API, then set base_url + model. Set enabled:false to skip. 'key' is the short label used in reports. See README.md for footprints and how to fill 32GB.",
+  "_comment": "Contenders for the tutor model bench-off on the 5090 (32GB VRAM). Served one at a time by the llama-nemotron NSSM service on :8082 (only one ~20-27GB model fits at once). deploy/eval-models.sh drives them serially (download -> swap -> healthcheck -> bench -> restore Q5). Extra fields ctx/hf_url are read by the orchestrator; run.py ignores them. 'enabled' here only affects a direct `python run.py` (which races whatever is currently served on :8082).",
 
   "models": [
     {
-      "key": "nemotron-nano",
-      "model": "nemotron-3-nano-omni-30b-a3b",
-      "base_url": "http://192.168.110.145:8000/v1",
+      "key": "nemotron-q5",
+      "model": "NVIDIA-Nemotron-3-Nano-Omni-30B-A3B-Reasoning-UD-Q5_K_XL.gguf",
+      "base_url": "http://192.168.110.145:8082/v1",
       "api_key": "",
       "enabled": true,
-      "note": "Current pick. 30B/3B-active MoE, fast, multimodal, 256k ctx."
+      "ctx": 16384,
+      "hf_url": "",
+      "note": "PROD baseline + accuracy ceiling. Nemotron-3-Nano-Omni 30B/3B-active MoE reasoning, Q5_K_XL 27.2GB. Already on box. Full-offload VRAM ceiling on the 32GB 5090 (Q6_K_XL 31.3GB does NOT fit)."
     },
     {
-      "key": "qwen3-32b",
-      "model": "qwen3-32b",
-      "base_url": "http://192.168.110.145:8000/v1",
+      "key": "nemotron-q4",
+      "model": "NVIDIA-Nemotron-3-Nano-Omni-30B-A3B-Reasoning-UD-Q4_K_XL.gguf",
+      "base_url": "http://192.168.110.145:8082/v1",
       "api_key": "",
       "enabled": false,
-      "note": "Dense 32B reasoning — the 'max capacity' one to beat. Run Q5/Q6 to fill VRAM."
+      "ctx": 16384,
+      "hf_url": "",
+      "note": "Same model, lower quant (Q4_K_XL 22.3GB). Already on box. The in-family speed/headroom comparison vs Q5."
     },
     {
-      "key": "r1-distill-32b",
-      "model": "deepseek-r1-distill-qwen-32b",
-      "base_url": "http://192.168.110.145:8000/v1",
+      "key": "qwen36-moe",
+      "model": "Qwen3.6-35B-A3B-UD-Q5_K_XL.gguf",
+      "base_url": "http://192.168.110.145:8082/v1",
       "api_key": "",
       "enabled": false,
-      "note": "Dense 32B reasoning distill. ~19GB Q4."
+      "ctx": 16384,
+      "hf_url": "https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/resolve/main/Qwen3.6-35B-A3B-UD-Q5_K_XL.gguf",
+      "extra_body": {"chat_template_kwargs": {"enable_thinking": false}},
+      "note": "Throughput pick. Qwen3.6-35B-A3B MoE (35B total / 3B active), Q5_K_XL 26.6GB. Reasoning model: it IGNORES /no_think; disable CoT only via chat_template_kwargs.enable_thinking=false (extra_body) or it burns the whole budget on hidden reasoning and returns empty content."
     },
     {
-      "key": "glm-4-30b",
-      "model": "glm-4-flash-30b",
-      "base_url": "http://192.168.110.145:8000/v1",
+      "key": "qwen36-dense",
+      "model": "Qwen3.6-27B-Q6_K.gguf",
+      "base_url": "http://192.168.110.145:8082/v1",
       "api_key": "",
       "enabled": false,
-      "note": "30B MoE, strong general/coding."
-    },
-    {
-      "key": "gpt-oss-20b",
-      "model": "gpt-oss-20b",
-      "base_url": "http://192.168.110.145:8000/v1",
-      "api_key": "",
-      "enabled": false,
-      "note": "Smaller but extremely fast (290-420 tok/s). Great latency baseline."
+      "ctx": 16384,
+      "hf_url": "https://huggingface.co/unsloth/Qwen3.6-27B-GGUF/resolve/main/Qwen3.6-27B-Q6_K.gguf",
+      "extra_body": {"chat_template_kwargs": {"enable_thinking": false}},
+      "note": "Faithfulness pick. Qwen3.6-27B dense, Q6_K 22.5GB. Reasoning model: it IGNORES /no_think; disable CoT only via chat_template_kwargs.enable_thinking=false (extra_body). Verified: enable_thinking=false -> clean answer, reasoning_content empty, finish=stop."
     }
   ]
 }

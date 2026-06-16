@@ -16,18 +16,36 @@ The bridge from "planned in Cowork" to "actually applied to a machine." Cowork
 > Start with the read-only/verify steps. PowerShell scripts are written to be
 > idempotent (safe to re-run) and to check state before changing it.
 
+## Current box (as configured)
+
+The Windows box at `192.168.110.145` already has SSH on and serves Nemotron via
+an NSSM-wrapped `llama-server` service named **`llama-nemotron`** on **port 8082**
+(`/v1` OpenAI-compatible). So the bootstrap steps below are optional history —
+day to day you just need the smoke test and benchmark runner.
+
+## Fastest path (it's already set up)
+
+From your Mac:
+```bash
+python3 deploy/healthcheck.py            # confirm the endpoint is live + speed
+./deploy/run-benchmark.sh                # smoke test, then race the models
+```
+
 ## What's here
 
 ```
 deploy/
+  healthcheck.py            Mac-side smoke test: model live? latency + tok/s. Changes nothing.
+  run-benchmark.sh          Mac-side: healthcheck, then run the bench harness.
   windows/
-    enable-openssh.ps1        Turn on OpenSSH Server (run ON the Windows box, as admin)
-    setup-model-server.ps1    Open the inference port + verify the model endpoint
+    service-nssm.ps1        Ensure the llama-nemotron service is auto-start + running (or re-point it).
+    enable-openssh.ps1      Turn on OpenSSH Server (already done on this box).
+    setup-model-server.ps1  Open the inference port + verify the endpoint.
   ansible/
-    inventory.ini.example     Copy to inventory.ini, fill in user/host
-    ansible.cfg               Sensible defaults
-    playbook.yml              Idempotent: SSH + firewall + health-check
-    requirements.md           Collections to install
+    inventory.ini.example   Copy to inventory.ini, fill in user/host.
+    ansible.cfg             Sensible defaults.
+    playbook.yml            Idempotent: SSH + model service + firewall + health-check.
+    requirements.md         Collections to install.
 ```
 
 ## Path A — one-off, by hand (fastest)

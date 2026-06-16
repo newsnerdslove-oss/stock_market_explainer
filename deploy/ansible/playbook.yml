@@ -8,8 +8,9 @@
   gather_facts: false
 
   vars:
-    inference_port: 8000
+    inference_port: 8082
     health_path: "/v1/models"
+    model_service: llama-nemotron   # the NSSM-wrapped llama-server service
 
   tasks:
     - name: Ensure OpenSSH Server feature is present
@@ -22,6 +23,13 @@
         name: sshd
         start_mode: auto
         state: started
+
+    - name: Ensure the model service is auto-start and running
+      ansible.windows.win_service:
+        name: "{{ model_service }}"
+        start_mode: auto
+        state: started
+      ignore_errors: true   # tolerate if named differently on this box
 
     - name: Open firewall for the inference port
       community.windows.win_firewall_rule:
