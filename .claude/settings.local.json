@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/jasonholt/.nvm/versions/**)",
+      "Read(//Users/jasonholt/.volta/**)",
+      "Read(//opt/homebrew/bin/**)",
+      "Bash(command -v fnm asdf)",
+      "Bash(command -v brew)",
+      "Bash(brew --version)",
+      "Bash(sw_vers)",
+      "Bash(brew install *)"
+    ]
+  }
+}
