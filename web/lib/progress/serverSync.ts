@@ -6,14 +6,27 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { defaultProgress, type Progress, type StreakState } from "@/lib/progress/schema";
 
-/** Get the current user id, creating an anonymous session if there isn't one. */
+// Dedupe concurrent first-time anonymous sign-ins. Without this, two providers
+// mounting together (Progress + Trading on /simulator) each call
+// signInAnonymously, creating two anon users and desyncing the session cookie
+// from the user_id each provider holds — which then trips RLS (writes 403,
+// because auth.uid() != user_id).
+let anonInflight: Promise<string | null> | null = null;
+
+/** Get the current user id, creating one shared anonymous session if there isn't one. */
 export async function ensureSession(supabase: SupabaseClient): Promise<string | null> {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) return session.user.id;
-    const { data, error } = await supabase.auth.signInAnonymously();
-    if (error) return null;
-    return data.user?.id ?? null;
+    if (!anonInflight) {
+      anonInflight = supabase.auth
+        .signInAnonymously()
+        .then(({ data, error }) => (error ? null : (data.user?.id ?? null)))
+        .finally(() => {
+          anonInflight = null;
+        });
+    }
+    return await anonInflight;
   } catch {
     return null;
   }

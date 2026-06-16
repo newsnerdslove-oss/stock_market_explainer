@@ -63,6 +63,12 @@ export default async function Home() {
         >
           Daily review →
         </Link>
+        <Link
+          href="/simulator"
+          className="inline-flex items-center gap-2 rounded-md border border-strong px-4 py-2 text-sm text-ink transition hover:bg-surface-2"
+        >
+          Simulator →
+        </Link>
       </div>
 
       <section className="mt-12 grid gap-4 sm:grid-cols-3">
