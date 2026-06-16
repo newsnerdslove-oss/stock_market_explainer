@@ -87,4 +87,22 @@ export const questions: Question[] = [
     explanation:
       "**Red** (or black) means the close finished **below** the open — price fell. Green means the close was above the open. The body's color is just open-vs-close direction.",
   },
+  {
+    id: "what-is-a-candle.q6",
+    lessonSlug: "what-is-a-candle",
+    type: "single",
+    difficulty: "hard",
+    tags: ["candlesticks", "body", "application"],
+    prompt:
+      "A candle **opens at $50**, dips to **$48**, runs up to **$55**, and **closes at $53**. Which span is its **body**?",
+    choices: [
+      { id: "a", text: "$50 → $53 (open to close)" },
+      { id: "b", text: "$48 → $55 (low to high)", feedback: "That's the wick span — the full range, not the body." },
+      { id: "c", text: "$50 → $55 (open to high)" },
+      { id: "d", text: "$48 → $53 (low to close)" },
+    ],
+    correctId: "a",
+    explanation:
+      "The **body** always spans **open → close** — here `$50` to `$53` (green, since the close is above the open). The `$48`–`$55` low-to-high range is drawn by the **wicks**, not the body.",
+  },
 ];
