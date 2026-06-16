@@ -49,6 +49,12 @@ export async function chat(
         // hidden `reasoning_content` first, so a low cap can leave `content`
         // empty. Keep this high enough that the visible answer survives.
         max_tokens: opts.maxTokens ?? 1024,
+        // Disable chain-of-thought for these short, RAG-grounded answers. The
+        // served Qwen3.6 model IGNORES the `/no_think` system directive (unlike
+        // Nemotron) — only this request kwarg suppresses its reasoning; without
+        // it the model spends the whole budget thinking and returns empty
+        // content. Harmlessly ignored by models whose template doesn't use it.
+        chat_template_kwargs: { enable_thinking: false },
         stream: false,
       }),
       signal: controller.signal,
