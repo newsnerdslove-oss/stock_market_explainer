@@ -104,6 +104,33 @@ import { questions as dexVsCex } from "@/lib/quiz/content/crypto-200/dex-vs-cex"
 import { questions as staking } from "@/lib/quiz/content/crypto-200/staking";
 import { questions as readingOnChainData } from "@/lib/quiz/content/crypto-200/reading-on-chain-data";
 
+// 300-level: Options strategies.
+import { questions as optionsGreeks } from "@/lib/quiz/content/options/options-greeks";
+import { questions as coveredCall } from "@/lib/quiz/content/options/covered-call";
+import { questions as protectivePut } from "@/lib/quiz/content/options/protective-put";
+import { questions as cashSecuredPut } from "@/lib/quiz/content/options/cash-secured-put";
+import { questions as bullCallSpread } from "@/lib/quiz/content/options/bull-call-spread";
+import { questions as bearPutSpread } from "@/lib/quiz/content/options/bear-put-spread";
+import { questions as bullPutSpreadCredit } from "@/lib/quiz/content/options/bull-put-spread-credit";
+import { questions as longStraddle } from "@/lib/quiz/content/options/long-straddle";
+import { questions as ironCondor } from "@/lib/quiz/content/options/iron-condor";
+
+// 300-level: Margin & leverage.
+import { questions as marginAccountsRegT } from "@/lib/quiz/content/margin/margin-accounts-and-regulation-t";
+import { questions as maintenanceMarginCalls } from "@/lib/quiz/content/margin/maintenance-margin-and-margin-calls";
+import { questions as buyingPowerLeverage } from "@/lib/quiz/content/margin/buying-power-and-leverage-math";
+import { questions as shortSellingMargin } from "@/lib/quiz/content/margin/short-selling-on-margin";
+import { questions as realCostsRisksMargin } from "@/lib/quiz/content/margin/real-costs-and-risks-of-margin";
+import { questions as dayTradingBuyingPower } from "@/lib/quiz/content/margin/day-trading-buying-power";
+
+// 300-level: Trading styles.
+import { questions as dayTrading } from "@/lib/quiz/content/styles/day-trading";
+import { questions as swingTrading } from "@/lib/quiz/content/styles/swing-trading";
+import { questions as positionTrading } from "@/lib/quiz/content/styles/position-trading-trend-following";
+import { questions as scalping } from "@/lib/quiz/content/styles/scalping";
+import { questions as systematicVsDiscretionary } from "@/lib/quiz/content/styles/systematic-vs-discretionary-edges";
+import { questions as tradingPsychology } from "@/lib/quiz/content/styles/trading-psychology-and-plan";
+
 // Single source of truth for the question bank, keyed by lesson slug. Mirrors
 // lib/lessons/index.ts; later phases swap this for Supabase-backed queries while
 // keeping the same Question shape and helper signatures.
@@ -198,6 +225,30 @@ const byLesson: Record<string, Question[]> = {
   "dex-vs-cex": dexVsCex,
   staking,
   "reading-on-chain-data": readingOnChainData,
+  // Options strategies (300)
+  "options-greeks": optionsGreeks,
+  "covered-call": coveredCall,
+  "protective-put": protectivePut,
+  "cash-secured-put": cashSecuredPut,
+  "bull-call-spread": bullCallSpread,
+  "bear-put-spread": bearPutSpread,
+  "bull-put-spread-credit": bullPutSpreadCredit,
+  "long-straddle": longStraddle,
+  "iron-condor": ironCondor,
+  // Margin & leverage (300)
+  "margin-accounts-and-regulation-t": marginAccountsRegT,
+  "maintenance-margin-and-margin-calls": maintenanceMarginCalls,
+  "buying-power-and-leverage-math": buyingPowerLeverage,
+  "short-selling-on-margin": shortSellingMargin,
+  "real-costs-and-risks-of-margin": realCostsRisksMargin,
+  "day-trading-buying-power": dayTradingBuyingPower,
+  // Trading styles (300)
+  "day-trading": dayTrading,
+  "swing-trading": swingTrading,
+  "position-trading-trend-following": positionTrading,
+  scalping,
+  "systematic-vs-discretionary-edges": systematicVsDiscretionary,
+  "trading-psychology-and-plan": tradingPsychology,
 };
 
 /** Questions for one lesson's quiz, in authored order. Empty if none exist. */
