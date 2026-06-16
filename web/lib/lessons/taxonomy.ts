@@ -52,6 +52,10 @@ export const MODULES = [
   { id: "markets-quotes-orders", trackId: "markets", title: "Quotes & orders", order: 3, level: 100, description: "Spreads, order types, the order lifecycle, slippage, and liquidity." },
   { id: "markets-owning-position", trackId: "markets", title: "Owning a position", order: 4, level: 100, description: "P&L, cost basis, breakeven, long vs. short, and dividends." },
   { id: "markets-valuation", trackId: "markets", title: "Valuation intro", order: 5, level: 100, description: "P/E, EPS, market cap, what 'expensive' means, sectors and indices." },
+  // 200-level: Mechanics & analysis.
+  { id: "markets-technical", trackId: "markets", title: "Technical analysis", order: 6, level: 200, description: "Moving averages, RSI, MACD, volume, patterns, divergence, multi-timeframe." },
+  { id: "markets-fundamental", trackId: "markets", title: "Fundamental analysis", order: 7, level: 200, description: "Financial statements, P/E depth, P/B & P/S, margins & ROE, growth vs. value." },
+  { id: "markets-risk", trackId: "markets", title: "Risk management", order: 8, level: 200, description: "Position sizing, risk per trade, stops, risk/reward, drawdown, diversification." },
   { id: "crypto-100", trackId: "crypto", title: "Crypto basics", order: 1, level: 100, description: "Coins vs. tokens, exchanges vs. wallets, supply, volatility, and custody." },
 ] as const satisfies readonly ModuleDef[];
 

@@ -50,6 +50,38 @@ import { lesson as crypto247Markets } from "@/lib/lessons/content/crypto/crypto-
 import { lesson as cryptoVolatility } from "@/lib/lessons/content/crypto/crypto-volatility";
 import { lesson as custodyAndKeys } from "@/lib/lessons/content/crypto/custody-and-keys";
 
+// 200-level: Technical analysis.
+import { lesson as movingAverages } from "@/lib/lessons/content/technical/moving-averages-sma-vs-ema";
+import { lesson as rsi } from "@/lib/lessons/content/technical/rsi-relative-strength-index";
+import { lesson as macd } from "@/lib/lessons/content/technical/macd-moving-average-convergence-divergence";
+import { lesson as volumeAnalysis } from "@/lib/lessons/content/technical/volume-analysis-confirmation-obv";
+import { lesson as supportResistanceDepth } from "@/lib/lessons/content/technical/support-resistance-depth";
+import { lesson as trendlinesAndChannels } from "@/lib/lessons/content/technical/trendlines-and-channels";
+import { lesson as candlestickPatterns } from "@/lib/lessons/content/technical/candlestick-patterns-reversal";
+import { lesson as chartPatterns } from "@/lib/lessons/content/technical/chart-patterns-measured-moves";
+import { lesson as divergence } from "@/lib/lessons/content/technical/divergence-price-vs-indicator";
+import { lesson as multiTimeframe } from "@/lib/lessons/content/technical/multi-timeframe-analysis";
+
+// 200-level: Fundamental analysis.
+import { lesson as incomeStatement } from "@/lib/lessons/content/fundamental/the-income-statement";
+import { lesson as balanceSheet } from "@/lib/lessons/content/fundamental/the-balance-sheet";
+import { lesson as cashFlowStatement } from "@/lib/lessons/content/fundamental/the-cash-flow-statement";
+import { lesson as peRatioInDepth } from "@/lib/lessons/content/fundamental/pe-ratio-in-depth";
+import { lesson as pbAndPsRatios } from "@/lib/lessons/content/fundamental/pb-and-ps-ratios";
+import { lesson as dividendMetrics } from "@/lib/lessons/content/fundamental/dividend-metrics-in-depth";
+import { lesson as earningsReports } from "@/lib/lessons/content/fundamental/earnings-reports";
+import { lesson as marginsAndRoe } from "@/lib/lessons/content/fundamental/margins-and-roe";
+import { lesson as growthVsValue } from "@/lib/lessons/content/fundamental/growth-vs-value";
+
+// 200-level: Risk management.
+import { lesson as positionSizing } from "@/lib/lessons/content/risk/position-sizing";
+import { lesson as riskPerTrade } from "@/lib/lessons/content/risk/risk-per-trade";
+import { lesson as stopPlacement } from "@/lib/lessons/content/risk/stop-placement";
+import { lesson as riskRewardRatio } from "@/lib/lessons/content/risk/risk-reward-ratio";
+import { lesson as drawdown } from "@/lib/lessons/content/risk/drawdown";
+import { lesson as diversification } from "@/lib/lessons/content/risk/diversification";
+import { lesson as lossRecoveryMath } from "@/lib/lessons/content/risk/loss-recovery-math";
+
 // The single source of truth for the lesson bank. Display order is computed from
 // the taxonomy (track → module → moduleOrder via getOrderedLessons); this array's
 // order only needs to contain every lesson. Grouped by module for readability.
@@ -95,6 +127,35 @@ export const lessons: Lesson[] = [
   crypto247Markets,
   cryptoVolatility,
   custodyAndKeys,
+  // Technical analysis (200)
+  movingAverages,
+  rsi,
+  macd,
+  volumeAnalysis,
+  supportResistanceDepth,
+  trendlinesAndChannels,
+  candlestickPatterns,
+  chartPatterns,
+  divergence,
+  multiTimeframe,
+  // Fundamental analysis (200)
+  incomeStatement,
+  balanceSheet,
+  cashFlowStatement,
+  peRatioInDepth,
+  pbAndPsRatios,
+  dividendMetrics,
+  earningsReports,
+  marginsAndRoe,
+  growthVsValue,
+  // Risk management (200)
+  positionSizing,
+  riskPerTrade,
+  stopPlacement,
+  riskRewardRatio,
+  drawdown,
+  diversification,
+  lossRecoveryMath,
 ];
 
 export function getAllLessons(): Lesson[] {
