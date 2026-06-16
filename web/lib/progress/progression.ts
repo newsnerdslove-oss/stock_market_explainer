@@ -21,11 +21,18 @@ export interface LessonStatus {
 /** A lesson identified by slug, in curriculum order. */
 interface OrderedLesson {
   slug: string;
+  /** Whether the lesson has a quiz. Defaults to true; a quiz-less lesson can't gate. */
+  hasQuiz?: boolean;
+}
+
+/** Coerce a persisted score to a finite fraction in [0,1]; anything else → 0. */
+function sanitizeScore(raw: unknown): number {
+  return typeof raw === "number" && Number.isFinite(raw) ? Math.min(1, Math.max(0, raw)) : 0;
 }
 
 function statusFor(slug: string, unlocked: boolean, progress: Progress): LessonStatus {
   const q = progress.quizzes[slug];
-  const bestScore = q?.bestScore ?? 0;
+  const bestScore = sanitizeScore(q?.bestScore);
   return {
     slug,
     unlocked,
@@ -36,25 +43,21 @@ function statusFor(slug: string, unlocked: boolean, progress: Progress): LessonS
   };
 }
 
-/** Status for every lesson, in order. Lesson i unlocks when lesson i-1 is passed. */
+/**
+ * Status for every lesson, in order. Lesson i unlocks when lesson i-1 is passed.
+ * A lesson with no quiz can't be "passed", so it would otherwise dead-end the
+ * ladder — instead it unlocks straight through to the next lesson.
+ */
 export function computeProgression(lessons: OrderedLesson[], progress: Progress): LessonStatus[] {
   const out: LessonStatus[] = [];
-  let prevPassed = true; // the first lesson is always unlocked
+  let prevUnlocksNext = true; // the first lesson is always unlocked
   for (const lesson of lessons) {
-    const status = statusFor(lesson.slug, prevPassed, progress);
+    const status = statusFor(lesson.slug, prevUnlocksNext, progress);
     out.push(status);
-    prevPassed = status.passed;
+    const gates = lesson.hasQuiz !== false; // a quiz-less lesson never blocks
+    prevUnlocksNext = gates ? status.passed : true;
   }
   return out;
-}
-
-/** Convenience: the status of a single lesson within the ordered list. */
-export function lessonStatus(
-  slug: string,
-  lessons: OrderedLesson[],
-  progress: Progress,
-): LessonStatus | undefined {
-  return computeProgression(lessons, progress).find((s) => s.slug === slug);
 }
 
 export interface ProgressSummary {

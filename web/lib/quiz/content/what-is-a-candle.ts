@@ -70,4 +70,21 @@ export const questions: Question[] = [
     explanation:
       "A long wick means price **traveled there but snapped back** — it reached that high during the period but closed away from it. Long wicks are the classic sign of *rejection*.",
   },
+  {
+    id: "what-is-a-candle.q5",
+    lessonSlug: "what-is-a-candle",
+    type: "single",
+    difficulty: "easy",
+    tags: ["candlesticks", "color"],
+    prompt: "A candle is drawn **red**. What does that tell you?",
+    choices: [
+      { id: "a", text: "The close was below the open — price fell over the period" },
+      { id: "b", text: "The close was above the open — price rose", feedback: "That would be a *green* candle." },
+      { id: "c", text: "The high was below the low" },
+      { id: "d", text: "The period had no trading" },
+    ],
+    correctId: "a",
+    explanation:
+      "**Red** (or black) means the close finished **below** the open — price fell. Green means the close was above the open. The body's color is just open-vs-close direction.",
+  },
 ];

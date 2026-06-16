@@ -72,4 +72,21 @@ export const questions: Question[] = [
     explanation:
       "You buy at the ask and sell at the bid, and fees add to the cost basis and subtract on exit. Price has to climb **past** the spread + fees before you're actually in profit.",
   },
+  {
+    id: "profit-and-loss.q5",
+    lessonSlug: "profit-and-loss",
+    type: "single",
+    difficulty: "easy",
+    tags: ["pnl", "costs"],
+    prompt: "Your **cost basis** is…",
+    choices: [
+      { id: "a", text: "What you actually paid to acquire the position, including fees" },
+      { id: "b", text: "The position's current market value" },
+      { id: "c", text: "Only the share price, excluding any fees", feedback: "Fees are part of cost basis — they raise it." },
+      { id: "d", text: "The price you expect to sell at" },
+    ],
+    correctId: "a",
+    explanation:
+      "**Cost basis** is what you paid to get in — share price **plus fees**. P&L is measured against it: `(current price − cost basis) × shares`.",
+  },
 ];

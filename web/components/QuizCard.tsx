@@ -1,35 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { checkAnswer } from "@/lib/quiz/check";
 import { isChoiceQuestion, type ChoiceQuestion, type Question } from "@/lib/quiz/types";
 import { useProgress } from "@/lib/progress/useProgress";
 import { MASTERY_SCORE, PASS_SCORE } from "@/lib/progress/schema";
-
-// Inline **bold**/*italic*/`code` → nodes. Mirrors LessonRenderer's `inline`
-// so question text reads like the lessons. (Small enough to keep local.)
-function inline(text: string) {
-  return text
-    .split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g)
-    .filter(Boolean)
-    .map((tok, i) => {
-      if (tok.startsWith("**") && tok.endsWith("**"))
-        return (
-          <strong key={i} className="font-medium text-ink">
-            {tok.slice(2, -2)}
-          </strong>
-        );
-      if (tok.startsWith("*") && tok.endsWith("*")) return <em key={i}>{tok.slice(1, -1)}</em>;
-      if (tok.startsWith("`") && tok.endsWith("`"))
-        return (
-          <code key={i} className="rounded bg-surface-2 px-1 py-0.5 font-mono text-[0.85em] text-up">
-            {tok.slice(1, -1)}
-          </code>
-        );
-      return <span key={i}>{tok}</span>;
-    });
-}
+import { inline } from "@/lib/inline";
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -52,7 +29,11 @@ export function QuizCard({
   next?: { slug: string; title: string } | null;
 }) {
   const { recordQuizAttempt } = useProgress();
-  const pool = questions.filter(isChoiceQuestion) as ChoiceQuestion[];
+  // Stable for the component's life; the UI only renders single-answer choice types.
+  const pool = useMemo(
+    () => questions.filter(isChoiceQuestion) as ChoiceQuestion[],
+    [questions],
+  );
 
   const [phase, setPhase] = useState<Phase>("intro");
   const [order, setOrder] = useState<ChoiceQuestion[]>([]);
@@ -79,14 +60,14 @@ export function QuizCard({
   const isLast = idx === order.length - 1;
 
   function check() {
-    if (selected == null || !q) return;
+    if (selected == null || !q || revealed) return; // ignore re-entry once revealed
     if (checkAnswer(q, selected).correct) setCorrectCount((c) => c + 1);
     setRevealed(true);
   }
 
   function advance() {
     if (isLast) {
-      const score = correctCount / order.length;
+      const score = Math.min(1, Math.max(0, correctCount / order.length));
       recordQuizAttempt(lessonSlug, score);
       setFinalScore(score);
       setPhase("results");

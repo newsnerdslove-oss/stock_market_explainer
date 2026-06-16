@@ -71,4 +71,21 @@ export const questions: Question[] = [
     explanation:
       "Identical closes draw an identical **line** but can produce wildly different **candles**. The candle tells you the *story* (range, who won); the line only tells you the *ending*.",
   },
+  {
+    id: "line-vs-candle.q5",
+    lessonSlug: "line-vs-candle",
+    type: "single",
+    difficulty: "easy",
+    tags: ["charts"],
+    prompt: "Why would a trader prefer **candles** when actually entering a trade?",
+    choices: [
+      { id: "a", text: "The intra-period action — range, open vs close, rejection — informs the decision" },
+      { id: "b", text: "Candles are more colorful" },
+      { id: "c", text: "Candles hide the closing price to reduce clutter" },
+      { id: "d", text: "Line charts aren't allowed for real trades" },
+    ],
+    correctId: "a",
+    explanation:
+      "Candles expose **what happened within the period** — how far price ranged and whether buyers or sellers won. That detail is exactly what you want when timing an entry; a line would hide it.",
+  },
 ];

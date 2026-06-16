@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { useProgress } from "@/lib/progress/useProgress";
 import { computeProgression, summarize } from "@/lib/progress/progression";
@@ -15,9 +16,13 @@ export interface LearnListItem {
 
 export function LearnList({ lessons }: { lessons: LearnListItem[] }) {
   const { progress, hydrated } = useProgress();
-  const statuses = computeProgression(lessons, progress);
-  const statusBySlug = new Map(statuses.map((s) => [s.slug, s]));
-  const summary = summarize(statuses);
+  const { statusBySlug, summary } = useMemo(() => {
+    const statuses = computeProgression(lessons, progress);
+    return {
+      statusBySlug: new Map(statuses.map((s) => [s.slug, s])),
+      summary: summarize(statuses),
+    };
+  }, [lessons, progress]);
 
   return (
     <>
