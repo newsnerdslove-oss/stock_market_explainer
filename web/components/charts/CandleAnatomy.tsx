@@ -29,11 +29,13 @@ function Leader({ y, label }: { y: number; label: string }) {
 
 export function CandleAnatomy() {
   return (
+    // viewBox is wide enough to fit the right-hand leader labels: the longest
+    // ("High — highest price in the period") starts at x=306 and runs to ~x=536.
     <svg
-      viewBox="0 0 460 340"
+      viewBox="0 0 560 340"
       role="img"
       aria-label="Anatomy of a candlestick: high, low, open, and close prices."
-      className="w-full max-w-md"
+      className="w-full max-w-lg"
     >
       {/* upper wick */}
       <line x1={CX} y1={HIGH_Y} x2={CX} y2={CLOSE_Y} stroke={UP} strokeWidth={2} />

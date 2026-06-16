@@ -89,4 +89,23 @@ export const questions: Question[] = [
     explanation:
       "**Cost basis** is what you paid to get in — share price **plus fees**. P&L is measured against it: `(current price − cost basis) × shares`.",
   },
+  {
+    id: "profit-and-loss.q6",
+    lessonSlug: "profit-and-loss",
+    type: "numericChoice",
+    difficulty: "hard",
+    tags: ["pnl", "math", "application"],
+    unit: "$",
+    prompt:
+      "You buy **20** shares at `$30`. The price rises to `$45` and you sell **10** shares, keeping the other 10. What is your **realized** P&L?",
+    choices: [
+      { id: "a", text: "$150" },
+      { id: "b", text: "$300", feedback: "That counts all 20 shares — but you only sold 10, so only those are realized." },
+      { id: "c", text: "$75" },
+      { id: "d", text: "$450" },
+    ],
+    correctId: "a",
+    explanation:
+      "Realized P&L counts only the shares you **sold**: `(45 − 30) × 10 = $150`. The 10 shares you still hold carry a `$150` **unrealized** gain — real money only once you sell them too.",
+  },
 ];

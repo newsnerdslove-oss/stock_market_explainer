@@ -89,4 +89,23 @@ export const questions: Question[] = [
     explanation:
       "A **limit order** lets you name your price instead of accepting the bid/ask — a way to avoid paying the full spread. The trade-off: it might not fill.",
   },
+  {
+    id: "bid-ask-spread.q6",
+    lessonSlug: "bid-ask-spread",
+    type: "numericChoice",
+    difficulty: "hard",
+    tags: ["spread", "math", "application"],
+    unit: "$",
+    prompt:
+      "Bid `$20.00`, ask `$20.10`. You buy **200** shares at market, the quote doesn't move, and you sell all 200 at market. What does the round trip cost you in spread (ignoring fees)?",
+    choices: [
+      { id: "a", text: "$10" },
+      { id: "b", text: "$20" },
+      { id: "c", text: "$40", feedback: "Don't double the share count — the spread is $0.10 once per share." },
+      { id: "d", text: "$0" },
+    ],
+    correctId: "b",
+    explanation:
+      "You buy at the ask and sell at the bid, losing the `$0.10` spread on each share **once**: `0.10 × 200 = $20`. The number of shares matters, but you don't pay the spread twice per share.",
+  },
 ];

@@ -88,4 +88,22 @@ export const questions: Question[] = [
     explanation:
       "Candles expose **what happened within the period** — how far price ranged and whether buyers or sellers won. That detail is exactly what you want when timing an entry; a line would hide it.",
   },
+  {
+    id: "line-vs-candle.q6",
+    lessonSlug: "line-vs-candle",
+    type: "single",
+    difficulty: "hard",
+    tags: ["charts", "candlesticks", "application"],
+    prompt:
+      "On a line chart, one day looks like an ordinary small gain. You suspect price actually spiked far higher intraday and fell back. What confirms it — and where?",
+    choices: [
+      { id: "a", text: "A long upper wick on that day's candle" },
+      { id: "b", text: "A taller body on that day's candle", feedback: "The body is open-to-close; a spike-and-fade shows in the wick, not the body." },
+      { id: "c", text: "Nothing — the line already shows everything" },
+      { id: "d", text: "A gap between two points on the line" },
+    ],
+    correctId: "a",
+    explanation:
+      "A spike that snapped back leaves the **close** near the open — so the line barely moves and the body stays small. The journey shows only as a **long upper wick** on the candle: classic rejection the line can't reveal.",
+  },
 ];

@@ -87,4 +87,22 @@ export const questions: Question[] = [
     explanation:
       "Cheap and *cheap for a reason* look identical on this one number. A low P/E can mean the market expects **earnings to decline** — always read P/E in context (history, peers, sector).",
   },
+  {
+    id: "pe-ratio.q6",
+    lessonSlug: "pe-ratio",
+    type: "single",
+    difficulty: "hard",
+    tags: ["valuation", "pe", "context", "application"],
+    prompt:
+      "A fast-growing **software** company and a slow, stable **utility** both trade at a P/E of **30**. What's the soundest read?",
+    choices: [
+      { id: "a", text: "30 may be reasonable for the software grower but expensive for the utility" },
+      { id: "b", text: "Both are equally priced — same P/E means same value", feedback: "Identical P/Es aren't comparable across different growth profiles and sectors." },
+      { id: "c", text: "The utility is the better growth bet" },
+      { id: "d", text: "Both are guaranteed bargains at 30" },
+    ],
+    correctId: "a",
+    explanation:
+      "P/E only means something **in context**. A P/E of 30 can be cheap for a company expected to grow earnings fast, yet expensive for a low-growth utility. Compare against the company's own history, peers, and sector — never across mismatched businesses on the raw number.",
+  },
 ];
