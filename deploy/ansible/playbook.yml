@@ -1,0 +1,49 @@
+---
+# Idempotent configuration for the Windows model-server box.
+# Run from your Mac:  ansible-playbook -i inventory.ini playbook.yml --check
+# Drop --check to apply. Re-running is safe — tasks only change drifted state.
+
+- name: Configure local model server (Windows)
+  hosts: model_server
+  gather_facts: false
+
+  vars:
+    inference_port: 8000
+    health_path: "/v1/models"
+
+  tasks:
+    - name: Ensure OpenSSH Server feature is present
+      ansible.windows.win_optional_feature:
+        name: OpenSSH.Server
+        state: present
+
+    - name: Ensure sshd service is running and automatic
+      ansible.windows.win_service:
+        name: sshd
+        start_mode: auto
+        state: started
+
+    - name: Open firewall for the inference port
+      community.windows.win_firewall_rule:
+        name: "Local model server (TCP {{ inference_port }})"
+        localport: "{{ inference_port }}"
+        protocol: tcp
+        direction: in
+        action: allow
+        enabled: true
+        state: present
+
+    - name: Check whether the model endpoint is live
+      ansible.windows.win_uri:
+        url: "http://localhost:{{ inference_port }}{{ health_path }}"
+        method: GET
+        status_code: [200, -1]   # -1 tolerates "not running yet" without failing
+      register: model_health
+      ignore_errors: true
+
+    - name: Report endpoint status
+      ansible.builtin.debug:
+        msg: >-
+          {{ 'Model endpoint is LIVE on port ' ~ inference_port
+             if (model_health.status_code | default(0)) == 200
+             else 'Firewall/SSH configured. Start the inference engine, then re-run.' }}

@@ -1,0 +1,9 @@
+# Copy to inventory.ini and fill in. inventory.ini is gitignored (may hold a username).
+[model_server]
+windowsbox ansible_host=192.168.110.145
+
+[model_server:vars]
+ansible_user=YOUR_WINDOWS_USER
+ansible_connection=ssh
+ansible_shell_type=powershell
+# If you use a password instead of an SSH key, also run with --ask-pass.

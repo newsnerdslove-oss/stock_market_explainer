@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAllLessons, getLesson } from "@/lib/lessons";
+import { getQuiz } from "@/lib/quiz";
 import { LessonRenderer } from "@/components/LessonRenderer";
 import { AskTutor } from "@/components/AskTutor";
+import { QuizCard } from "@/components/QuizCard";
 
 // Pre-render every lesson at build time.
 export function generateStaticParams() {
@@ -23,6 +25,7 @@ export default function LessonPage({ params }: { params: { slug: string } }) {
   const idx = all.findIndex((l) => l.slug === lesson.slug);
   const prev = idx > 0 ? all[idx - 1] : null;
   const next = idx < all.length - 1 ? all[idx + 1] : null;
+  const questions = getQuiz(lesson.slug);
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-16">
@@ -41,6 +44,14 @@ export default function LessonPage({ params }: { params: { slug: string } }) {
       <article className="mt-8">
         <LessonRenderer sections={lesson.sections} />
       </article>
+
+      {questions.length > 0 && (
+        <QuizCard
+          lessonSlug={lesson.slug}
+          questions={questions}
+          next={next ? { slug: next.slug, title: next.title } : null}
+        />
+      )}
 
       <AskTutor slug={lesson.slug} />
 
