@@ -4,6 +4,8 @@ export const lesson: Lesson = {
   slug: "profit-and-loss",
   title: "Profit & loss (P&L), realized and unrealized",
   level: 1,
+  moduleId: "markets-owning-position",
+  moduleOrder: 1,
   summary: "How gains are actually counted — and why a 'paper' profit isn't real yet.",
   estMinutes: 5,
   sections: [

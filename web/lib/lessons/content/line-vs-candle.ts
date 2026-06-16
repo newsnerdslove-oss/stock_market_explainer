@@ -4,6 +4,8 @@ export const lesson: Lesson = {
   slug: "line-vs-candle",
   title: "Line charts vs. candlestick charts",
   level: 1,
+  moduleId: "markets-reading-price",
+  moduleOrder: 2,
   summary: "Why traders reach for candles when a simple line would do.",
   estMinutes: 3,
   sections: [

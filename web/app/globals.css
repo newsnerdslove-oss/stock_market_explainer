@@ -29,3 +29,9 @@ body {
 .font-mono {
   font-variant-numeric: tabular-nums;
 }
+
+/* Hide the native <details> disclosure triangle (Safari ignores list-none here)
+   so module sections show only the custom chevron. */
+summary::-webkit-details-marker {
+  display: none;
+}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getAllLessons, getLesson } from "@/lib/lessons";
+import { getAllLessons, getLesson, getOrderedLessons } from "@/lib/lessons";
+import { moduleById, trackById } from "@/lib/lessons/taxonomy";
 import { getQuiz } from "@/lib/quiz";
 import { LessonRenderer } from "@/components/LessonRenderer";
 import { AskTutor } from "@/components/AskTutor";
@@ -21,11 +22,14 @@ export default function LessonPage({ params }: { params: { slug: string } }) {
   const lesson = getLesson(params.slug);
   if (!lesson) notFound();
 
-  const all = getAllLessons();
-  const idx = all.findIndex((l) => l.slug === lesson.slug);
-  const prev = idx > 0 ? all[idx - 1] : null;
-  const next = idx < all.length - 1 ? all[idx + 1] : null;
+  const ordered = getOrderedLessons();
+  const idx = ordered.findIndex((l) => l.slug === lesson.slug);
+  const prev = idx > 0 ? ordered[idx - 1] : null;
+  const next = idx < ordered.length - 1 ? ordered[idx + 1] : null;
   const questions = getQuiz(lesson.slug);
+
+  const mod = moduleById[lesson.moduleId];
+  const track = trackById[mod.trackId];
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-16">
@@ -35,7 +39,7 @@ export default function LessonPage({ params }: { params: { slug: string } }) {
 
       <header className="mt-4">
         <p className="font-mono text-xs text-faint">
-          Level {lesson.level} · {lesson.estMinutes} min read
+          {track.title} › {mod.title} · {lesson.estMinutes} min read
         </p>
         <h1 className="mt-2 text-4xl font-medium tracking-tight">{lesson.title}</h1>
         <p className="mt-3 text-lg text-muted">{lesson.summary}</p>

@@ -17,6 +17,8 @@ export default function LearnIndex() {
     summary: l.summary,
     estMinutes: l.estMinutes,
     hasQuiz: hasQuiz(l.slug),
+    moduleId: l.moduleId,
+    moduleOrder: l.moduleOrder,
   }));
 
   return (
