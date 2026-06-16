@@ -22,7 +22,9 @@ export function completeSession(streak: StreakState, today: string): StreakState
     current = 1; // first session ever
   } else {
     const gap = daysBetween(streak.lastActiveDate, today);
-    if (gap <= 1) {
+    if (gap <= 0) {
+      return streak; // anomalous: last session is "today or later" (clock/tz moved back) — don't advance
+    } else if (gap === 1) {
       current = streak.current + 1; // consecutive day
     } else {
       const missed = gap - 1;

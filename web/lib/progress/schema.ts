@@ -98,16 +98,22 @@ export function defaultProgress(): Progress {
  */
 export function migrate(raw: unknown): Progress {
   const base = defaultProgress();
-  if (!raw || typeof raw !== "object") return base;
-  const s = raw as Partial<Progress>;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return base;
+  const s = raw as Record<string, unknown>;
   const obj = <T,>(v: unknown, fallback: T): T =>
     v && typeof v === "object" && !Array.isArray(v) ? { ...fallback, ...(v as object) } : fallback;
+  const str = (v: unknown, fallback: string): string => (typeof v === "string" ? v : fallback);
+  const strOrNull = (v: unknown): string | null => (typeof v === "string" ? v : null);
+  // Construct explicitly (rather than spreading `s`) so unknown or wrong-typed
+  // fields from corrupt/tampered storage can't leak into Progress.
   return {
-    ...base,
-    ...s,
+    schemaVersion: CURRENT_VERSION,
+    userId: strOrNull(s.userId),
     quizzes: obj(s.quizzes, base.quizzes),
     review: obj(s.review, base.review),
     streak: obj(s.streak, base.streak),
-    schemaVersion: CURRENT_VERSION,
+    tz: str(s.tz, base.tz),
+    lastSession: strOrNull(s.lastSession),
+    updatedAt: str(s.updatedAt, base.updatedAt),
   };
 }

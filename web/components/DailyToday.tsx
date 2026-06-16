@@ -1,17 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { QuestionRunner } from "@/components/QuestionRunner";
 import { isChoiceQuestion, type ChoiceQuestion, type Question } from "@/lib/quiz/types";
 import { useProgress } from "@/lib/progress/useProgress";
-import { dueCount, pickDaily, todayInTz } from "@/lib/review/schedule";
+import { isDue, pickDaily, todayInTz } from "@/lib/review/schedule";
 
 const DAILY_TARGET = 5;
 
 export function DailyToday({ allQuestions }: { allQuestions: Question[] }) {
   const { progress, hydrated, recordReview, completeDailySession } = useProgress();
   const [phase, setPhase] = useState<"idle" | "running">("idle");
+  // The exact question set for this session, snapshotted when the learner starts.
+  const [sessionQs, setSessionQs] = useState<ChoiceQuestion[]>([]);
+  const byId = useMemo(
+    () => new Map((allQuestions.filter(isChoiceQuestion) as ChoiceQuestion[]).map((q) => [q.id, q])),
+    [allQuestions],
+  );
 
   if (!hydrated) {
     return (
@@ -20,15 +26,17 @@ export function DailyToday({ allQuestions }: { allQuestions: Question[] }) {
   }
 
   const today = todayInTz(progress.tz);
-  const bank = allQuestions.filter(isChoiceQuestion) as ChoiceQuestion[];
-  const byId = new Map(bank.map((q) => [q.id, q]));
+  // Only consider questions still in the bank, so the "cards due" count and the
+  // runnable queue are always derived from the same set (no orphaned-id drift).
   const seenIds = Object.keys(progress.review).filter((id) => byId.has(id));
-
-  // Daily review reinforces material the learner has already seen via lessons.
-  const todaysIds = pickDaily(progress.review, seenIds, today, DAILY_TARGET, 0);
-  const todays = todaysIds.map((id) => byId.get(id)!).filter(Boolean);
-  const due = dueCount(progress.review, today);
+  const todays = pickDaily(progress.review, seenIds, today, DAILY_TARGET, 0).map((id) => byId.get(id)!);
+  const due = seenIds.filter((id) => isDue(progress.review[id], today)).length;
   const doneToday = progress.lastSession === today;
+
+  const start = () => {
+    setSessionQs(todays);
+    setPhase("running");
+  };
 
   return (
     <>
@@ -49,7 +57,7 @@ export function DailyToday({ allQuestions }: { allQuestions: Question[] }) {
             <h2 className="text-sm font-medium text-ink">Today&apos;s review</h2>
             <div className="mt-4">
               <QuestionRunner
-                questions={todays}
+                questions={sessionQs}
                 onAnswer={(qid, correct) => recordReview(qid, correct)}
                 onComplete={() => {
                   completeDailySession();
@@ -59,7 +67,7 @@ export function DailyToday({ allQuestions }: { allQuestions: Question[] }) {
             </div>
           </section>
         ) : (
-          <StartCard count={todays.length} onStart={() => setPhase("running")} />
+          <StartCard count={todays.length} onStart={start} />
         )}
       </div>
     </>

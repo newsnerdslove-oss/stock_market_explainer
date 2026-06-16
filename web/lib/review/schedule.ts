@@ -92,7 +92,7 @@ export function pickDaily(
       .sort((a, b) => review[a].due.localeCompare(review[b].due));
     chosen.push(...future);
   }
-  return chosen.slice(0, n);
+  return [...new Set(chosen)].slice(0, n); // dedup in case an id appears in more than one source
 }
 
 /** How many seen items are due today — the recurring "N cards due" signal. */
