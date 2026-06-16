@@ -6,11 +6,11 @@
   "models": [
     {
       "key": "nemotron-nano",
-      "model": "NVIDIA-Nemotron-3-Nano-Omni-30B-A3B-Reasoning-UD-Q4_K_XL.gguf",
+      "model": "NVIDIA-Nemotron-3-Nano-Omni-30B-A3B-Reasoning-UD-Q5_K_XL.gguf",
       "base_url": "http://192.168.110.145:8082/v1",
       "api_key": "",
       "enabled": true,
-      "note": "Current pick. 30B/3B-active MoE reasoning model, served by the llama-nemotron NSSM service on :8082."
+      "note": "Current pick. 30B/3B-active MoE reasoning model, served by the llama-nemotron NSSM service on :8082 (Q5_K_XL, ctx 16k). Q5_K_XL (27.2GB) is the VRAM ceiling for full GPU offload on the 32GB 5090 — Q6_K_XL (31.3GB) does not fit alongside the 16k KV cache + compute buffers."
     },
     {
       "key": "qwen3-32b",
