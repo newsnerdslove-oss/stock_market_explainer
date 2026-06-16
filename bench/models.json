@@ -1,0 +1,48 @@
+{
+  "default_system": "You are a patient finance tutor for beginners. Be accurate, clear, and concise. Never give financial advice.",
+
+  "_comment": "Candidate models to race on the 5090 (32GB VRAM). Run one (or several) on your box via llama.cpp/Ollama/vLLM/LM Studio exposing an OpenAI-compatible API, then set base_url + model. Set enabled:false to skip. 'key' is the short label used in reports. See README.md for footprints and how to fill 32GB.",
+
+  "models": [
+    {
+      "key": "nemotron-nano",
+      "model": "nemotron-3-nano-omni-30b-a3b",
+      "base_url": "http://192.168.110.145:8000/v1",
+      "api_key": "",
+      "enabled": true,
+      "note": "Current pick. 30B/3B-active MoE, fast, multimodal, 256k ctx."
+    },
+    {
+      "key": "qwen3-32b",
+      "model": "qwen3-32b",
+      "base_url": "http://192.168.110.145:8000/v1",
+      "api_key": "",
+      "enabled": false,
+      "note": "Dense 32B reasoning — the 'max capacity' one to beat. Run Q5/Q6 to fill VRAM."
+    },
+    {
+      "key": "r1-distill-32b",
+      "model": "deepseek-r1-distill-qwen-32b",
+      "base_url": "http://192.168.110.145:8000/v1",
+      "api_key": "",
+      "enabled": false,
+      "note": "Dense 32B reasoning distill. ~19GB Q4."
+    },
+    {
+      "key": "glm-4-30b",
+      "model": "glm-4-flash-30b",
+      "base_url": "http://192.168.110.145:8000/v1",
+      "api_key": "",
+      "enabled": false,
+      "note": "30B MoE, strong general/coding."
+    },
+    {
+      "key": "gpt-oss-20b",
+      "model": "gpt-oss-20b",
+      "base_url": "http://192.168.110.145:8000/v1",
+      "api_key": "",
+      "enabled": false,
+      "note": "Smaller but extremely fast (290-420 tok/s). Great latency baseline."
+    }
+  ]
+}
