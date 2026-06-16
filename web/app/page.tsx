@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getHealth, getQuote, type Quote } from "@/lib/marketService";
 
 async function loadDemo(): Promise<{ provider: string; quotes: Quote[] } | null> {
@@ -14,14 +15,17 @@ async function loadDemo(): Promise<{ provider: string; quotes: Quote[] } | null>
 const pillars = [
   {
     title: "Learn",
+    accent: "text-learn",
     body: "Structured lessons from basics to advanced: candlesticks vs. line charts, P&L, P/E, options, swing vs. day trading.",
   },
   {
     title: "Test",
+    accent: "text-learn",
     body: "Progressive quizzes that gate the next module. A Series 7-style question bank that builds exam confidence.",
   },
   {
     title: "Simulate",
+    accent: "text-up",
     body: "Paper-trade stocks & crypto on near-real-time quotes. Virtual cash, positions, P&L, and live charts.",
   },
 ];
@@ -31,55 +35,78 @@ export default async function Home() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="text-4xl font-bold tracking-tight">Stock Market Explainer</h1>
-      <p className="mt-3 text-slate-400">
-        Daily training for the stock market and crypto — from absolute basics to
-        Series 7-level mastery, with a paper-trading simulator.
+      <div className="flex items-center gap-2.5">
+        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-up text-canvas">
+          <span className="text-sm font-medium">$</span>
+        </div>
+        <span className="text-sm font-medium tracking-tight">Explainer</span>
+      </div>
+
+      <h1 className="mt-8 text-4xl font-medium tracking-tight">
+        Learn the markets. <span className="text-muted">Daily.</span>
+      </h1>
+      <p className="mt-3 max-w-xl text-muted">
+        Training for stocks and crypto — from absolute basics to Series 7-level
+        mastery — with a paper-trading simulator on near-real-time quotes.
       </p>
 
-      <section className="mt-10 grid gap-4 sm:grid-cols-3">
+      <div className="mt-6 flex items-center gap-3">
+        <Link
+          href="/learn"
+          className="inline-flex items-center gap-2 rounded-md bg-up px-4 py-2 text-sm font-medium text-canvas transition hover:opacity-90"
+        >
+          Start learning →
+        </Link>
+        <Link
+          href="/learn"
+          className="inline-flex items-center gap-2 rounded-md border border-strong px-4 py-2 text-sm text-ink transition hover:bg-surface-2"
+        >
+          Browse lessons
+        </Link>
+      </div>
+
+      <section className="mt-12 grid gap-4 sm:grid-cols-3">
         {pillars.map((p) => (
-          <div key={p.title} className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
-            <h2 className="text-lg font-semibold">{p.title}</h2>
-            <p className="mt-2 text-sm text-slate-400">{p.body}</p>
+          <div
+            key={p.title}
+            className="rounded-lg border border-strong bg-surface p-4"
+          >
+            <h2 className={`text-base font-medium ${p.accent}`}>{p.title}</h2>
+            <p className="mt-2 text-sm text-muted">{p.body}</p>
           </div>
         ))}
       </section>
 
       <section className="mt-12">
-        <h2 className="text-xl font-semibold">Market service status</h2>
+        <h2 className="text-sm font-medium text-muted">Market service</h2>
         {demo ? (
           <div className="mt-3">
-            <p className="text-sm text-slate-400">
+            <p className="text-xs text-muted">
               Connected · provider:{" "}
-              <span className="font-mono text-emerald-400">{demo.provider}</span>
-              {demo.provider === "mock" && " (add Alpaca keys for live data)"}
+              <span className="font-mono text-up">{demo.provider}</span>
+              {demo.provider === "mock" && " — add Alpaca keys for live data"}
             </p>
-            <div className="mt-4 overflow-hidden rounded-xl border border-slate-800">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-900 text-left text-slate-400">
-                  <tr>
-                    <th className="px-4 py-2">Symbol</th>
-                    <th className="px-4 py-2">Price</th>
-                    <th className="px-4 py-2">Bid</th>
-                    <th className="px-4 py-2">Ask</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {demo.quotes.map((q) => (
-                    <tr key={q.symbol} className="border-t border-slate-800">
-                      <td className="px-4 py-2 font-mono">{q.symbol}</td>
-                      <td className="px-4 py-2">${q.price.toFixed(2)}</td>
-                      <td className="px-4 py-2 text-slate-400">${q.bid.toFixed(2)}</td>
-                      <td className="px-4 py-2 text-slate-400">${q.ask.toFixed(2)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="mt-3 overflow-hidden rounded-lg border border-strong bg-surface">
+              {demo.quotes.map((q, i) => (
+                <div
+                  key={q.symbol}
+                  className={`flex items-center justify-between px-4 py-3 ${
+                    i > 0 ? "border-t border-hairline" : ""
+                  }`}
+                >
+                  <span className="font-mono text-sm">{q.symbol}</span>
+                  <div className="flex items-center gap-6 font-mono text-sm">
+                    <span>${q.price.toFixed(2)}</span>
+                    <span className="text-faint">
+                      ${q.bid.toFixed(2)} / ${q.ask.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         ) : (
-          <p className="mt-3 rounded-lg border border-amber-900/50 bg-amber-950/30 p-4 text-sm text-amber-300">
+          <p className="mt-3 rounded-md border border-streak/40 bg-streak/10 p-4 text-sm text-streak">
             Market service not reachable. Start it with{" "}
             <code className="font-mono">uvicorn app.main:app --port 8000</code> in{" "}
             <code className="font-mono">market-service/</code>, then reload.
@@ -87,9 +114,8 @@ export default async function Home() {
         )}
       </section>
 
-      <footer className="mt-16 border-t border-slate-800 pt-6 text-xs text-slate-500">
-        Educational only. Not financial advice. All trading is simulated (paper).
-        See <code className="font-mono">docs/ROADMAP.md</code> for what's next.
+      <footer className="mt-16 flex items-center gap-2 border-t border-hairline pt-6 text-xs text-faint">
+        Educational only · paper trading only · not financial advice.
       </footer>
     </main>
   );
