@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { TradingProvider, useTrading } from "@/lib/trading/useTrading";
 import { equity, unrealizedPnL } from "@/lib/trading/ledger";
 import type { OrderSide, OrderType } from "@/lib/trading/schema";
@@ -153,7 +154,17 @@ function OrderTicket({ onPlaced }: { onPlaced: () => void }) {
 
   return (
     <section className="rounded-lg border border-learn/30 bg-learn/5 p-5">
-      <h2 className="text-sm font-medium text-ink">Place an order</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-medium text-ink">Place an order</h2>
+        {symbol.trim() && (
+          <Link
+            href={`/symbol/${encodeURIComponent(symbol.trim().toUpperCase())}`}
+            className="text-xs text-learn transition hover:opacity-80"
+          >
+            View {symbol.trim().toUpperCase()} chart →
+          </Link>
+        )}
+      </div>
       <form onSubmit={submit} className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <input value={symbol} onChange={(e) => setSymbol(e.target.value)} placeholder="AAPL" aria-label="Symbol" className={`${inputCls} uppercase`} />
         <select value={side} onChange={(e) => setSide(e.target.value as OrderSide)} aria-label="Side" className={inputCls}>
