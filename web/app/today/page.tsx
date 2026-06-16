@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAllQuestions } from "@/lib/quiz";
 import { DailyToday } from "@/components/DailyToday";
+import { AuthControls } from "@/components/AuthControls";
 
 export const metadata = {
   title: "Today — Stock Market Explainer",
@@ -24,6 +25,8 @@ export default function TodayPage() {
       </p>
 
       <DailyToday allQuestions={allQuestions} />
+
+      <AuthControls />
 
       <footer className="mt-16 border-t border-hairline pt-6 text-xs text-faint">
         Educational only · paper trading only · not financial advice.
