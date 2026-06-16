@@ -2,11 +2,10 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { checkAnswer } from "@/lib/quiz/check";
+import { QuestionRunner } from "@/components/QuestionRunner";
 import { isChoiceQuestion, type ChoiceQuestion, type Question } from "@/lib/quiz/types";
 import { useProgress } from "@/lib/progress/useProgress";
 import { MASTERY_SCORE, PASS_SCORE } from "@/lib/progress/schema";
-import { inline } from "@/lib/inline";
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -28,7 +27,7 @@ export function QuizCard({
   questions: Question[];
   next?: { slug: string; title: string } | null;
 }) {
-  const { recordQuizAttempt } = useProgress();
+  const { recordQuizAttempt, recordReview } = useProgress();
   // Stable for the component's life; the UI only renders single-answer choice types.
   const pool = useMemo(
     () => questions.filter(isChoiceQuestion) as ChoiceQuestion[],
@@ -37,45 +36,20 @@ export function QuizCard({
 
   const [phase, setPhase] = useState<Phase>("intro");
   const [order, setOrder] = useState<ChoiceQuestion[]>([]);
-  const [idx, setIdx] = useState(0);
-  const [selected, setSelected] = useState<string | null>(null);
-  const [revealed, setRevealed] = useState(false);
-  const [correctCount, setCorrectCount] = useState(0);
   const [finalScore, setFinalScore] = useState(0);
 
   if (pool.length === 0) return null;
 
   function start() {
-    // Shuffle only on this click (post-mount) so SSR/first render stay deterministic.
-    setOrder(shuffle(pool).map((q) => ({ ...q, choices: shuffle(q.choices) })));
-    setIdx(0);
-    setSelected(null);
-    setRevealed(false);
-    setCorrectCount(0);
+    setOrder(shuffle(pool)); // question order; QuestionRunner shuffles each question's choices
     setPhase("answering");
   }
 
-  const q = order[idx];
-  const result = revealed && q ? checkAnswer(q, selected ?? "") : null;
-  const isLast = idx === order.length - 1;
-
-  function check() {
-    if (selected == null || !q || revealed) return; // ignore re-entry once revealed
-    if (checkAnswer(q, selected).correct) setCorrectCount((c) => c + 1);
-    setRevealed(true);
-  }
-
-  function advance() {
-    if (isLast) {
-      const score = Math.min(1, Math.max(0, correctCount / order.length));
-      recordQuizAttempt(lessonSlug, score);
-      setFinalScore(score);
-      setPhase("results");
-    } else {
-      setIdx((i) => i + 1);
-      setSelected(null);
-      setRevealed(false);
-    }
+  function complete(correctCount: number, total: number) {
+    const score = total > 0 ? Math.min(1, Math.max(0, correctCount / total)) : 0;
+    recordQuizAttempt(lessonSlug, score);
+    setFinalScore(score);
+    setPhase("results");
   }
 
   return (
@@ -85,70 +59,17 @@ export function QuizCard({
           ✓
         </span>
         <h2 className="text-sm font-medium text-ink">Test yourself</h2>
-        {phase === "answering" && (
-          <span className="ml-auto font-mono text-xs text-faint">
-            {idx + 1} / {order.length}
-          </span>
-        )}
       </div>
 
-      {phase === "intro" && (
-        <Intro count={pool.length} onStart={start} />
-      )}
+      {phase === "intro" && <Intro count={pool.length} onStart={start} />}
 
-      {phase === "answering" && q && (
+      {phase === "answering" && (
         <div className="mt-4">
-          <p className="leading-relaxed text-ink">{inline(q.prompt)}</p>
-
-          <div className="mt-4 space-y-2" role="group" aria-label="Answer choices">
-            {q.choices.map((c) => (
-              <ChoiceButton
-                key={c.id}
-                label={c.text}
-                state={choiceState(c.id, q.correctId, selected, revealed)}
-                disabled={revealed}
-                onClick={() => setSelected(c.id)}
-              />
-            ))}
-          </div>
-
-          {result && (
-            <div
-              className={`mt-4 rounded-md border p-4 text-sm leading-relaxed ${
-                result.correct ? "border-up/40 bg-up/10" : "border-down/40 bg-down/10"
-              }`}
-              aria-live="polite"
-            >
-              <p className={`font-medium ${result.correct ? "text-up" : "text-down"}`}>
-                {result.correct ? "Correct" : "Not quite"}
-              </p>
-              {!result.correct && result.selectedFeedback && (
-                <p className="mt-1 text-muted">{inline(result.selectedFeedback)}</p>
-              )}
-              <p className="mt-1 text-muted">{inline(result.explanation)}</p>
-            </div>
-          )}
-
-          <div className="mt-4 flex justify-end">
-            {!revealed ? (
-              <button
-                type="button"
-                onClick={check}
-                disabled={selected == null}
-                className="rounded-md bg-learn px-4 py-2 text-sm font-medium text-canvas transition hover:opacity-90 disabled:opacity-40"
-              >
-                Check
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={advance}
-                className="rounded-md bg-learn px-4 py-2 text-sm font-medium text-canvas transition hover:opacity-90"
-              >
-                {isLast ? "See results" : "Next question"}
-              </button>
-            )}
-          </div>
+          <QuestionRunner
+            questions={order}
+            onAnswer={(qid, correct) => recordReview(qid, correct)}
+            onComplete={complete}
+          />
         </div>
       )}
 
@@ -234,53 +155,5 @@ function Results({
         )}
       </div>
     </div>
-  );
-}
-
-type ChoiceVisualState = "idle" | "selected" | "correct" | "wrong" | "dimmed";
-
-function choiceState(
-  id: string,
-  correctId: string,
-  selected: string | null,
-  revealed: boolean,
-): ChoiceVisualState {
-  if (!revealed) return selected === id ? "selected" : "idle";
-  if (id === correctId) return "correct";
-  if (id === selected) return "wrong";
-  return "dimmed";
-}
-
-const CHOICE_CLASSES: Record<ChoiceVisualState, string> = {
-  idle: "border-strong bg-surface text-ink hover:bg-surface-2",
-  selected: "border-learn bg-learn/10 text-ink",
-  correct: "border-up/60 bg-up/10 text-ink",
-  wrong: "border-down/60 bg-down/10 text-ink",
-  dimmed: "border-strong bg-surface text-faint",
-};
-
-function ChoiceButton({
-  label,
-  state,
-  disabled,
-  onClick,
-}: {
-  label: string;
-  state: ChoiceVisualState;
-  disabled: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      aria-pressed={state === "selected"}
-      className={`flex w-full items-center gap-3 rounded-md border px-3 py-2 text-left text-sm transition ${CHOICE_CLASSES[state]} disabled:cursor-default`}
-    >
-      <span className="flex-1">{inline(label)}</span>
-      {state === "correct" && <span className="font-mono text-xs text-up">✓</span>}
-      {state === "wrong" && <span className="font-mono text-xs text-down">✗</span>}
-    </button>
   );
 }
