@@ -2,10 +2,11 @@ import { Fragment, type ReactNode } from "react";
 import type { Section } from "@/lib/lessons/types";
 import { CandleAnatomy } from "@/components/charts/CandleAnatomy";
 
-// Tiny inline formatter: turns **bold** and `code` into React nodes.
+// Tiny inline formatter: turns **bold**, *italic*, and `code` into React nodes.
 // Intentionally minimal — lesson prose only needs emphasis and inline code.
+// Bold is matched before italic so `**x**` never falls into the single-`*` branch.
 function inline(text: string): ReactNode[] {
-  const tokens = text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).filter(Boolean);
+  const tokens = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g).filter(Boolean);
   return tokens.map((tok, i) => {
     if (tok.startsWith("**") && tok.endsWith("**")) {
       return (
@@ -13,6 +14,9 @@ function inline(text: string): ReactNode[] {
           {tok.slice(2, -2)}
         </strong>
       );
+    }
+    if (tok.startsWith("*") && tok.endsWith("*")) {
+      return <em key={i}>{tok.slice(1, -1)}</em>;
     }
     if (tok.startsWith("`") && tok.endsWith("`")) {
       return (

@@ -45,7 +45,10 @@ export async function chat(
         model,
         messages,
         temperature: opts.temperature ?? 0.2,
-        max_tokens: opts.maxTokens ?? 400,
+        // Generous budget: reasoning models (e.g. Nemotron) spend tokens on
+        // hidden `reasoning_content` first, so a low cap can leave `content`
+        // empty. Keep this high enough that the visible answer survives.
+        max_tokens: opts.maxTokens ?? 1024,
         stream: false,
       }),
       signal: controller.signal,

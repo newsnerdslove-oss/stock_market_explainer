@@ -17,6 +17,8 @@ export interface Chunk {
 
 export interface RankedChunk extends Chunk {
   score: number;
+  /** How many distinct query terms this chunk matched (in body or title). */
+  matched: number;
 }
 
 const STOPWORDS = new Set([
@@ -60,7 +62,7 @@ export function buildCorpus(lessons: Lesson[] = getAllLessons()): Chunk[] {
   return chunks;
 }
 
-function tokenize(s: string): string[] {
+export function tokenize(s: string): string[] {
   return (s.toLowerCase().match(/[a-z0-9]+/g) ?? []).filter(
     (w) => w.length > 1 && !STOPWORDS.has(w),
   );
@@ -96,12 +98,16 @@ export function retrieve(
     const titleTerms = new Set(tokenize(c.lessonTitle));
 
     let score = 0;
+    let matched = 0;
     for (const q of qTerms) {
-      if (tf.has(q)) score += (tf.get(q) ?? 0) * idf(q);
-      if (titleTerms.has(q)) score += 1.5 * idf(q); // title relevance
+      const inBody = tf.has(q);
+      const inTitle = titleTerms.has(q);
+      if (inBody) score += (tf.get(q) ?? 0) * idf(q);
+      if (inTitle) score += 1.5 * idf(q); // title relevance
+      if (inBody || inTitle) matched += 1;
     }
     if (currentSlug && c.lessonSlug === currentSlug) score *= 1.25; // local boost
-    return { ...c, score };
+    return { ...c, score, matched };
   });
 
   return ranked

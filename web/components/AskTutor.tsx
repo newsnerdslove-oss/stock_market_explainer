@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 interface Source {
   slug: string;
@@ -10,6 +10,7 @@ interface TutorResponse {
   answer: string;
   sources: Source[];
   mode: "llm" | "retrieval" | "none";
+  llmStatus?: "off" | "unreachable";
 }
 
 // Inline "ask a question" helper shown on each lesson. Posts to /api/tutor,
@@ -20,10 +21,19 @@ export function AskTutor({ slug }: { slug: string }) {
   const [loading, setLoading] = useState(false);
   const [res, setRes] = useState<TutorResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Guards against races: a newer request aborts the previous fetch, and any
+  // response from a superseded request (by id) is ignored.
+  const reqId = useRef(0);
+  const inFlight = useRef<AbortController | null>(null);
 
   async function ask(q: string) {
     const query = q.trim();
-    if (!query || loading) return;
+    if (!query) return;
+    inFlight.current?.abort();
+    const controller = new AbortController();
+    inFlight.current = controller;
+    const id = ++reqId.current;
+
     setLoading(true);
     setError(null);
     setRes(null);
@@ -32,13 +42,16 @@ export function AskTutor({ slug }: { slug: string }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: query, slug }),
+        signal: controller.signal,
       });
+      if (id !== reqId.current) return; // superseded by a newer request
       if (!r.ok) throw new Error(`Tutor error ${r.status}`);
       setRes(await r.json());
-    } catch {
+    } catch (e) {
+      if (id !== reqId.current || (e as Error)?.name === "AbortError") return;
       setError("Couldn't reach the tutor. Is the model running?");
     } finally {
-      setLoading(false);
+      if (id === reqId.current) setLoading(false);
     }
   }
 
@@ -78,21 +91,27 @@ export function AskTutor({ slug }: { slug: string }) {
         {suggestions.map((s) => (
           <button
             key={s}
+            type="button"
+            disabled={loading}
             onClick={() => {
               setQuestion(s);
               ask(s);
             }}
-            className="rounded-full border border-strong px-3 py-1 text-xs text-muted transition hover:text-ink"
+            className="rounded-full border border-strong px-3 py-1 text-xs text-muted transition hover:text-ink disabled:opacity-40"
           >
             {s}
           </button>
         ))}
       </div>
 
-      {error && <p className="mt-4 text-sm text-down">{error}</p>}
+      {error && (
+        <p className="mt-4 text-sm text-down" role="alert">
+          {error}
+        </p>
+      )}
 
       {res && (
-        <div className="mt-4 rounded-md border border-hairline bg-surface p-4">
+        <div className="mt-4 rounded-md border border-hairline bg-surface p-4" aria-live="polite">
           <p className="whitespace-pre-line text-sm leading-relaxed text-muted">{res.answer}</p>
           {res.sources.length > 0 && (
             <p className="mt-3 text-xs text-faint">
@@ -109,7 +128,9 @@ export function AskTutor({ slug }: { slug: string }) {
           )}
           {res.mode === "retrieval" && (
             <p className="mt-2 text-xs text-faint">
-              Showing lesson text directly — the tutor model isn't connected.
+              {res.llmStatus === "unreachable"
+                ? "The tutor model is configured but unreachable — showing lesson text instead."
+                : "Showing lesson text directly — the tutor model isn't connected."}
             </p>
           )}
         </div>

@@ -2,7 +2,7 @@
 // self-hosted model to explain it, or (if no model is reachable) return the
 // matched lesson text directly. Either way, answers come from YOUR lessons.
 
-import { retrieve, type RankedChunk } from "@/lib/tutor/retrieval";
+import { retrieve, tokenize, type RankedChunk } from "@/lib/tutor/retrieval";
 import { chat, tutorConfig, type ChatMessage } from "@/lib/tutor/llm";
 
 export interface TutorSource {
@@ -15,6 +15,11 @@ export interface TutorAnswer {
   sources: TutorSource[];
   /** "llm" = answered by the self-hosted model; "retrieval" = matched text only. */
   mode: "llm" | "retrieval" | "none";
+  /**
+   * Why the model wasn't used on a "retrieval" answer: "off" = not configured,
+   * "unreachable" = configured but the call failed. Lets the UI explain accurately.
+   */
+  llmStatus?: "off" | "unreachable";
 }
 
 const SYSTEM_PROMPT = [
@@ -56,7 +61,8 @@ export async function answerQuestion(
     .join("\n\n");
 
   // Preferred path: let the self-hosted model explain, grounded on the excerpts.
-  if (tutorConfig().enabled) {
+  const cfg = tutorConfig();
+  if (cfg.enabled) {
     const messages: ChatMessage[] = [
       { role: "system", content: SYSTEM_PROMPT },
       { role: "user", content: `Question: ${q}\n\nLesson excerpts:\n${context}` },
@@ -65,13 +71,21 @@ export async function answerQuestion(
     if (reply) return { answer: reply, sources, mode: "llm" };
   }
 
-  // Fallback: no model reachable — hand back the most relevant lesson text.
+  // Fallback: hand back the most relevant lesson text. When the top match is
+  // weak (only one query term hit, on a multi-word question), hedge the wording
+  // so an incidental keyword match doesn't read as a confident answer.
   const best = chunks[0];
+  const strongMatch = best.matched >= 2 || tokenize(q).length <= 1;
+  const answer = strongMatch
+    ? `Here's what your lessons say:\n\n"${best.text}"\n\n` +
+      `Open "${best.lessonTitle}" to read it in context.`
+    : `I'm not certain that's covered yet, but this looks related — from "${best.lessonTitle}":\n\n` +
+      `"${best.text}"\n\nOpen the lesson to read it in full context.`;
+
   return {
-    answer:
-      `Here's what your lessons say:\n\n"${best.text}"\n\n` +
-      `Open "${best.lessonTitle}" to read it in context.`,
+    answer,
     sources,
     mode: "retrieval",
+    llmStatus: cfg.enabled ? "unreachable" : "off",
   };
 }
