@@ -8,7 +8,9 @@
       "Bash(command -v brew)",
       "Bash(brew --version)",
       "Bash(sw_vers)",
-      "Bash(brew install *)"
+      "Bash(brew install *)",
+      "Bash(echo \"---exit $?---\")",
+      "Bash(git check-ignore *)"
     ]
   }
 }
