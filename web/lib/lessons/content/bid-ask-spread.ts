@@ -4,6 +4,8 @@ export const lesson: Lesson = {
   slug: "bid-ask-spread",
   title: "Bid, ask, and the spread",
   level: 1,
+  moduleId: "markets-quotes-orders",
+  moduleOrder: 1,
   summary: "Every quote is really two prices — here's why that gap matters.",
   estMinutes: 4,
   sections: [

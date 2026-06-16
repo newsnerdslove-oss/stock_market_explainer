@@ -1,4 +1,5 @@
 import type { Lesson } from "@/lib/lessons/types";
+import { MODULES, TRACKS, moduleById } from "@/lib/lessons/taxonomy";
 import { lesson as whatIsACandle } from "@/lib/lessons/content/what-is-a-candle";
 import { lesson as lineVsCandle } from "@/lib/lessons/content/line-vs-candle";
 import { lesson as bidAskSpread } from "@/lib/lessons/content/bid-ask-spread";
@@ -22,6 +23,25 @@ export function getAllLessons(): Lesson[] {
 
 export function getLesson(slug: string): Lesson | undefined {
   return lessons.find((l) => l.slug === slug);
+}
+
+/**
+ * Lessons in curriculum order: by track order, then module order, then the
+ * lesson's order within its module. Used for prev/next sequencing across the
+ * whole curriculum (the Learn list groups by module for display).
+ */
+export function getOrderedLessons(): Lesson[] {
+  const trackOrder = new Map(TRACKS.map((t) => [t.id, t.order]));
+  const moduleOrder = new Map(MODULES.map((m) => [m.id, m.order]));
+  return [...lessons].sort((a, b) => {
+    const ta = trackOrder.get(moduleById[a.moduleId].trackId) ?? 0;
+    const tb = trackOrder.get(moduleById[b.moduleId].trackId) ?? 0;
+    if (ta !== tb) return ta - tb;
+    const ma = moduleOrder.get(a.moduleId) ?? 0;
+    const mb = moduleOrder.get(b.moduleId) ?? 0;
+    if (ma !== mb) return ma - mb;
+    return a.moduleOrder - b.moduleOrder;
+  });
 }
 
 export type { Lesson } from "@/lib/lessons/types";

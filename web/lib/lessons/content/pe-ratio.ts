@@ -4,6 +4,8 @@ export const lesson: Lesson = {
   slug: "pe-ratio",
   title: "The P/E ratio",
   level: 2,
+  moduleId: "markets-valuation",
+  moduleOrder: 1,
   summary: "The most-quoted valuation number — what it means and where it lies.",
   estMinutes: 5,
   sections: [

@@ -4,6 +4,8 @@ export const lesson: Lesson = {
   slug: "what-is-a-candle",
   title: "What is a candlestick?",
   level: 1,
+  moduleId: "markets-reading-price",
+  moduleOrder: 1,
   summary: "Read a single candle — the four prices it packs into one shape.",
   estMinutes: 4,
   sections: [
