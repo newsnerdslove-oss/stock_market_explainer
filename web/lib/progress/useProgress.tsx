@@ -72,26 +72,59 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!hydrated || !supabaseConfigured()) return; // localStorage-only mode
+    const supabase = createClient();
+    supabaseRef.current = supabase;
     let cancelled = false;
-    (async () => {
-      const supabase = createClient();
-      const uid = await ensureSession(supabase); // anonymous sign-in if no session
-      if (cancelled || !uid) return;
-      supabaseRef.current = supabase;
+    let initialSynced = false;
+
+    // Load a user's server progress into state. seedFromLocal=true (first anon
+    // session) pushes the guest's localStorage up if the server is empty; false
+    // (a login/account switch) loads that account's own data, even if empty.
+    const syncForUser = async (uid: string, seedFromLocal: boolean) => {
       userIdRef.current = uid;
       const server = await loadServerProgress(supabase, uid);
       if (cancelled) return;
       if (server && hasData(server)) {
-        setProgress(server); // returning user: server is the source of truth
-      } else {
-        // new server user: seed from whatever's already in localStorage
+        setProgress(server);
+      } else if (seedFromLocal) {
         await saveServerProgress(supabase, uid, { ...progressRef.current, userId: uid });
         if (!cancelled) setProgress((p) => ({ ...p, userId: uid }));
+      } else {
+        const fresh = defaultProgress();
+        fresh.userId = uid;
+        fresh.tz = progressRef.current.tz || resolvedTz();
+        setProgress(fresh);
       }
-      if (!cancelled) setServerReady(true);
+    };
+
+    (async () => {
+      const uid = await ensureSession(supabase); // anonymous sign-in if no session
+      if (cancelled || !uid) return;
+      await syncForUser(uid, true);
+      if (cancelled) return;
+      initialSynced = true;
+      setServerReady(true);
     })();
+
+    // React to login / logout / account-claim after the initial sync.
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!initialSynced || cancelled) return; // ignore the initial-session events
+      const uid = session?.user?.id;
+      if (!uid) {
+        // signed out -> drop back to a fresh anonymous guest
+        void (async () => {
+          const newUid = await ensureSession(supabase);
+          if (newUid && !cancelled) await syncForUser(newUid, false);
+        })();
+      } else if (uid !== userIdRef.current) {
+        void syncForUser(uid, false); // logged in as a different (real) account
+      }
+      // same uid (e.g. claim emits USER_UPDATED) -> data unchanged, no reload
+    });
+
     return () => {
       cancelled = true;
+      sub.subscription.unsubscribe();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated]);
