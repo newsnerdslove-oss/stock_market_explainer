@@ -82,6 +82,29 @@ import { lesson as drawdown } from "@/lib/lessons/content/risk/drawdown";
 import { lesson as diversification } from "@/lib/lessons/content/risk/diversification";
 import { lesson as lossRecoveryMath } from "@/lib/lessons/content/risk/loss-recovery-math";
 
+// 200-level: Market structure.
+import { lesson as orderBookAndDepth } from "@/lib/lessons/content/market-structure/order-book-and-market-depth";
+import { lesson as howMarketMakersWork } from "@/lib/lessons/content/market-structure/how-market-makers-work";
+import { lesson as exchangesEcnsDarkPools } from "@/lib/lessons/content/market-structure/exchanges-ecns-dark-pools";
+import { lesson as clearingAndSettlement } from "@/lib/lessons/content/market-structure/clearing-and-settlement";
+import { lesson as extendedHoursMechanics } from "@/lib/lessons/content/market-structure/extended-hours-trading-mechanics";
+import { lesson as haltsAndCircuitBreakers } from "@/lib/lessons/content/market-structure/trading-halts-and-circuit-breakers";
+
+// 200-level: Derivatives intro.
+import { lesson as whatIsADerivative } from "@/lib/lessons/content/derivatives/what-is-a-derivative";
+import { lesson as callsAndPuts } from "@/lib/lessons/content/derivatives/calls-and-puts";
+import { lesson as optionPremiumAndLeverage } from "@/lib/lessons/content/derivatives/option-premium-and-leverage";
+import { lesson as futuresContracts } from "@/lib/lessons/content/derivatives/futures-contracts";
+
+// 200-level: Crypto (wallets, DeFi & on-chain).
+import { lesson as walletsInDepth } from "@/lib/lessons/content/crypto-200/wallets-in-depth";
+import { lesson as onChainVsExchangePrice } from "@/lib/lessons/content/crypto-200/on-chain-vs-exchange-price";
+import { lesson as stablecoins } from "@/lib/lessons/content/crypto-200/stablecoins";
+import { lesson as gasAndNetworkFees } from "@/lib/lessons/content/crypto-200/gas-and-network-fees";
+import { lesson as dexVsCex } from "@/lib/lessons/content/crypto-200/dex-vs-cex";
+import { lesson as staking } from "@/lib/lessons/content/crypto-200/staking";
+import { lesson as readingOnChainData } from "@/lib/lessons/content/crypto-200/reading-on-chain-data";
+
 // The single source of truth for the lesson bank. Display order is computed from
 // the taxonomy (track → module → moduleOrder via getOrderedLessons); this array's
 // order only needs to contain every lesson. Grouped by module for readability.
@@ -156,6 +179,26 @@ export const lessons: Lesson[] = [
   drawdown,
   diversification,
   lossRecoveryMath,
+  // Market structure (200)
+  orderBookAndDepth,
+  howMarketMakersWork,
+  exchangesEcnsDarkPools,
+  clearingAndSettlement,
+  extendedHoursMechanics,
+  haltsAndCircuitBreakers,
+  // Derivatives intro (200)
+  whatIsADerivative,
+  callsAndPuts,
+  optionPremiumAndLeverage,
+  futuresContracts,
+  // Crypto 200
+  walletsInDepth,
+  onChainVsExchangePrice,
+  stablecoins,
+  gasAndNetworkFees,
+  dexVsCex,
+  staking,
+  readingOnChainData,
 ];
 
 export function getAllLessons(): Lesson[] {

@@ -81,6 +81,29 @@ import { questions as drawdown } from "@/lib/quiz/content/risk/drawdown";
 import { questions as diversification } from "@/lib/quiz/content/risk/diversification";
 import { questions as lossRecoveryMath } from "@/lib/quiz/content/risk/loss-recovery-math";
 
+// 200-level: Market structure.
+import { questions as orderBookAndDepth } from "@/lib/quiz/content/market-structure/order-book-and-market-depth";
+import { questions as howMarketMakersWork } from "@/lib/quiz/content/market-structure/how-market-makers-work";
+import { questions as exchangesEcnsDarkPools } from "@/lib/quiz/content/market-structure/exchanges-ecns-dark-pools";
+import { questions as clearingAndSettlement } from "@/lib/quiz/content/market-structure/clearing-and-settlement";
+import { questions as extendedHoursMechanics } from "@/lib/quiz/content/market-structure/extended-hours-trading-mechanics";
+import { questions as haltsAndCircuitBreakers } from "@/lib/quiz/content/market-structure/trading-halts-and-circuit-breakers";
+
+// 200-level: Derivatives intro.
+import { questions as whatIsADerivative } from "@/lib/quiz/content/derivatives/what-is-a-derivative";
+import { questions as callsAndPuts } from "@/lib/quiz/content/derivatives/calls-and-puts";
+import { questions as optionPremiumAndLeverage } from "@/lib/quiz/content/derivatives/option-premium-and-leverage";
+import { questions as futuresContracts } from "@/lib/quiz/content/derivatives/futures-contracts";
+
+// 200-level: Crypto (wallets, DeFi & on-chain).
+import { questions as walletsInDepth } from "@/lib/quiz/content/crypto-200/wallets-in-depth";
+import { questions as onChainVsExchangePrice } from "@/lib/quiz/content/crypto-200/on-chain-vs-exchange-price";
+import { questions as stablecoins } from "@/lib/quiz/content/crypto-200/stablecoins";
+import { questions as gasAndNetworkFees } from "@/lib/quiz/content/crypto-200/gas-and-network-fees";
+import { questions as dexVsCex } from "@/lib/quiz/content/crypto-200/dex-vs-cex";
+import { questions as staking } from "@/lib/quiz/content/crypto-200/staking";
+import { questions as readingOnChainData } from "@/lib/quiz/content/crypto-200/reading-on-chain-data";
+
 // Single source of truth for the question bank, keyed by lesson slug. Mirrors
 // lib/lessons/index.ts; later phases swap this for Supabase-backed queries while
 // keeping the same Question shape and helper signatures.
@@ -155,6 +178,26 @@ const byLesson: Record<string, Question[]> = {
   drawdown,
   diversification,
   "loss-recovery-math": lossRecoveryMath,
+  // Market structure (200)
+  "order-book-and-market-depth": orderBookAndDepth,
+  "how-market-makers-work": howMarketMakersWork,
+  "exchanges-ecns-dark-pools": exchangesEcnsDarkPools,
+  "clearing-and-settlement": clearingAndSettlement,
+  "extended-hours-trading-mechanics": extendedHoursMechanics,
+  "trading-halts-and-circuit-breakers": haltsAndCircuitBreakers,
+  // Derivatives intro (200)
+  "what-is-a-derivative": whatIsADerivative,
+  "calls-and-puts": callsAndPuts,
+  "option-premium-and-leverage": optionPremiumAndLeverage,
+  "futures-contracts": futuresContracts,
+  // Crypto 200
+  "wallets-in-depth": walletsInDepth,
+  "on-chain-vs-exchange-price": onChainVsExchangePrice,
+  stablecoins,
+  "gas-and-network-fees": gasAndNetworkFees,
+  "dex-vs-cex": dexVsCex,
+  staking,
+  "reading-on-chain-data": readingOnChainData,
 };
 
 /** Questions for one lesson's quiz, in authored order. Empty if none exist. */
