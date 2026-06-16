@@ -3,6 +3,8 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { loadProgress, saveProgress } from "@/lib/progress/storage";
 import { defaultProgress, PASS_SCORE, type Progress, type QuizProgress } from "@/lib/progress/schema";
+import { grade, newItem, todayInTz } from "@/lib/review/schedule";
+import { completeSession } from "@/lib/progress/streak";
 
 interface ProgressContextValue {
   progress: Progress;
@@ -14,17 +16,32 @@ interface ProgressContextValue {
   hydrated: boolean;
   /** Record a finished quiz attempt for a lesson. `score` is the fraction correct (0..1). */
   recordQuizAttempt: (lessonSlug: string, score: number) => void;
+  /** Record one answer to a question into the spaced-repetition schedule. */
+  recordReview: (questionId: string, correct: boolean) => void;
+  /** Mark today's daily review session complete (advances the streak). */
+  completeDailySession: () => void;
 }
 
 const ProgressContext = createContext<ProgressContextValue | null>(null);
+
+function resolvedTz(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  } catch {
+    return "UTC";
+  }
+}
 
 export function ProgressProvider({ children }: { children: ReactNode }) {
   const [progress, setProgress] = useState<Progress>(defaultProgress);
   const [hydrated, setHydrated] = useState(false);
 
   // Load the persisted value once, after mount (never during render/SSR).
+  // Stamp the local tz on first load so "today" is computed on the right calendar day.
   useEffect(() => {
-    setProgress(loadProgress());
+    const loaded = loadProgress();
+    if (!loaded.tz) loaded.tz = resolvedTz();
+    setProgress(loaded);
     setHydrated(true);
   }, []);
 
@@ -51,16 +68,45 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         lastAt: now,
         passedAt: prior?.passedAt ?? (passNow ? now : null),
       };
+      return { ...prev, quizzes: { ...prev.quizzes, [lessonSlug]: next }, updatedAt: now };
+    });
+  }, []);
+
+  const recordReview = useCallback((questionId: string, correct: boolean) => {
+    if (!hydratedRef.current) return;
+    setProgress((prev) => {
+      const tz = prev.tz || resolvedTz();
+      const today = todayInTz(tz);
+      const existing = prev.review[questionId] ?? newItem(today);
+      const updated = grade(existing, correct, today);
       return {
         ...prev,
-        quizzes: { ...prev.quizzes, [lessonSlug]: next },
-        updatedAt: now,
+        tz,
+        review: { ...prev.review, [questionId]: updated },
+        updatedAt: new Date().toISOString(),
+      };
+    });
+  }, []);
+
+  const completeDailySession = useCallback(() => {
+    if (!hydratedRef.current) return;
+    setProgress((prev) => {
+      const tz = prev.tz || resolvedTz();
+      const today = todayInTz(tz);
+      return {
+        ...prev,
+        tz,
+        streak: completeSession(prev.streak, today),
+        lastSession: today,
+        updatedAt: new Date().toISOString(),
       };
     });
   }, []);
 
   return (
-    <ProgressContext.Provider value={{ progress, hydrated, recordQuizAttempt }}>
+    <ProgressContext.Provider
+      value={{ progress, hydrated, recordQuizAttempt, recordReview, completeDailySession }}
+    >
       {children}
     </ProgressContext.Provider>
   );

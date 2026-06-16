@@ -4,14 +4,17 @@
 // entry point, and the whole thing is one payload to POST to the server on first
 // login (Phase 3). The collections are keyed `Record`s — i.e. "rows by primary
 // key" — so mapping them to Supabase tables later is an `Object.entries()` loop,
-// not a redesign. Phase 2b adds `review` (Leitner) and `streak` here behind a
-// schema-version bump; this file is the one place that knows the shape.
+// not a redesign. v2 (Phase 2b) adds `review` (Leitner spaced repetition),
+// `streak`, and `tz`; this file is the one place that knows the shape.
 
-export const CURRENT_VERSION = 1;
+export const CURRENT_VERSION = 2;
 
 /** Mastery thresholds (fractions of the quiz answered correctly). */
 export const PASS_SCORE = 0.8;
 export const MASTERY_SCORE = 0.9;
+
+/** Front-loaded streak freezes (missed days a streak can survive). Capped here. */
+export const MAX_FREEZES = 2;
 
 /** Result state for one lesson's quiz. Keyed by lessonSlug in `quizzes`. */
 export interface QuizProgress {
@@ -27,14 +30,50 @@ export interface QuizProgress {
   passedAt: string | null;
 }
 
+/** Leitner spaced-repetition state for one question. Keyed by question id in `review`. */
+export interface ReviewItem {
+  /** Leitner box 1..5; higher = longer interval. */
+  box: number;
+  /** Local-calendar date (YYYY-MM-DD) the item next becomes due. */
+  due: string;
+  /** Local date last reviewed, or null if only just created. */
+  last: string | null;
+  /** Total times reviewed. */
+  reps: number;
+  /** Total times answered wrong (surfaces chronically-weak items). */
+  lapses: number;
+}
+
+export interface StreakState {
+  /** Current consecutive-day streak. */
+  current: number;
+  /** Best streak ever reached. */
+  longest: number;
+  /** Local date (YYYY-MM-DD) of the last completed daily session, or null. */
+  lastActiveDate: string | null;
+  /** Remaining streak freezes (0..MAX_FREEZES). */
+  freezes: number;
+}
+
 export interface Progress {
   schemaVersion: number;
   /** null while a guest; set on login — the join key for the server merge. */
   userId: string | null;
   /** Per-lesson quiz results, keyed by lessonSlug. */
   quizzes: Record<string, QuizProgress>;
+  /** Per-question spaced-repetition state, keyed by question id. */
+  review: Record<string, ReviewItem>;
+  streak: StreakState;
+  /** IANA time zone, so "today" is computed on the learner's local calendar day. */
+  tz: string;
+  /** Local date of the last completed daily review session, or null. */
+  lastSession: string | null;
   /** ISO timestamp of the last mutation — the last-write-wins merge key. */
   updatedAt: string;
+}
+
+export function defaultStreak(): StreakState {
+  return { current: 0, longest: 0, lastActiveDate: null, freezes: MAX_FREEZES };
 }
 
 export function defaultProgress(): Progress {
@@ -42,25 +81,33 @@ export function defaultProgress(): Progress {
     schemaVersion: CURRENT_VERSION,
     userId: null,
     quizzes: {},
+    review: {},
+    streak: defaultStreak(),
+    tz: "",
+    lastSession: null,
     updatedAt: "1970-01-01T00:00:00.000Z",
   };
 }
 
 /**
  * Bring any persisted blob up to the current shape. Spreading over
- * `defaultProgress()` backfills missing fields, so partial/corrupt data degrades
- * to sane defaults instead of crashing. Add a branch per version as the shape
- * evolves (e.g. v1 → v2 introduces `review`/`streak` for Phase 2b).
+ * `defaultProgress()` backfills missing fields, so partial/corrupt data — and a
+ * v1 blob that predates `review`/`streak` — degrades to sane defaults instead of
+ * crashing. Nested record/object fields are merged field-by-field so a missing
+ * or non-object value falls back rather than wiping the default.
  */
 export function migrate(raw: unknown): Progress {
   const base = defaultProgress();
   if (!raw || typeof raw !== "object") return base;
   const s = raw as Partial<Progress>;
-  // (no historical versions yet — future: if (s.schemaVersion === 1) s = v1_to_v2(s))
+  const obj = <T,>(v: unknown, fallback: T): T =>
+    v && typeof v === "object" && !Array.isArray(v) ? { ...fallback, ...(v as object) } : fallback;
   return {
     ...base,
     ...s,
-    quizzes: { ...base.quizzes, ...(s.quizzes ?? {}) },
+    quizzes: obj(s.quizzes, base.quizzes),
+    review: obj(s.review, base.review),
+    streak: obj(s.streak, base.streak),
     schemaVersion: CURRENT_VERSION,
   };
 }

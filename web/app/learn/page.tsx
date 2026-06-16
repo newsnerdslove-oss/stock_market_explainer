@@ -21,9 +21,14 @@ export default function LearnIndex() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
-      <Link href="/" className="text-sm text-muted transition hover:text-ink">
-        ← Home
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link href="/" className="text-sm text-muted transition hover:text-ink">
+          ← Home
+        </Link>
+        <Link href="/today" className="text-sm text-learn transition hover:opacity-80">
+          Daily review →
+        </Link>
+      </div>
 
       <h1 className="mt-4 text-4xl font-medium tracking-tight">Learn</h1>
 
