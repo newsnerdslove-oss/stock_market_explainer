@@ -29,6 +29,13 @@ const SYSTEM_PROMPT = [
   "them to the most relevant lesson instead of guessing.",
   "Keep answers short, plain, and encouraging. Define jargon in everyday words.",
   "Never give financial advice or tell the student what to buy, sell, or trade.",
+  // Disable the model's chain-of-thought for these short, RAG-grounded answers.
+  // Benchmarked 2026-06-16 (bench/): `/no_think` cut time-to-first-answer-token
+  // ~5x (0.51s -> 0.10s) on our 15-task suite with no real accuracy loss.
+  // NOTE: this Nemotron-Omni build IGNORES its own "detailed thinking off"
+  // directive — only `/no_think` (Qwen-style) suppresses reasoning here. It's a
+  // harmless no-op for models that don't recognize it.
+  "/no_think",
 ].join(" ");
 
 function uniqueSources(chunks: RankedChunk[]): TutorSource[] {
