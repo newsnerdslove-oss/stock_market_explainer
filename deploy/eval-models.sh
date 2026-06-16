@@ -33,14 +33,20 @@ mfield() { python3 -c "import json;d=json.load(open('$BENCH/models.json'));print
 resolve_path() { ssh_ps "Get-ChildItem -Recurse '$MODELS_BASE' -Filter '$1' -EA SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName" | tr -d '\r' | grep -i '\.gguf$' | head -1; }
 vram_used() { ssh -o ConnectTimeout=12 "$SSH_TGT" "nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits" 2>/dev/null | tr -d '\r' | head -1; }
 served_model() { curl -s -m 10 "http://$HOST:$PORT/v1/models" | python3 -c "import json,sys;print(json.load(sys.stdin)['data'][0]['id'])" 2>/dev/null; }
-# swap-model already polled /health; this confirms the /v1 completion path is
-# serving too, retrying through the brief post-load warmup window.
+# swap-model already polled /health; this confirms /v1/chat/completions serves
+# (HTTP 200), retrying through warmup. We deliberately do NOT require non-empty
+# content: a reasoning model with thinking still on returns 200 with empty
+# content, which is fine here — the bench uses the model's extra_body to disable
+# thinking. (The old content-requiring gate is what wrongly skipped Qwen3.6.)
+http_ok() {
+  code=$(curl -s -m 30 -o /dev/null -w "%{http_code}" "http://$HOST:$PORT/v1/chat/completions" \
+    -H "Content-Type: application/json" \
+    -d "{\"model\":\"$1\",\"messages\":[{\"role\":\"user\",\"content\":\"ok\"}],\"max_tokens\":8}")
+  [ "$code" = "200" ]
+}
 healthcheck() {
   i=1
-  while [ "$i" -le 6 ]; do
-    python3 "$REPO/deploy/healthcheck.py" "$HOST" "$PORT" >/dev/null 2>&1 && return 0
-    sleep 3; i=$((i+1))
-  done
+  while [ "$i" -le 8 ]; do http_ok "$1" && return 0; sleep 3; i=$((i+1)); done
   return 1
 }
 swap_to() { ssh_ps "& '$SWAP_PS1' -Service $SVC -ModelPath '$1' -CtxSize $2 -Port $PORT" | tail -4; return "${PIPESTATUS[0]}"; }
@@ -54,7 +60,7 @@ echo "Production restore target: $RESTORE_PATH (ctx $RESTORE_CTX)"
 restore_prod() {
   echo ""; echo ">> Restoring production model ($RESTORE_KEY) ..."
   swap_to "$RESTORE_PATH" "$RESTORE_CTX" >/dev/null 2>&1
-  if healthcheck; then echo ">> Restored. Now serving: $(served_model)"; else echo ">> !! RESTORE HEALTHCHECK FAILED — investigate the box manually."; fi
+  if healthcheck "$RESTORE_FILE"; then echo ">> Restored. Now serving: $(served_model)"; else echo ">> !! RESTORE HEALTHCHECK FAILED — investigate the box manually."; fi
 }
 trap restore_prod EXIT INT TERM
 
@@ -78,16 +84,19 @@ for key in "${CONTENDERS[@]}"; do
     echo ">> SWAP FAILED for $key (unsupported arch or VRAM overflow). swap-model rolled back; continuing."
     continue
   fi
-  if ! healthcheck; then echo ">> healthcheck failed for $key; skipping."; continue; fi
-  served="$(served_model)"; vram="$(vram_used)"
+  served="$(served_model)"
+  if ! healthcheck "$served"; then echo ">> /v1 not serving for $key after warmup; skipping."; continue; fi
+  vram="$(vram_used)"
   echo ">> Live: $served  | VRAM used: ${vram} MiB"
 
   tmpcfg="$(mktemp "/tmp/evalcfg.${key}.XXXX.json")"
-  python3 - "$tmpcfg" "$key" "$served" "$HOST" "$PORT" "$TUTOR_SYS" <<'PY'
+  python3 - "$tmpcfg" "$key" "$served" "$HOST" "$PORT" "$TUTOR_SYS" "$BENCH/models.json" <<'PY'
 import json,sys
-out,key,served,host,port,sysp=sys.argv[1:7]
-json.dump({"default_system":sysp,"models":[{"key":key,"model":served,
-  "base_url":f"http://{host}:{port}/v1","api_key":"","enabled":True}]}, open(out,"w"), indent=2)
+out,key,served,host,port,sysp,cfgpath=sys.argv[1:8]
+entry=next((m for m in json.load(open(cfgpath))["models"] if m["key"]==key), {})
+model={"key":key,"model":served,"base_url":f"http://{host}:{port}/v1","api_key":"","enabled":True}
+if entry.get("extra_body"): model["extra_body"]=entry["extra_body"]
+json.dump({"default_system":sysp,"models":[model]}, open(out,"w"), indent=2)
 PY
   outroot="$BENCH/results/eval-$key"
   echo ">> Benching grounded suite (runs=2) ..."

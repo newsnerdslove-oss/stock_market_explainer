@@ -32,7 +32,8 @@
       "enabled": false,
       "ctx": 16384,
       "hf_url": "https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/resolve/main/Qwen3.6-35B-A3B-UD-Q5_K_XL.gguf",
-      "note": "Throughput pick. Qwen3.6-35B-A3B MoE (35B total / 3B active), Q5_K_XL 26.6GB. Verify exact filename against the repo tree before download (curl -I). Needs a llama.cpp build new enough for the Qwen3.6 hybrid (Gated DeltaNet) arch."
+      "extra_body": {"chat_template_kwargs": {"enable_thinking": false}},
+      "note": "Throughput pick. Qwen3.6-35B-A3B MoE (35B total / 3B active), Q5_K_XL 26.6GB. Reasoning model: it IGNORES /no_think; disable CoT only via chat_template_kwargs.enable_thinking=false (extra_body) or it burns the whole budget on hidden reasoning and returns empty content."
     },
     {
       "key": "qwen36-dense",
@@ -42,7 +43,8 @@
       "enabled": false,
       "ctx": 16384,
       "hf_url": "https://huggingface.co/unsloth/Qwen3.6-27B-GGUF/resolve/main/Qwen3.6-27B-Q6_K.gguf",
-      "note": "Faithfulness pick. Qwen3.6-27B dense, Q6_K 22.5GB. Dense models often hold the 'answer only from context' instruction tighter. Verify exact filename before download."
+      "extra_body": {"chat_template_kwargs": {"enable_thinking": false}},
+      "note": "Faithfulness pick. Qwen3.6-27B dense, Q6_K 22.5GB. Reasoning model: it IGNORES /no_think; disable CoT only via chat_template_kwargs.enable_thinking=false (extra_body). Verified: enable_thinking=false -> clean answer, reasoning_content empty, finish=stop."
     }
   ]
 }

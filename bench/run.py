@@ -51,6 +51,9 @@ def call_model(model_cfg: dict, messages: list[dict], max_tokens: int,
         "stream": True,
         "stream_options": {"include_usage": True},
     }
+    # Per-model request extras (e.g. {"chat_template_kwargs": {"enable_thinking": false}}
+    # to disable a reasoning model's chain-of-thought — Qwen3.6 ignores /no_think).
+    payload.update(model_cfg.get("extra_body") or {})
     headers = {"Content-Type": "application/json"}
     key = model_cfg.get("api_key", "")
     if key:
