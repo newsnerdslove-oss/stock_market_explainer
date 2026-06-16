@@ -49,6 +49,38 @@ import { questions as crypto247Markets } from "@/lib/quiz/content/crypto/crypto-
 import { questions as cryptoVolatility } from "@/lib/quiz/content/crypto/crypto-volatility";
 import { questions as custodyAndKeys } from "@/lib/quiz/content/crypto/custody-and-keys";
 
+// 200-level: Technical analysis.
+import { questions as movingAverages } from "@/lib/quiz/content/technical/moving-averages-sma-vs-ema";
+import { questions as rsi } from "@/lib/quiz/content/technical/rsi-relative-strength-index";
+import { questions as macd } from "@/lib/quiz/content/technical/macd-moving-average-convergence-divergence";
+import { questions as volumeAnalysis } from "@/lib/quiz/content/technical/volume-analysis-confirmation-obv";
+import { questions as supportResistanceDepth } from "@/lib/quiz/content/technical/support-resistance-depth";
+import { questions as trendlinesAndChannels } from "@/lib/quiz/content/technical/trendlines-and-channels";
+import { questions as candlestickPatterns } from "@/lib/quiz/content/technical/candlestick-patterns-reversal";
+import { questions as chartPatterns } from "@/lib/quiz/content/technical/chart-patterns-measured-moves";
+import { questions as divergence } from "@/lib/quiz/content/technical/divergence-price-vs-indicator";
+import { questions as multiTimeframe } from "@/lib/quiz/content/technical/multi-timeframe-analysis";
+
+// 200-level: Fundamental analysis.
+import { questions as incomeStatement } from "@/lib/quiz/content/fundamental/the-income-statement";
+import { questions as balanceSheet } from "@/lib/quiz/content/fundamental/the-balance-sheet";
+import { questions as cashFlowStatement } from "@/lib/quiz/content/fundamental/the-cash-flow-statement";
+import { questions as peRatioInDepth } from "@/lib/quiz/content/fundamental/pe-ratio-in-depth";
+import { questions as pbAndPsRatios } from "@/lib/quiz/content/fundamental/pb-and-ps-ratios";
+import { questions as dividendMetrics } from "@/lib/quiz/content/fundamental/dividend-metrics-in-depth";
+import { questions as earningsReports } from "@/lib/quiz/content/fundamental/earnings-reports";
+import { questions as marginsAndRoe } from "@/lib/quiz/content/fundamental/margins-and-roe";
+import { questions as growthVsValue } from "@/lib/quiz/content/fundamental/growth-vs-value";
+
+// 200-level: Risk management.
+import { questions as positionSizing } from "@/lib/quiz/content/risk/position-sizing";
+import { questions as riskPerTrade } from "@/lib/quiz/content/risk/risk-per-trade";
+import { questions as stopPlacement } from "@/lib/quiz/content/risk/stop-placement";
+import { questions as riskRewardRatio } from "@/lib/quiz/content/risk/risk-reward-ratio";
+import { questions as drawdown } from "@/lib/quiz/content/risk/drawdown";
+import { questions as diversification } from "@/lib/quiz/content/risk/diversification";
+import { questions as lossRecoveryMath } from "@/lib/quiz/content/risk/loss-recovery-math";
+
 // Single source of truth for the question bank, keyed by lesson slug. Mirrors
 // lib/lessons/index.ts; later phases swap this for Supabase-backed queries while
 // keeping the same Question shape and helper signatures.
@@ -94,6 +126,35 @@ const byLesson: Record<string, Question[]> = {
   "crypto-24-7-markets": crypto247Markets,
   "crypto-volatility": cryptoVolatility,
   "custody-and-keys": custodyAndKeys,
+  // Technical analysis (200)
+  "moving-averages-sma-vs-ema": movingAverages,
+  "rsi-relative-strength-index": rsi,
+  "macd-moving-average-convergence-divergence": macd,
+  "volume-analysis-confirmation-obv": volumeAnalysis,
+  "support-resistance-depth": supportResistanceDepth,
+  "trendlines-and-channels": trendlinesAndChannels,
+  "candlestick-patterns-reversal": candlestickPatterns,
+  "chart-patterns-measured-moves": chartPatterns,
+  "divergence-price-vs-indicator": divergence,
+  "multi-timeframe-analysis": multiTimeframe,
+  // Fundamental analysis (200)
+  "the-income-statement": incomeStatement,
+  "the-balance-sheet": balanceSheet,
+  "the-cash-flow-statement": cashFlowStatement,
+  "pe-ratio-in-depth": peRatioInDepth,
+  "pb-and-ps-ratios": pbAndPsRatios,
+  "dividend-metrics-in-depth": dividendMetrics,
+  "earnings-reports": earningsReports,
+  "margins-and-roe": marginsAndRoe,
+  "growth-vs-value": growthVsValue,
+  // Risk management (200)
+  "position-sizing": positionSizing,
+  "risk-per-trade": riskPerTrade,
+  "stop-placement": stopPlacement,
+  "risk-reward-ratio": riskRewardRatio,
+  drawdown,
+  diversification,
+  "loss-recovery-math": lossRecoveryMath,
 };
 
 /** Questions for one lesson's quiz, in authored order. Empty if none exist. */
