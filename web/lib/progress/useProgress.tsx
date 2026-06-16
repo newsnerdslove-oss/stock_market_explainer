@@ -5,6 +5,9 @@ import { loadProgress, saveProgress } from "@/lib/progress/storage";
 import { defaultProgress, PASS_SCORE, type Progress, type QuizProgress } from "@/lib/progress/schema";
 import { grade, newItem, todayInTz } from "@/lib/review/schedule";
 import { completeSession } from "@/lib/progress/streak";
+import { createClient, supabaseConfigured } from "@/lib/supabase/client";
+import { ensureSession, hasData, loadServerProgress, saveServerProgress } from "@/lib/progress/serverSync";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 interface ProgressContextValue {
   progress: Progress;
@@ -56,6 +59,49 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   // Avoid recording against the empty default before load completes.
   const hydratedRef = useRef(hydrated);
   hydratedRef.current = hydrated;
+
+  // ── Server persistence (Phase 3) ──────────────────────────────────────────
+  // Layered UNDER localStorage: localStorage stays the instant/offline cache;
+  // Supabase is the durable per-user store. Anonymous sign-in gives a real
+  // user_id so progress is theirs from the first quiz (no guest->authed merge).
+  const [serverReady, setServerReady] = useState(false);
+  const supabaseRef = useRef<SupabaseClient | null>(null);
+  const userIdRef = useRef<string | null>(null);
+  const progressRef = useRef(progress);
+  progressRef.current = progress;
+
+  useEffect(() => {
+    if (!hydrated || !supabaseConfigured()) return; // localStorage-only mode
+    let cancelled = false;
+    (async () => {
+      const supabase = createClient();
+      const uid = await ensureSession(supabase); // anonymous sign-in if no session
+      if (cancelled || !uid) return;
+      supabaseRef.current = supabase;
+      userIdRef.current = uid;
+      const server = await loadServerProgress(supabase, uid);
+      if (cancelled) return;
+      if (server && hasData(server)) {
+        setProgress(server); // returning user: server is the source of truth
+      } else {
+        // new server user: seed from whatever's already in localStorage
+        await saveServerProgress(supabase, uid, { ...progressRef.current, userId: uid });
+        if (!cancelled) setProgress((p) => ({ ...p, userId: uid }));
+      }
+      if (!cancelled) setServerReady(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
+
+  // Write-through to the server on every change once synced (best-effort).
+  useEffect(() => {
+    if (serverReady && supabaseRef.current && userIdRef.current) {
+      void saveServerProgress(supabaseRef.current, userIdRef.current, progress);
+    }
+  }, [progress, serverReady]);
 
   const recordQuizAttempt = useCallback((lessonSlug: string, score: number) => {
     if (!hydratedRef.current) return;
