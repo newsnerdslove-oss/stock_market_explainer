@@ -161,6 +161,32 @@ import { questions as leverageAndLiquidationCrypto } from "@/lib/quiz/content/cr
 import { questions as bridgesAndCrossChainRisk } from "@/lib/quiz/content/crypto-300/bridges-and-cross-chain-risk";
 import { questions as cryptoRiskManagement } from "@/lib/quiz/content/crypto-300/crypto-risk-management-and-portfolio";
 
+// 400-level: Advanced options.
+import { questions as optionsStrategyMatrix } from "@/lib/quiz/content/adv-options/options-strategy-matrix";
+import { questions as spreadMathMastery } from "@/lib/quiz/content/adv-options/spread-math-mastery";
+import { questions as multiLegStrategies } from "@/lib/quiz/content/adv-options/multi-leg-strategies";
+import { questions as optionsRulesPositionLimits } from "@/lib/quiz/content/adv-options/options-rules-position-limits";
+import { questions as assignmentExerciseMechanics } from "@/lib/quiz/content/adv-options/assignment-exercise-mechanics";
+import { questions as hedgingWithOptions } from "@/lib/quiz/content/adv-options/hedging-with-options";
+import { questions as indexOptionsLeaps } from "@/lib/quiz/content/adv-options/index-options-leaps";
+import { questions as optionsExamProblems } from "@/lib/quiz/content/adv-options/options-exam-problems";
+
+// 400-level: Suitability & recommendations.
+import { questions as knowYourCustomerRule2090 } from "@/lib/quiz/content/suitability/know-your-customer-rule-2090";
+import { questions as investmentObjectivesRiskReturnTimeHorizon } from "@/lib/quiz/content/suitability/investment-objectives-risk-return-time-horizon";
+import { questions as threeComponentsSuitabilityRule2111 } from "@/lib/quiz/content/suitability/three-components-suitability-rule-2111";
+import { questions as regulationBestInterestFourObligations } from "@/lib/quiz/content/suitability/regulation-best-interest-four-obligations";
+import { questions as fiduciaryVsSuitabilityVsRegBi } from "@/lib/quiz/content/suitability/fiduciary-vs-suitability-vs-reg-bi";
+import { questions as formCrsDisclosureObligations } from "@/lib/quiz/content/suitability/form-crs-disclosure-obligations";
+import { questions as suitableRecommendationsByProfile } from "@/lib/quiz/content/suitability/suitable-recommendations-by-profile";
+import { questions as prohibitedPracticesRecommendations } from "@/lib/quiz/content/suitability/prohibited-practices-recommendations";
+
+// 400-level: Margin math (exam depth).
+import { questions as longMarginAccountMath } from "@/lib/quiz/content/margin-math/long-margin-account-math";
+import { questions as shortMarginAccountMath } from "@/lib/quiz/content/margin-math/short-margin-account-math";
+import { questions as combinedLongShortMarginMath } from "@/lib/quiz/content/margin-math/combined-long-short-margin-math";
+import { questions as maintenanceCallsAndMinimumMaintenancePrice } from "@/lib/quiz/content/margin-math/maintenance-calls-and-minimum-maintenance-price";
+
 // Single source of truth for the question bank, keyed by lesson slug. Mirrors
 // lib/lessons/index.ts; later phases swap this for Supabase-backed queries while
 // keeping the same Question shape and helper signatures.
@@ -305,6 +331,29 @@ const byLesson: Record<string, Question[]> = {
   "leverage-and-liquidation-in-crypto": leverageAndLiquidationCrypto,
   "bridges-and-cross-chain-risk": bridgesAndCrossChainRisk,
   "crypto-risk-management-and-portfolio": cryptoRiskManagement,
+  // Advanced options (400)
+  "options-strategy-matrix": optionsStrategyMatrix,
+  "spread-math-mastery": spreadMathMastery,
+  "multi-leg-strategies": multiLegStrategies,
+  "options-rules-position-limits": optionsRulesPositionLimits,
+  "assignment-exercise-mechanics": assignmentExerciseMechanics,
+  "hedging-with-options": hedgingWithOptions,
+  "index-options-leaps": indexOptionsLeaps,
+  "options-exam-problems": optionsExamProblems,
+  // Suitability & recommendations (400)
+  "know-your-customer-rule-2090": knowYourCustomerRule2090,
+  "investment-objectives-risk-return-time-horizon": investmentObjectivesRiskReturnTimeHorizon,
+  "three-components-suitability-rule-2111": threeComponentsSuitabilityRule2111,
+  "regulation-best-interest-four-obligations": regulationBestInterestFourObligations,
+  "fiduciary-vs-suitability-vs-reg-bi": fiduciaryVsSuitabilityVsRegBi,
+  "form-crs-disclosure-obligations": formCrsDisclosureObligations,
+  "suitable-recommendations-by-profile": suitableRecommendationsByProfile,
+  "prohibited-practices-recommendations": prohibitedPracticesRecommendations,
+  // Margin math (400)
+  "long-margin-account-math": longMarginAccountMath,
+  "short-margin-account-math": shortMarginAccountMath,
+  "combined-long-short-margin-math": combinedLongShortMarginMath,
+  "maintenance-calls-and-minimum-maintenance-price": maintenanceCallsAndMinimumMaintenancePrice,
 };
 
 /** Questions for one lesson's quiz, in authored order. Empty if none exist. */

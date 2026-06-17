@@ -65,6 +65,10 @@ export const MODULES = [
   { id: "markets-fixed-income", trackId: "markets", title: "Fixed income & products", order: 14, level: 300, description: "Bonds, prices & yields, YTM, duration, credit ratings, the yield curve, and bond funds." },
   { id: "markets-portfolio", trackId: "markets", title: "Portfolio construction", order: 15, level: 300, description: "Asset allocation, diversification, MPT & the Sharpe ratio, rebalancing, and risk tolerance." },
   { id: "markets-backtesting", trackId: "markets", title: "Backtesting", order: 16, level: 300, description: "What backtesting is, overfitting, pitfalls (look-ahead/survivorship), and evaluating a backtest." },
+  // 400-level: Mastery, regulation & the Series 7.
+  { id: "markets-adv-options", trackId: "markets", title: "Advanced options", order: 17, level: 400, description: "Strategy matrix, exact spread math, butterflies/calendars, position limits, assignment, hedging, index options & LEAPS, exam-style problems." },
+  { id: "markets-suitability", trackId: "markets", title: "Suitability & recommendations", order: 18, level: 400, description: "KYC (Rule 2090), customer profiles, Rule 2111 suitability, Reg BI, fiduciary vs Reg BI, Form CRS, recommendation scenarios, prohibited practices." },
+  { id: "markets-margin-math", trackId: "markets", title: "Margin math (exam depth)", order: 19, level: 400, description: "Long & short margin account math, SMA, combined accounts, maintenance calls and the minimum-maintenance-price formulas." },
   { id: "crypto-100", trackId: "crypto", title: "Crypto basics", order: 1, level: 100, description: "Coins vs. tokens, exchanges vs. wallets, supply, volatility, and custody." },
   { id: "crypto-200", trackId: "crypto", title: "Crypto: wallets, DeFi & on-chain", order: 2, level: 200, description: "Hot/cold wallets, on-chain vs exchange price, stablecoins, gas, DEX vs CEX, staking, on-chain data." },
   { id: "crypto-300", trackId: "crypto", title: "Crypto: DeFi & derivatives", order: 3, level: 300, description: "DeFi lending, liquidity & impermanent loss, perpetual futures, leverage & liquidation, bridges, crypto risk." },
