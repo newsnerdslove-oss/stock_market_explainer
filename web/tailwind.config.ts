@@ -21,8 +21,10 @@ const config: Config = {
         streak: "#F5A623",
       },
       fontFamily: {
-        sans: ["Inter", "ui-sans-serif", "system-ui", "-apple-system", "sans-serif"],
-        mono: ["JetBrains Mono", "ui-monospace", "SFMono-Regular", "monospace"],
+        // The CSS vars are set by next/font in app/layout.tsx; the fallbacks keep
+        // text readable before the webfont swaps in.
+        sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "-apple-system", "sans-serif"],
+        mono: ["var(--font-jetbrains-mono)", "ui-monospace", "SFMono-Regular", "monospace"],
       },
       borderRadius: { md: "8px", lg: "12px", xl: "16px" },
     },
