@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useToast } from "@/components/Toast";
 import { DailyChallengeCard } from "@/components/DailyChallenge";
+import { isCryptoSymbol } from "@/lib/crypto/products";
 import { TradingProvider, useTrading } from "@/lib/trading/useTrading";
 import { equity, unrealizedPnL } from "@/lib/trading/ledger";
 import type { OrderSide, OrderType } from "@/lib/trading/schema";
@@ -192,7 +193,23 @@ function OrderTicket({ onPlaced }: { onPlaced: () => void }) {
           </Link>
         )}
       </div>
-      <form onSubmit={submit} className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {["AAPL", "MSFT", "BTC-USD", "ETH-USD"].map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => {
+              setSymbol(s);
+              if (isCryptoSymbol(s)) setQty("1");
+            }}
+            className="rounded-full border border-strong px-2.5 py-1 text-xs text-muted transition hover:text-ink"
+          >
+            {s}
+            {isCryptoSymbol(s) && <span className="ml-1 text-up">· live</span>}
+          </button>
+        ))}
+      </div>
+      <form onSubmit={submit} className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <input value={symbol} onChange={(e) => setSymbol(e.target.value)} placeholder="AAPL" aria-label="Symbol" className={`${inputCls} uppercase`} />
         <select value={side} onChange={(e) => setSide(e.target.value as OrderSide)} aria-label="Side" className={inputCls}>
           <option value="buy">Buy</option>
