@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useToast } from "@/components/Toast";
+import { DailyChallengeCard } from "@/components/DailyChallenge";
 import { TradingProvider, useTrading } from "@/lib/trading/useTrading";
 import { equity, unrealizedPnL } from "@/lib/trading/ledger";
 import type { OrderSide, OrderType } from "@/lib/trading/schema";
@@ -46,6 +47,8 @@ function SimulatorBody() {
 
   return (
     <div className="mt-8 space-y-6">
+      <DailyChallengeCard />
+
       {/* account summary */}
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="Equity" value={money(eq)} />
