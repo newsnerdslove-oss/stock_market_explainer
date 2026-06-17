@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo } from "react";
 import type { ExamAttempt } from "@/lib/progress/schema";
 import { EXAM_PASS_SCORE, drillModeForFunction } from "@/lib/exam/blueprint";
@@ -129,6 +130,10 @@ export function ReadinessDashboard({
           ))}
         </div>
       )}
+
+      <Link href="/study" className="mt-4 inline-block text-xs text-learn transition hover:opacity-80">
+        See your full study plan →
+      </Link>
     </section>
   );
 }
