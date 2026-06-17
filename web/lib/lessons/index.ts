@@ -188,6 +188,32 @@ import { lesson as shortMarginAccountMath } from "@/lib/lessons/content/margin-m
 import { lesson as combinedLongShortMarginMath } from "@/lib/lessons/content/margin-math/combined-long-short-margin-math";
 import { lesson as maintenanceCallsAndMinimumMaintenancePrice } from "@/lib/lessons/content/margin-math/maintenance-calls-and-minimum-maintenance-price";
 
+// 400-level: Regulatory framework.
+import { lesson as secAndFoundationalFederalActs } from "@/lib/lessons/content/regulation/sec-and-foundational-federal-acts";
+import { lesson as finraSelfRegulatoryOrganization } from "@/lib/lessons/content/regulation/finra-self-regulatory-organization";
+import { lesson as msrbMunicipalSecuritiesRulemaking } from "@/lib/lessons/content/regulation/msrb-municipal-securities-rulemaking";
+import { lesson as sieSeries7ExamAndRegistrationFramework } from "@/lib/lessons/content/regulation/sie-series7-exam-and-registration-framework";
+import { lesson as registeringRepresentativesU4U5Ce } from "@/lib/lessons/content/regulation/registering-representatives-u4-u5-ce";
+import { lesson as prohibitedPracticesInsiderTradingManipulation } from "@/lib/lessons/content/regulation/prohibited-practices-insider-trading-manipulation";
+import { lesson as reportingAndRecordkeeping } from "@/lib/lessons/content/regulation/reporting-and-recordkeeping";
+import { lesson as antiMoneyLaunderingBsaPatriotAct } from "@/lib/lessons/content/regulation/anti-money-laundering-bsa-patriot-act";
+
+// 400-level: Municipal & debt securities.
+import { lesson as goVsRevenueBonds } from "@/lib/lessons/content/muni-debt/go-vs-revenue-bonds";
+import { lesson as municipalTaxationAndTey } from "@/lib/lessons/content/muni-debt/municipal-taxation-and-tey";
+import { lesson as muniYieldsAndBasisPricing } from "@/lib/lessons/content/muni-debt/muni-yields-and-basis-pricing";
+import { lesson as callableRefundedConvertiblePutBonds } from "@/lib/lessons/content/muni-debt/callable-refunded-convertible-put-bonds";
+import { lesson as moneyMarketAndShortTermDebt } from "@/lib/lessons/content/muni-debt/money-market-and-short-term-debt";
+import { lesson as municipalDebtExamMath } from "@/lib/lessons/content/muni-debt/municipal-debt-exam-math";
+
+// 400-level: Accounts & processing.
+import { lesson as accountTypesOwnershipAndAuthority } from "@/lib/lessons/content/accounts/account-types-ownership-and-authority";
+import { lesson as optionsAccountApprovalAndSpecialDocs } from "@/lib/lessons/content/accounts/options-account-approval-and-special-docs";
+import { lesson as openingAccountsCipApprovalAndSpecialSituations } from "@/lib/lessons/content/accounts/opening-accounts-cip-approval-and-special-situations";
+import { lesson as confirmationsSettlementT1AndRegT } from "@/lib/lessons/content/accounts/confirmations-settlement-t1-and-reg-t";
+import { lesson as booksRecordsStatementsAndAcats } from "@/lib/lessons/content/accounts/books-records-statements-and-acats";
+import { lesson as settlementDeliveryEdgeCasesAndExDate } from "@/lib/lessons/content/accounts/settlement-delivery-edge-cases-and-ex-date";
+
 // The single source of truth for the lesson bank. Display order is computed from
 // the taxonomy (track → module → moduleOrder via getOrderedLessons); this array's
 // order only needs to contain every lesson. Grouped by module for readability.
@@ -348,6 +374,29 @@ export const lessons: Lesson[] = [
   shortMarginAccountMath,
   combinedLongShortMarginMath,
   maintenanceCallsAndMinimumMaintenancePrice,
+  // Regulatory framework (400)
+  secAndFoundationalFederalActs,
+  finraSelfRegulatoryOrganization,
+  msrbMunicipalSecuritiesRulemaking,
+  sieSeries7ExamAndRegistrationFramework,
+  registeringRepresentativesU4U5Ce,
+  prohibitedPracticesInsiderTradingManipulation,
+  reportingAndRecordkeeping,
+  antiMoneyLaunderingBsaPatriotAct,
+  // Municipal & debt securities (400)
+  goVsRevenueBonds,
+  municipalTaxationAndTey,
+  muniYieldsAndBasisPricing,
+  callableRefundedConvertiblePutBonds,
+  moneyMarketAndShortTermDebt,
+  municipalDebtExamMath,
+  // Accounts & processing (400)
+  accountTypesOwnershipAndAuthority,
+  optionsAccountApprovalAndSpecialDocs,
+  openingAccountsCipApprovalAndSpecialSituations,
+  confirmationsSettlementT1AndRegT,
+  booksRecordsStatementsAndAcats,
+  settlementDeliveryEdgeCasesAndExDate,
   // Crypto: DeFi & derivatives (300)
   defiLendingAndBorrowing,
   liquidityProvidingImpermanentLoss,
