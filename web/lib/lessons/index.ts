@@ -162,6 +162,32 @@ import { lesson as leverageAndLiquidationCrypto } from "@/lib/lessons/content/cr
 import { lesson as bridgesAndCrossChainRisk } from "@/lib/lessons/content/crypto-300/bridges-and-cross-chain-risk";
 import { lesson as cryptoRiskManagement } from "@/lib/lessons/content/crypto-300/crypto-risk-management-and-portfolio";
 
+// 400-level: Advanced options.
+import { lesson as optionsStrategyMatrix } from "@/lib/lessons/content/adv-options/options-strategy-matrix";
+import { lesson as spreadMathMastery } from "@/lib/lessons/content/adv-options/spread-math-mastery";
+import { lesson as multiLegStrategies } from "@/lib/lessons/content/adv-options/multi-leg-strategies";
+import { lesson as optionsRulesPositionLimits } from "@/lib/lessons/content/adv-options/options-rules-position-limits";
+import { lesson as assignmentExerciseMechanics } from "@/lib/lessons/content/adv-options/assignment-exercise-mechanics";
+import { lesson as hedgingWithOptions } from "@/lib/lessons/content/adv-options/hedging-with-options";
+import { lesson as indexOptionsLeaps } from "@/lib/lessons/content/adv-options/index-options-leaps";
+import { lesson as optionsExamProblems } from "@/lib/lessons/content/adv-options/options-exam-problems";
+
+// 400-level: Suitability & recommendations.
+import { lesson as knowYourCustomerRule2090 } from "@/lib/lessons/content/suitability/know-your-customer-rule-2090";
+import { lesson as investmentObjectivesRiskReturnTimeHorizon } from "@/lib/lessons/content/suitability/investment-objectives-risk-return-time-horizon";
+import { lesson as threeComponentsSuitabilityRule2111 } from "@/lib/lessons/content/suitability/three-components-suitability-rule-2111";
+import { lesson as regulationBestInterestFourObligations } from "@/lib/lessons/content/suitability/regulation-best-interest-four-obligations";
+import { lesson as fiduciaryVsSuitabilityVsRegBi } from "@/lib/lessons/content/suitability/fiduciary-vs-suitability-vs-reg-bi";
+import { lesson as formCrsDisclosureObligations } from "@/lib/lessons/content/suitability/form-crs-disclosure-obligations";
+import { lesson as suitableRecommendationsByProfile } from "@/lib/lessons/content/suitability/suitable-recommendations-by-profile";
+import { lesson as prohibitedPracticesRecommendations } from "@/lib/lessons/content/suitability/prohibited-practices-recommendations";
+
+// 400-level: Margin math (exam depth).
+import { lesson as longMarginAccountMath } from "@/lib/lessons/content/margin-math/long-margin-account-math";
+import { lesson as shortMarginAccountMath } from "@/lib/lessons/content/margin-math/short-margin-account-math";
+import { lesson as combinedLongShortMarginMath } from "@/lib/lessons/content/margin-math/combined-long-short-margin-math";
+import { lesson as maintenanceCallsAndMinimumMaintenancePrice } from "@/lib/lessons/content/margin-math/maintenance-calls-and-minimum-maintenance-price";
+
 // The single source of truth for the lesson bank. Display order is computed from
 // the taxonomy (track → module → moduleOrder via getOrderedLessons); this array's
 // order only needs to contain every lesson. Grouped by module for readability.
@@ -299,6 +325,29 @@ export const lessons: Lesson[] = [
   overfittingAndCurveFitting,
   backtestingPitfalls,
   evaluatingABacktest,
+  // Advanced options (400)
+  optionsStrategyMatrix,
+  spreadMathMastery,
+  multiLegStrategies,
+  optionsRulesPositionLimits,
+  assignmentExerciseMechanics,
+  hedgingWithOptions,
+  indexOptionsLeaps,
+  optionsExamProblems,
+  // Suitability & recommendations (400)
+  knowYourCustomerRule2090,
+  investmentObjectivesRiskReturnTimeHorizon,
+  threeComponentsSuitabilityRule2111,
+  regulationBestInterestFourObligations,
+  fiduciaryVsSuitabilityVsRegBi,
+  formCrsDisclosureObligations,
+  suitableRecommendationsByProfile,
+  prohibitedPracticesRecommendations,
+  // Margin math (400)
+  longMarginAccountMath,
+  shortMarginAccountMath,
+  combinedLongShortMarginMath,
+  maintenanceCallsAndMinimumMaintenancePrice,
   // Crypto: DeFi & derivatives (300)
   defiLendingAndBorrowing,
   liquidityProvidingImpermanentLoss,
