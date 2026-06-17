@@ -12,7 +12,7 @@ export default function ExamPage() {
   const allQuestions = getAllQuestions();
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
+    <main className="mx-auto max-w-2xl px-6 pb-16 pt-10">
       <h1 className="text-4xl font-medium tracking-tight">Exam</h1>
       <p className="mt-3 text-muted">
         Timed, Series 7-style practice exams over the mastery curriculum — weighted by exam function,

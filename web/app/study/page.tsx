@@ -12,7 +12,7 @@ export default function StudyPage() {
   const examLessons = examLessonFunctions();
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
+    <main className="mx-auto max-w-2xl px-6 pb-16 pt-10">
       <h1 className="text-4xl font-medium tracking-tight">Study plan</h1>
       <p className="mt-3 text-muted">
         Your next steps, in order — built from your exam history and lesson progress to close the gaps

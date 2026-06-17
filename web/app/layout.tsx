@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ProgressProvider } from "@/lib/progress/useProgress";
@@ -19,9 +19,31 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+const DESCRIPTION =
+  "Daily training for stocks & crypto — basics to Series 7-level mastery, with quizzes, a spaced-repetition review, practice exams, and a paper-trading simulator.";
+
 export const metadata: Metadata = {
   title: "Stock Market Explainer",
-  description: "Daily training for stocks & crypto — basics to advanced, with a paper-trading simulator.",
+  description: DESCRIPTION,
+  applicationName: "Explainer",
+  openGraph: {
+    title: "Stock Market Explainer",
+    description: DESCRIPTION,
+    siteName: "Explainer",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Stock Market Explainer",
+    description: DESCRIPTION,
+  },
+};
+
+// Pins the mobile browser chrome to the app canvas and the standard viewport.
+export const viewport: Viewport = {
+  themeColor: "#0B0E14",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
