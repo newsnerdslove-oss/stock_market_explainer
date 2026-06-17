@@ -26,6 +26,13 @@ export default function TodayPage() {
 
       <DailyToday allQuestions={allQuestions} />
 
+      <p className="mt-8 text-sm text-muted">
+        Ready to test under pressure?{" "}
+        <Link href="/exam" className="text-learn transition hover:opacity-80">
+          Take a timed practice exam →
+        </Link>
+      </p>
+
       <AuthControls />
 
       <footer className="mt-16 border-t border-hairline pt-6 text-xs text-faint">
