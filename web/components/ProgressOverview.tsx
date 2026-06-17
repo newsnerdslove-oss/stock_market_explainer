@@ -6,6 +6,7 @@ import { useProgress } from "@/lib/progress/useProgress";
 import { computeOverview, LEVEL_LABELS, type Bucket, type LessonRef } from "@/lib/progress/overview";
 import { computeReadiness } from "@/lib/exam/readiness";
 import { EXAM_PASS_SCORE } from "@/lib/exam/blueprint";
+import { computeTutorInsights } from "@/lib/tutor/insights";
 
 const pct = (x: number) => Math.round(x * 100);
 
@@ -46,10 +47,13 @@ export function ProgressOverview({ lessons }: { lessons: LessonRef[] }) {
 
   const overview = useMemo(() => computeOverview(lessons, progress.quizzes), [lessons, progress.quizzes]);
   const readiness = useMemo(() => computeReadiness(progress.exams), [progress.exams]);
+  const insights = useMemo(() => computeTutorInsights(progress.tutorLog), [progress.tutorLog]);
+  const titleBySlug = useMemo(() => new Map(lessons.map((l) => [l.slug, l.title])), [lessons]);
 
   if (!hydrated) return <p className="mt-8 text-sm text-faint">Loading your progress…</p>;
 
   const streak = progress.streak;
+  const lessonTitle = (slug: string) => titleBySlug.get(slug) ?? slug;
 
   return (
     <div className="mt-8 space-y-8">
@@ -124,6 +128,45 @@ export function ProgressOverview({ lessons }: { lessons: LessonRef[] }) {
           )}
         </div>
       </section>
+
+      {/* Tutor questions — personal history + confusion hotspots */}
+      {insights.total > 0 && (
+        <section>
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-sm font-medium text-ink">Questions you&apos;ve asked</h2>
+            <span className="font-mono text-xs text-muted">{insights.total} total</span>
+          </div>
+
+          {insights.hotspots.length > 0 && (
+            <div className="mt-3">
+              <h3 className="text-xs uppercase tracking-wide text-faint">Confusion hotspots</h3>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {insights.hotspots.slice(0, 4).map((h) => (
+                  <Link
+                    key={h.slug}
+                    href={`/learn/${h.slug}`}
+                    className="rounded-full border border-strong px-3 py-1 text-xs text-ink transition hover:bg-surface-2"
+                  >
+                    {lessonTitle(h.slug)}{" "}
+                    <span className="font-mono text-faint">×{h.count}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <ul className="mt-4 space-y-1.5">
+            {insights.recent.slice(0, 5).map((qy) => (
+              <li key={qy.id} className="flex items-baseline justify-between gap-3 text-sm">
+                <span className="min-w-0 flex-1 truncate text-muted">“{qy.question}”</span>
+                <Link href={`/learn/${qy.slug}`} className="shrink-0 text-xs text-learn transition hover:opacity-80">
+                  {lessonTitle(qy.slug)}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Continue */}
       <section className="flex flex-wrap gap-2">

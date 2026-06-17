@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useProgress } from "@/lib/progress/useProgress";
 
 interface Source {
   slug: string;
@@ -17,6 +18,7 @@ interface TutorResponse {
 // which grounds the answer on lesson content and (when configured) routes to
 // the self-hosted model. No external services.
 export function AskTutor({ slug }: { slug: string }) {
+  const { recordTutorQuery } = useProgress();
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
   const [res, setRes] = useState<TutorResponse | null>(null);
@@ -46,7 +48,18 @@ export function AskTutor({ slug }: { slug: string }) {
       });
       if (id !== reqId.current) return; // superseded by a newer request
       if (!r.ok) throw new Error(`Tutor error ${r.status}`);
-      setRes(await r.json());
+      const data: TutorResponse = await r.json();
+      setRes(data);
+      // Log the question (newest-first) so progress can surface confusion hotspots.
+      const at = new Date().toISOString();
+      recordTutorQuery({
+        id: `${slug}-${at}`,
+        at,
+        slug,
+        question: query,
+        mode: data.mode,
+        sourceSlugs: data.sources.map((s) => s.slug),
+      });
     } catch (e) {
       if (id !== reqId.current || (e as Error)?.name === "AbortError") return;
       setError("Couldn't reach the tutor. Is the model running?");

@@ -20,7 +20,7 @@ export interface StudyLesson {
 }
 
 export type StudyStep =
-  | { kind: "lesson"; slug: string; title: string; moduleTitle: string; fnCode: string; fnLabel: string }
+  | { kind: "lesson"; slug: string; title: string; moduleTitle: string; fnCode: string; fnLabel: string; revisit?: boolean }
   | { kind: "drill"; modeId: string; fnCode: string; fnLabel: string };
 
 export interface StudyPlan {
@@ -34,7 +34,11 @@ const MAX_LESSONS_PER_FN = 3;
 /** A function is "handled" once it clears this; below it still earns a study gap. */
 const READY_AT = 0.75;
 
-export function buildStudyPlan(readiness: Readiness, lessons: StudyLesson[]): StudyPlan {
+export function buildStudyPlan(
+  readiness: Readiness,
+  lessons: StudyLesson[],
+  askedSlugs?: Set<string>,
+): StudyPlan {
   // Severity per function = score gap × exam weight (untested = a full gap).
   const severity = new Map<string, number>();
   for (const f of readiness.byFunction) {
@@ -59,6 +63,27 @@ export function buildStudyPlan(readiness: Readiness, lessons: StudyLesson[]): St
   }
 
   const steps: StudyStep[] = [];
+  const added = new Set<string>();
+
+  // Follow-through: lessons you asked the tutor about but haven't passed —
+  // surface them first, since you flagged confusion there yourself.
+  if (askedSlugs && askedSlugs.size > 0) {
+    const revisit = lessons.filter((l) => !l.done && askedSlugs.has(l.slug)).slice(0, 3);
+    for (const l of revisit) {
+      const meta = functionByTag[l.fnTag];
+      steps.push({
+        kind: "lesson",
+        slug: l.slug,
+        title: l.title,
+        moduleTitle: l.moduleTitle,
+        fnCode: meta?.code ?? l.fnTag,
+        fnLabel: meta?.label ?? l.fnTag,
+        revisit: true,
+      });
+      added.add(l.slug);
+    }
+  }
+
   for (const f of targets) {
     if (steps.length >= MAX_STEPS) break;
     const meta = functionByTag[f.tag];
@@ -66,10 +91,11 @@ export function buildStudyPlan(readiness: Readiness, lessons: StudyLesson[]): St
     const fnLabel = meta?.label ?? f.tag;
 
     // Study: the function's still-unpassed lessons, in curriculum order.
-    const todo = lessons.filter((l) => l.fnTag === f.tag && !l.done).slice(0, MAX_LESSONS_PER_FN);
+    const todo = lessons.filter((l) => l.fnTag === f.tag && !l.done && !added.has(l.slug)).slice(0, MAX_LESSONS_PER_FN);
     for (const l of todo) {
       if (steps.length >= MAX_STEPS) break;
       steps.push({ kind: "lesson", slug: l.slug, title: l.title, moduleTitle: l.moduleTitle, fnCode, fnLabel });
+      added.add(l.slug);
     }
 
     // Then test it.

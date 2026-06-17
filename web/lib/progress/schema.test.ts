@@ -51,10 +51,20 @@ describe("progress migrate", () => {
     expect(m.quizzes).toEqual({});
   });
 
-  it("defaultProgress is a clean v3 shape", () => {
+  it("backfills tutorLog and filters corrupt entries", () => {
+    const good = { id: "s-1", at: "t", slug: "s", question: "what?", mode: "llm", sourceSlugs: [] };
+    const v3NoTutor = migrate({ ...base() }); // no tutorLog key at all
+    expect(v3NoTutor.tutorLog).toEqual([]);
+    const mixed = migrate({ ...base(), tutorLog: [good, null, { id: 5 }, { question: "no id" }] });
+    expect(mixed.tutorLog).toHaveLength(1);
+    expect(mixed.tutorLog[0].id).toBe("s-1");
+  });
+
+  it("defaultProgress is a clean current-version shape", () => {
     const d = defaultProgress();
     expect(d.schemaVersion).toBe(CURRENT_VERSION);
     expect(d.exams).toEqual([]);
+    expect(d.tutorLog).toEqual([]);
     expect(d.userId).toBeNull();
   });
 });

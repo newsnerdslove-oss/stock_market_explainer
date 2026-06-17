@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { loadProgress, saveProgress } from "@/lib/progress/storage";
-import { defaultProgress, MAX_EXAM_HISTORY, PASS_SCORE, type ExamAttempt, type Progress, type QuizProgress } from "@/lib/progress/schema";
+import { defaultProgress, MAX_EXAM_HISTORY, MAX_TUTOR_LOG, PASS_SCORE, type ExamAttempt, type Progress, type QuizProgress, type TutorQuery } from "@/lib/progress/schema";
 import { grade, newItem, todayInTz } from "@/lib/review/schedule";
 import { completeSession } from "@/lib/progress/streak";
 import { createClient, supabaseConfigured } from "@/lib/supabase/client";
@@ -23,6 +23,8 @@ interface ProgressContextValue {
   recordReview: (questionId: string, correct: boolean) => void;
   /** Record a completed practice-exam attempt (stored newest-first, capped). */
   recordExam: (attempt: ExamAttempt) => void;
+  /** Record a tutor question that was asked (stored newest-first, capped). */
+  recordTutorQuery: (query: TutorQuery) => void;
   /** Count today as a training day for the streak, without marking the daily review done. */
   markActiveToday: () => void;
   /** Mark today's daily review session complete (advances the streak AND the review). */
@@ -180,6 +182,15 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const recordTutorQuery = useCallback((query: TutorQuery) => {
+    if (!hydratedRef.current) return;
+    setProgress((prev) => ({
+      ...prev,
+      tutorLog: [query, ...prev.tutorLog].slice(0, MAX_TUTOR_LOG),
+      updatedAt: new Date().toISOString(),
+    }));
+  }, []);
+
   const markActiveToday = useCallback(() => {
     if (!hydratedRef.current) return;
     setProgress((prev) => {
@@ -214,6 +225,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         recordQuizAttempt,
         recordReview,
         recordExam,
+        recordTutorQuery,
         markActiveToday,
         completeDailySession,
       }}

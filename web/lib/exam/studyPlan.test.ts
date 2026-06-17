@@ -53,6 +53,34 @@ describe("buildStudyPlan", () => {
     expect(plan.steps.length).toBeLessThanOrEqual(12);
   });
 
+  it("prepends asked-about unpassed lessons as revisit steps", () => {
+    const readiness = computeReadiness([attempt({ "fn:3": { correct: 40, total: 91 } })]);
+    const plan = buildStudyPlan(
+      readiness,
+      lessons([
+        ["opt", "fn:3", false],
+        ["spread", "fn:3", false],
+        ["asked-one", "fn:3", false],
+      ]),
+      new Set(["asked-one"]),
+    );
+    const first = plan.steps[0];
+    expect(first).toMatchObject({ kind: "lesson", slug: "asked-one", revisit: true });
+    // The revisited lesson isn't then duplicated in the function section.
+    const occurrences = plan.steps.filter((s) => s.kind === "lesson" && s.slug === "asked-one").length;
+    expect(occurrences).toBe(1);
+  });
+
+  it("does not revisit an asked-about lesson that's already passed", () => {
+    const readiness = computeReadiness([attempt({ "fn:3": { correct: 40, total: 91 } })]);
+    const plan = buildStudyPlan(
+      readiness,
+      lessons([["passed", "fn:3", true], ["todo", "fn:3", false]]),
+      new Set(["passed"]),
+    );
+    expect(plan.steps.some((s) => s.kind === "lesson" && s.slug === "passed")).toBe(false);
+  });
+
   it("skips already-passed lessons", () => {
     const readiness = computeReadiness([attempt({ "fn:3": { correct: 5, total: 30 } })]);
     const plan = buildStudyPlan(
