@@ -97,6 +97,13 @@ export const EXAM_MODES: ExamMode[] = [
     functions: ["fn:3"],
   },
   {
+    id: "drill-fn1",
+    title: "Drill: Seeking business & communications (F1)",
+    description: "20 questions on communications, advertising, telemarketing, and prospecting rules.",
+    total: 20,
+    functions: ["fn:1"],
+  },
+  {
     id: "drill-fn2",
     title: "Drill: Opening accounts (F2)",
     description: "20 questions on account types, suitability profiling, CIP, and registration.",
@@ -115,3 +122,9 @@ export const EXAM_MODES: ExamMode[] = [
 export const examModeById: Record<string, ExamMode> = Object.fromEntries(
   EXAM_MODES.map((m) => [m.id, m]),
 );
+
+/** The single-function drill mode id for a function tag (e.g. "fn:3" → "drill-fn3"), or null. */
+export function drillModeForFunction(tag: string): string | null {
+  const id = `drill-${tag.replace(":", "")}`; // fn:3 → drill-fn3
+  return examModeById[id] ? id : null;
+}

@@ -2,6 +2,7 @@
 
 import { EXAM_MODES, examModeById, FUNCTIONS, MINUTES_PER_QUESTION } from "@/lib/exam/blueprint";
 import type { ExamAttempt } from "@/lib/progress/schema";
+import { ReadinessDashboard } from "@/components/exam/ReadinessDashboard";
 
 /** Availability of the bank, per function tag (count of exam-eligible questions). */
 export type Availability = Record<string, number>;
@@ -36,6 +37,12 @@ export function ExamSetup({
 
   return (
     <div className="mt-6">
+      {exams.length > 0 && (
+        <div className="mb-4">
+          <ReadinessDashboard exams={exams} onStartDrill={onStart} />
+        </div>
+      )}
+
       <div className="rounded-md border border-strong bg-surface p-4 text-sm text-muted">
         <p>
           A timed, Series 7-style exam drawn from the{" "}
