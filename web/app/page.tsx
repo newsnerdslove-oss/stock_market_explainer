@@ -64,6 +64,12 @@ export default async function Home() {
           Daily review →
         </Link>
         <Link
+          href="/progress"
+          className="inline-flex items-center gap-2 rounded-md border border-strong px-4 py-2 text-sm text-ink transition hover:bg-surface-2"
+        >
+          My progress →
+        </Link>
+        <Link
           href="/exam"
           className="inline-flex items-center gap-2 rounded-md border border-strong px-4 py-2 text-sm text-ink transition hover:bg-surface-2"
         >
