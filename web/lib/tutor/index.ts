@@ -24,12 +24,12 @@ export interface TutorAnswer {
 
 const SYSTEM_PROMPT = [
   "You are a patient finance tutor inside a learning app for beginners.",
-  "Answer the student's question using ONLY the lesson excerpts provided.",
-  "If the excerpts do not contain the answer, say you're not certain and point",
-  "them to the most relevant lesson instead of guessing.",
-  "Keep answers short, plain, and encouraging. Define jargon in everyday words.",
-  "Never give financial advice or tell the student what to buy, sell, or trade.",
-  // Disable the model's chain-of-thought for these short, RAG-grounded answers.
+  "Ground your answer in the provided lesson excerpts whenever they are relevant, and point the student to those lessons.",
+  "The excerpts are a starting point, not a limit. If the student asks for more than the excerpts contain — for example 'what OTHER...' or a broader factual question about markets, investing, trading, or finance — give the fuller, correct answer from your own knowledge (e.g. actually name the major global stock exchanges), then briefly note which part went beyond the lessons. Stay brief, beginner-friendly, and on-topic.",
+  "Define jargon in everyday words and keep answers short and encouraging.",
+  "Do NOT give financial advice or tell the student what to buy, sell, hold, or trade, and do not predict prices — explain the concept instead.",
+  "If a question is outside finance/markets, or you genuinely don't know, say so honestly rather than guessing.",
+  // Disable the model's chain-of-thought for these short, mostly-grounded answers.
   // Benchmarked 2026-06-16 (bench/): `/no_think` cut time-to-first-answer-token
   // ~5x (0.51s -> 0.10s) on our 15-task suite with no real accuracy loss.
   // NOTE: this Nemotron-Omni build IGNORES its own "detailed thinking off"
@@ -51,25 +51,21 @@ export async function answerQuestion(
   const q = question.trim();
   if (!q) return { answer: "Ask me anything about this lesson.", sources: [], mode: "none" };
 
-  const chunks = retrieve(q, { currentSlug, k: 4 });
-  const sources = uniqueSources(chunks);
+  // Only excerpts that genuinely match (2+ query terms, or any hit on a one-word
+  // question) count as grounding — so an incidental keyword hit (e.g. an options
+  // lesson surfacing on "stock markets") doesn't anchor the answer or get cited.
+  const allChunks = retrieve(q, { currentSlug, k: 4 });
+  const grounded = allChunks.filter((c) => c.matched >= 2 || tokenize(q).length <= 1);
+  const sources = uniqueSources(grounded);
 
-  if (chunks.length === 0) {
-    return {
-      answer:
-        "I couldn't find that in the lessons yet. Try rephrasing, or browse the lesson list — this topic may be coming in a later module.",
-      sources: [],
-      mode: "none",
-    };
-  }
-
-  const context = chunks
-    .map((c, i) => `[${i + 1}] (${c.lessonTitle}) ${c.text}`)
-    .join("\n\n");
-
-  // Preferred path: let the self-hosted model explain, grounded on the excerpts.
+  // Preferred path: let the self-hosted model answer — grounded on the excerpts
+  // when we have them, and from general knowledge (per the system prompt) when we
+  // don't, rather than refusing a reasonable finance question outright.
   const cfg = tutorConfig();
   if (cfg.enabled) {
+    const context = grounded.length
+      ? grounded.map((c, i) => `[${i + 1}] (${c.lessonTitle}) ${c.text}`).join("\n\n")
+      : "(No lesson excerpts closely matched this question.)";
     const messages: ChatMessage[] = [
       { role: "system", content: SYSTEM_PROMPT },
       { role: "user", content: `Question: ${q}\n\nLesson excerpts:\n${context}` },
@@ -78,19 +74,23 @@ export async function answerQuestion(
     if (reply) return { answer: reply, sources, mode: "llm" };
   }
 
-  // Fallback: hand back the most relevant lesson text. When the top match is
-  // weak (only one query term hit, on a multi-word question), hedge the wording
-  // so an incidental keyword match doesn't read as a confident answer.
-  const best = chunks[0];
-  const strongMatch = best.matched >= 2 || tokenize(q).length <= 1;
-  const answer = strongMatch
-    ? `Here's what your lessons say:\n\n"${best.text}"\n\n` +
-      `Open "${best.lessonTitle}" to read it in context.`
-    : `I'm not certain that's covered yet, but this looks related — from "${best.lessonTitle}":\n\n` +
-      `"${best.text}"\n\nOpen the lesson to read it in full context.`;
+  // Model off or unreachable: fall back to the most relevant lesson text, or — if
+  // nothing matched well — say so and point to the lesson list.
+  if (grounded.length === 0) {
+    return {
+      answer:
+        "I couldn't find that in the lessons, and the tutor model isn't available right now to answer from general knowledge. Try rephrasing, or browse the lesson list.",
+      sources: [],
+      mode: "none",
+      llmStatus: cfg.enabled ? "unreachable" : "off",
+    };
+  }
 
+  const best = grounded[0];
   return {
-    answer,
+    answer:
+      `Here's what your lessons say:\n\n"${best.text}"\n\n` +
+      `Open "${best.lessonTitle}" to read it in context.`,
     sources,
     mode: "retrieval",
     llmStatus: cfg.enabled ? "unreachable" : "off",
