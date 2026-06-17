@@ -30,6 +30,10 @@ export default function TodayPage() {
         Ready to test under pressure?{" "}
         <Link href="/exam" className="text-learn transition hover:opacity-80">
           Take a timed practice exam →
+        </Link>{" "}
+        or follow your{" "}
+        <Link href="/study" className="text-learn transition hover:opacity-80">
+          study plan →
         </Link>
       </p>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Question } from "@/lib/quiz/types";
 import { useProgress } from "@/lib/progress/useProgress";
 import { examModeById, MINUTES_PER_QUESTION, questionFunction } from "@/lib/exam/blueprint";
@@ -76,6 +76,18 @@ export function ExamApp({ allQuestions }: { allQuestions: Question[] }) {
     setResult(res);
     setPhase("results");
   }
+
+  // One-click drill links from the study plan: /exam?start=drill-fnN auto-starts
+  // that mode once, client-side after hydration (selection uses Math.random, so
+  // it must not run during SSR/render).
+  const autoStartedRef = useRef(false);
+  useEffect(() => {
+    if (!hydrated || autoStartedRef.current) return;
+    autoStartedRef.current = true;
+    const startId = new URLSearchParams(window.location.search).get("start");
+    if (startId && examModeById[startId]) start(startId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
 
   const minutes = exam ? Math.round(exam.questions.length * MINUTES_PER_QUESTION) : 0;
 
