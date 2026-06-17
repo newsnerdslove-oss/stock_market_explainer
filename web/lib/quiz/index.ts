@@ -131,6 +131,36 @@ import { questions as scalping } from "@/lib/quiz/content/styles/scalping";
 import { questions as systematicVsDiscretionary } from "@/lib/quiz/content/styles/systematic-vs-discretionary-edges";
 import { questions as tradingPsychology } from "@/lib/quiz/content/styles/trading-psychology-and-plan";
 
+// 300-level: Fixed income & products.
+import { questions as howBondsWork } from "@/lib/quiz/content/fixed-income/how-bonds-work";
+import { questions as bondPricesAndYields } from "@/lib/quiz/content/fixed-income/bond-prices-and-yields";
+import { questions as yieldToMaturity } from "@/lib/quiz/content/fixed-income/yield-to-maturity";
+import { questions as interestRateRiskAndDuration } from "@/lib/quiz/content/fixed-income/interest-rate-risk-and-duration";
+import { questions as creditRiskAndRatings } from "@/lib/quiz/content/fixed-income/credit-risk-and-ratings";
+import { questions as theYieldCurve } from "@/lib/quiz/content/fixed-income/the-yield-curve";
+import { questions as bondTypesAndFunds } from "@/lib/quiz/content/fixed-income/bond-types-and-funds";
+
+// 300-level: Portfolio construction.
+import { questions as assetAllocation } from "@/lib/quiz/content/portfolio/asset-allocation";
+import { questions as diversificationAndCorrelation } from "@/lib/quiz/content/portfolio/diversification-and-correlation";
+import { questions as mptAndEfficientFrontier } from "@/lib/quiz/content/portfolio/mpt-and-efficient-frontier";
+import { questions as rebalancing } from "@/lib/quiz/content/portfolio/rebalancing";
+import { questions as riskToleranceAndTimeHorizon } from "@/lib/quiz/content/portfolio/risk-tolerance-and-time-horizon";
+
+// 300-level: Backtesting.
+import { questions as whatBacktestingIsAndWhy } from "@/lib/quiz/content/backtesting/what-backtesting-is-and-why";
+import { questions as overfittingAndCurveFitting } from "@/lib/quiz/content/backtesting/overfitting-and-curve-fitting";
+import { questions as backtestingPitfalls } from "@/lib/quiz/content/backtesting/backtesting-pitfalls";
+import { questions as evaluatingABacktest } from "@/lib/quiz/content/backtesting/evaluating-a-backtest-and-going-live";
+
+// 300-level: Crypto (DeFi & derivatives).
+import { questions as defiLendingAndBorrowing } from "@/lib/quiz/content/crypto-300/defi-lending-and-borrowing";
+import { questions as liquidityProvidingImpermanentLoss } from "@/lib/quiz/content/crypto-300/liquidity-providing-and-impermanent-loss";
+import { questions as perpetualFuturesAndFunding } from "@/lib/quiz/content/crypto-300/perpetual-futures-and-funding-rates";
+import { questions as leverageAndLiquidationCrypto } from "@/lib/quiz/content/crypto-300/leverage-and-liquidation-in-crypto";
+import { questions as bridgesAndCrossChainRisk } from "@/lib/quiz/content/crypto-300/bridges-and-cross-chain-risk";
+import { questions as cryptoRiskManagement } from "@/lib/quiz/content/crypto-300/crypto-risk-management-and-portfolio";
+
 // Single source of truth for the question bank, keyed by lesson slug. Mirrors
 // lib/lessons/index.ts; later phases swap this for Supabase-backed queries while
 // keeping the same Question shape and helper signatures.
@@ -249,6 +279,32 @@ const byLesson: Record<string, Question[]> = {
   scalping,
   "systematic-vs-discretionary-edges": systematicVsDiscretionary,
   "trading-psychology-and-plan": tradingPsychology,
+  // Fixed income & products (300)
+  "how-bonds-work": howBondsWork,
+  "bond-prices-and-yields": bondPricesAndYields,
+  "yield-to-maturity": yieldToMaturity,
+  "interest-rate-risk-and-duration": interestRateRiskAndDuration,
+  "credit-risk-and-ratings": creditRiskAndRatings,
+  "the-yield-curve": theYieldCurve,
+  "bond-types-and-funds": bondTypesAndFunds,
+  // Portfolio construction (300)
+  "asset-allocation": assetAllocation,
+  "diversification-and-correlation": diversificationAndCorrelation,
+  "mpt-and-efficient-frontier": mptAndEfficientFrontier,
+  rebalancing,
+  "risk-tolerance-and-time-horizon": riskToleranceAndTimeHorizon,
+  // Backtesting (300)
+  "what-backtesting-is-and-why": whatBacktestingIsAndWhy,
+  "overfitting-and-curve-fitting": overfittingAndCurveFitting,
+  "backtesting-pitfalls": backtestingPitfalls,
+  "evaluating-a-backtest-and-going-live": evaluatingABacktest,
+  // Crypto: DeFi & derivatives (300)
+  "defi-lending-and-borrowing": defiLendingAndBorrowing,
+  "liquidity-providing-and-impermanent-loss": liquidityProvidingImpermanentLoss,
+  "perpetual-futures-and-funding-rates": perpetualFuturesAndFunding,
+  "leverage-and-liquidation-in-crypto": leverageAndLiquidationCrypto,
+  "bridges-and-cross-chain-risk": bridgesAndCrossChainRisk,
+  "crypto-risk-management-and-portfolio": cryptoRiskManagement,
 };
 
 /** Questions for one lesson's quiz, in authored order. Empty if none exist. */

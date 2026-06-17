@@ -132,6 +132,36 @@ import { lesson as scalping } from "@/lib/lessons/content/styles/scalping";
 import { lesson as systematicVsDiscretionary } from "@/lib/lessons/content/styles/systematic-vs-discretionary-edges";
 import { lesson as tradingPsychology } from "@/lib/lessons/content/styles/trading-psychology-and-plan";
 
+// 300-level: Fixed income & products.
+import { lesson as howBondsWork } from "@/lib/lessons/content/fixed-income/how-bonds-work";
+import { lesson as bondPricesAndYields } from "@/lib/lessons/content/fixed-income/bond-prices-and-yields";
+import { lesson as yieldToMaturity } from "@/lib/lessons/content/fixed-income/yield-to-maturity";
+import { lesson as interestRateRiskAndDuration } from "@/lib/lessons/content/fixed-income/interest-rate-risk-and-duration";
+import { lesson as creditRiskAndRatings } from "@/lib/lessons/content/fixed-income/credit-risk-and-ratings";
+import { lesson as theYieldCurve } from "@/lib/lessons/content/fixed-income/the-yield-curve";
+import { lesson as bondTypesAndFunds } from "@/lib/lessons/content/fixed-income/bond-types-and-funds";
+
+// 300-level: Portfolio construction.
+import { lesson as assetAllocation } from "@/lib/lessons/content/portfolio/asset-allocation";
+import { lesson as diversificationAndCorrelation } from "@/lib/lessons/content/portfolio/diversification-and-correlation";
+import { lesson as mptAndEfficientFrontier } from "@/lib/lessons/content/portfolio/mpt-and-efficient-frontier";
+import { lesson as rebalancing } from "@/lib/lessons/content/portfolio/rebalancing";
+import { lesson as riskToleranceAndTimeHorizon } from "@/lib/lessons/content/portfolio/risk-tolerance-and-time-horizon";
+
+// 300-level: Backtesting.
+import { lesson as whatBacktestingIsAndWhy } from "@/lib/lessons/content/backtesting/what-backtesting-is-and-why";
+import { lesson as overfittingAndCurveFitting } from "@/lib/lessons/content/backtesting/overfitting-and-curve-fitting";
+import { lesson as backtestingPitfalls } from "@/lib/lessons/content/backtesting/backtesting-pitfalls";
+import { lesson as evaluatingABacktest } from "@/lib/lessons/content/backtesting/evaluating-a-backtest-and-going-live";
+
+// 300-level: Crypto (DeFi & derivatives).
+import { lesson as defiLendingAndBorrowing } from "@/lib/lessons/content/crypto-300/defi-lending-and-borrowing";
+import { lesson as liquidityProvidingImpermanentLoss } from "@/lib/lessons/content/crypto-300/liquidity-providing-and-impermanent-loss";
+import { lesson as perpetualFuturesAndFunding } from "@/lib/lessons/content/crypto-300/perpetual-futures-and-funding-rates";
+import { lesson as leverageAndLiquidationCrypto } from "@/lib/lessons/content/crypto-300/leverage-and-liquidation-in-crypto";
+import { lesson as bridgesAndCrossChainRisk } from "@/lib/lessons/content/crypto-300/bridges-and-cross-chain-risk";
+import { lesson as cryptoRiskManagement } from "@/lib/lessons/content/crypto-300/crypto-risk-management-and-portfolio";
+
 // The single source of truth for the lesson bank. Display order is computed from
 // the taxonomy (track → module → moduleOrder via getOrderedLessons); this array's
 // order only needs to contain every lesson. Grouped by module for readability.
@@ -250,6 +280,32 @@ export const lessons: Lesson[] = [
   scalping,
   systematicVsDiscretionary,
   tradingPsychology,
+  // Fixed income & products (300)
+  howBondsWork,
+  bondPricesAndYields,
+  yieldToMaturity,
+  interestRateRiskAndDuration,
+  creditRiskAndRatings,
+  theYieldCurve,
+  bondTypesAndFunds,
+  // Portfolio construction (300)
+  assetAllocation,
+  diversificationAndCorrelation,
+  mptAndEfficientFrontier,
+  rebalancing,
+  riskToleranceAndTimeHorizon,
+  // Backtesting (300)
+  whatBacktestingIsAndWhy,
+  overfittingAndCurveFitting,
+  backtestingPitfalls,
+  evaluatingABacktest,
+  // Crypto: DeFi & derivatives (300)
+  defiLendingAndBorrowing,
+  liquidityProvidingImpermanentLoss,
+  perpetualFuturesAndFunding,
+  leverageAndLiquidationCrypto,
+  bridgesAndCrossChainRisk,
+  cryptoRiskManagement,
 ];
 
 export function getAllLessons(): Lesson[] {
