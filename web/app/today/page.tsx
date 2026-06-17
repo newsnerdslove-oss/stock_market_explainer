@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAllQuestions } from "@/lib/quiz";
 import { DailyToday } from "@/components/DailyToday";
+import { DailyChallengeTeaser } from "@/components/DailyChallenge";
 import { AuthControls } from "@/components/AuthControls";
 
 export const metadata = {
@@ -22,7 +23,9 @@ export default function TodayPage() {
 
       <DailyToday allQuestions={allQuestions} />
 
-      <p className="mt-8 text-sm text-muted">
+      <DailyChallengeTeaser />
+
+      <p className="mt-6 text-sm text-muted">
         Ready to test under pressure?{" "}
         <Link href="/exam" className="text-learn transition hover:opacity-80">
           Take a timed practice exam →
