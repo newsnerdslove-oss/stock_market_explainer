@@ -25,8 +25,9 @@ export function StudyPlanView({ examLessons }: { examLessons: ExamLessonRef[] })
       fnTag: l.fnTag,
       done: (progress.quizzes[l.slug]?.bestScore ?? 0) >= PASS_SCORE,
     }));
-    return buildStudyPlan(readiness, lessons);
-  }, [progress.exams, progress.quizzes, examLessons]);
+    const asked = new Set(progress.tutorLog.map((t) => t.slug));
+    return buildStudyPlan(readiness, lessons, asked);
+  }, [progress.exams, progress.quizzes, progress.tutorLog, examLessons]);
 
   if (!hydrated) {
     return <p className="mt-8 text-sm text-faint">Loading your plan…</p>;
@@ -95,6 +96,10 @@ function StepRow({ step, n }: { step: StudyStep; n: number }) {
               <>
                 <span className="font-mono">{step.fnCode}</span> · 20-question timed drill
               </>
+            ) : step.revisit ? (
+              <>
+                You asked about this · {step.moduleTitle}
+              </>
             ) : (
               <>
                 {step.moduleTitle} · strengthen <span className="font-mono">{step.fnCode}</span>
@@ -104,10 +109,10 @@ function StepRow({ step, n }: { step: StudyStep; n: number }) {
         </span>
         <span
           className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wide ${
-            isDrill ? "border-learn/50 text-learn" : "border-strong text-muted"
+            isDrill ? "border-learn/50 text-learn" : step.kind === "lesson" && step.revisit ? "border-streak/50 text-streak" : "border-strong text-muted"
           }`}
         >
-          {isDrill ? "test" : "learn"}
+          {isDrill ? "test" : step.kind === "lesson" && step.revisit ? "revisit" : "learn"}
         </span>
       </Link>
     </li>

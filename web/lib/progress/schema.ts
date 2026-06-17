@@ -7,10 +7,13 @@
 // not a redesign. v2 (Phase 2b) adds `review` (Leitner spaced repetition),
 // `streak`, and `tz`; this file is the one place that knows the shape.
 
-export const CURRENT_VERSION = 3;
+export const CURRENT_VERSION = 4;
 
 /** Most recent exam attempts kept per user (newest first). Older ones are dropped. */
 export const MAX_EXAM_HISTORY = 50;
+
+/** Most recent tutor questions kept per user (newest first). */
+export const MAX_TUTOR_LOG = 100;
 
 /** Mastery thresholds (fractions of the quiz answered correctly). */
 export const PASS_SCORE = 0.8;
@@ -31,6 +34,22 @@ export interface QuizProgress {
   lastAt: string;
   /** ISO timestamp of the first passing attempt, or null if never passed. */
   passedAt: string | null;
+}
+
+/** One tutor "ask about this lesson" question. Keyed by `id` in `tutorLog`. */
+export interface TutorQuery {
+  /** Unique, stable id — `<slug>-<ISO timestamp>`. */
+  id: string;
+  /** ISO timestamp the question was asked. */
+  at: string;
+  /** Lesson slug the question was asked from. */
+  slug: string;
+  /** The question text. */
+  question: string;
+  /** How it was answered: self-hosted model, retrieval-only, or no match. */
+  mode: "llm" | "retrieval" | "none";
+  /** Lesson slugs the answer cited as sources. */
+  sourceSlugs: string[];
 }
 
 /** Leitner spaced-repetition state for one question. Keyed by question id in `review`. */
@@ -85,6 +104,8 @@ export interface Progress {
   review: Record<string, ReviewItem>;
   /** Completed practice-exam attempts, newest first (capped at MAX_EXAM_HISTORY). */
   exams: ExamAttempt[];
+  /** Tutor questions asked, newest first (capped at MAX_TUTOR_LOG). */
+  tutorLog: TutorQuery[];
   streak: StreakState;
   /** IANA time zone, so "today" is computed on the learner's local calendar day. */
   tz: string;
@@ -105,6 +126,7 @@ export function defaultProgress(): Progress {
     quizzes: {},
     review: {},
     exams: [],
+    tutorLog: [],
     streak: defaultStreak(),
     tz: "",
     lastSession: null,
@@ -137,6 +159,16 @@ export function migrate(raw: unknown): Progress {
             typeof (e as ExamAttempt).score === "number",
         ) as ExamAttempt[]).slice(0, MAX_EXAM_HISTORY)
       : [];
+  // Keep only well-formed tutor questions; absent/corrupt -> [].
+  const tutorLog = (v: unknown): TutorQuery[] =>
+    Array.isArray(v)
+      ? (v.filter(
+          (e) =>
+            e && typeof e === "object" &&
+            typeof (e as TutorQuery).id === "string" &&
+            typeof (e as TutorQuery).question === "string",
+        ) as TutorQuery[]).slice(0, MAX_TUTOR_LOG)
+      : [];
   // Construct explicitly (rather than spreading `s`) so unknown or wrong-typed
   // fields from corrupt/tampered storage can't leak into Progress.
   return {
@@ -145,6 +177,7 @@ export function migrate(raw: unknown): Progress {
     quizzes: obj(s.quizzes, base.quizzes),
     review: obj(s.review, base.review),
     exams: exams(s.exams),
+    tutorLog: tutorLog(s.tutorLog),
     streak: obj(s.streak, base.streak),
     tz: str(s.tz, base.tz),
     lastSession: strOrNull(s.lastSession),
