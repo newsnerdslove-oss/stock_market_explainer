@@ -35,3 +35,25 @@ body {
 summary::-webkit-details-marker {
   display: none;
 }
+
+/* Keyboard focus ring on every interactive control — the spec's "0 0 0 3px accent
+   at low alpha" (and WCAG 2.4.7). Uses box-shadow so it isn't cancelled by the
+   `focus:outline-none` utilities some inputs carry, and only shows for keyboard
+   (`:focus-visible`), not mouse clicks. */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(139, 124, 246, 0.45); /* --learn at ~45% */
+  border-radius: 6px;
+}
+
+/* Respect reduced-motion: collapse transitions and the loading-skeleton pulse. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
