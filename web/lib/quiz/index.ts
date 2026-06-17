@@ -187,6 +187,32 @@ import { questions as shortMarginAccountMath } from "@/lib/quiz/content/margin-m
 import { questions as combinedLongShortMarginMath } from "@/lib/quiz/content/margin-math/combined-long-short-margin-math";
 import { questions as maintenanceCallsAndMinimumMaintenancePrice } from "@/lib/quiz/content/margin-math/maintenance-calls-and-minimum-maintenance-price";
 
+// 400-level: Regulatory framework.
+import { questions as secAndFoundationalFederalActs } from "@/lib/quiz/content/regulation/sec-and-foundational-federal-acts";
+import { questions as finraSelfRegulatoryOrganization } from "@/lib/quiz/content/regulation/finra-self-regulatory-organization";
+import { questions as msrbMunicipalSecuritiesRulemaking } from "@/lib/quiz/content/regulation/msrb-municipal-securities-rulemaking";
+import { questions as sieSeries7ExamAndRegistrationFramework } from "@/lib/quiz/content/regulation/sie-series7-exam-and-registration-framework";
+import { questions as registeringRepresentativesU4U5Ce } from "@/lib/quiz/content/regulation/registering-representatives-u4-u5-ce";
+import { questions as prohibitedPracticesInsiderTradingManipulation } from "@/lib/quiz/content/regulation/prohibited-practices-insider-trading-manipulation";
+import { questions as reportingAndRecordkeeping } from "@/lib/quiz/content/regulation/reporting-and-recordkeeping";
+import { questions as antiMoneyLaunderingBsaPatriotAct } from "@/lib/quiz/content/regulation/anti-money-laundering-bsa-patriot-act";
+
+// 400-level: Municipal & debt securities.
+import { questions as goVsRevenueBonds } from "@/lib/quiz/content/muni-debt/go-vs-revenue-bonds";
+import { questions as municipalTaxationAndTey } from "@/lib/quiz/content/muni-debt/municipal-taxation-and-tey";
+import { questions as muniYieldsAndBasisPricing } from "@/lib/quiz/content/muni-debt/muni-yields-and-basis-pricing";
+import { questions as callableRefundedConvertiblePutBonds } from "@/lib/quiz/content/muni-debt/callable-refunded-convertible-put-bonds";
+import { questions as moneyMarketAndShortTermDebt } from "@/lib/quiz/content/muni-debt/money-market-and-short-term-debt";
+import { questions as municipalDebtExamMath } from "@/lib/quiz/content/muni-debt/municipal-debt-exam-math";
+
+// 400-level: Accounts & processing.
+import { questions as accountTypesOwnershipAndAuthority } from "@/lib/quiz/content/accounts/account-types-ownership-and-authority";
+import { questions as optionsAccountApprovalAndSpecialDocs } from "@/lib/quiz/content/accounts/options-account-approval-and-special-docs";
+import { questions as openingAccountsCipApprovalAndSpecialSituations } from "@/lib/quiz/content/accounts/opening-accounts-cip-approval-and-special-situations";
+import { questions as confirmationsSettlementT1AndRegT } from "@/lib/quiz/content/accounts/confirmations-settlement-t1-and-reg-t";
+import { questions as booksRecordsStatementsAndAcats } from "@/lib/quiz/content/accounts/books-records-statements-and-acats";
+import { questions as settlementDeliveryEdgeCasesAndExDate } from "@/lib/quiz/content/accounts/settlement-delivery-edge-cases-and-ex-date";
+
 // Single source of truth for the question bank, keyed by lesson slug. Mirrors
 // lib/lessons/index.ts; later phases swap this for Supabase-backed queries while
 // keeping the same Question shape and helper signatures.
@@ -354,6 +380,29 @@ const byLesson: Record<string, Question[]> = {
   "short-margin-account-math": shortMarginAccountMath,
   "combined-long-short-margin-math": combinedLongShortMarginMath,
   "maintenance-calls-and-minimum-maintenance-price": maintenanceCallsAndMinimumMaintenancePrice,
+  // Regulatory framework (400)
+  "sec-and-foundational-federal-acts": secAndFoundationalFederalActs,
+  "finra-self-regulatory-organization": finraSelfRegulatoryOrganization,
+  "msrb-municipal-securities-rulemaking": msrbMunicipalSecuritiesRulemaking,
+  "sie-series7-exam-and-registration-framework": sieSeries7ExamAndRegistrationFramework,
+  "registering-representatives-u4-u5-ce": registeringRepresentativesU4U5Ce,
+  "prohibited-practices-insider-trading-manipulation": prohibitedPracticesInsiderTradingManipulation,
+  "reporting-and-recordkeeping": reportingAndRecordkeeping,
+  "anti-money-laundering-bsa-patriot-act": antiMoneyLaunderingBsaPatriotAct,
+  // Municipal & debt securities (400)
+  "go-vs-revenue-bonds": goVsRevenueBonds,
+  "municipal-taxation-and-tey": municipalTaxationAndTey,
+  "muni-yields-and-basis-pricing": muniYieldsAndBasisPricing,
+  "callable-refunded-convertible-put-bonds": callableRefundedConvertiblePutBonds,
+  "money-market-and-short-term-debt": moneyMarketAndShortTermDebt,
+  "municipal-debt-exam-math": municipalDebtExamMath,
+  // Accounts & processing (400)
+  "account-types-ownership-and-authority": accountTypesOwnershipAndAuthority,
+  "options-account-approval-and-special-docs": optionsAccountApprovalAndSpecialDocs,
+  "opening-accounts-cip-approval-and-special-situations": openingAccountsCipApprovalAndSpecialSituations,
+  "confirmations-settlement-t1-and-reg-t": confirmationsSettlementT1AndRegT,
+  "books-records-statements-and-acats": booksRecordsStatementsAndAcats,
+  "settlement-delivery-edge-cases-and-ex-date": settlementDeliveryEdgeCasesAndExDate,
 };
 
 /** Questions for one lesson's quiz, in authored order. Empty if none exist. */
