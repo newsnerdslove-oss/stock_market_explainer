@@ -4,7 +4,7 @@
 // All calls are best-effort: any failure leaves the app on localStorage-only.
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { defaultProgress, type Progress, type StreakState } from "@/lib/progress/schema";
+import { defaultProgress, type ExamAttempt, type Progress, type StreakState } from "@/lib/progress/schema";
 
 // Dedupe concurrent first-time anonymous sign-ins. Without this, two providers
 // mounting together (Progress + Trading on /simulator) each call
@@ -37,6 +37,7 @@ export function hasData(p: Progress): boolean {
   return (
     Object.keys(p.quizzes).length > 0 ||
     Object.keys(p.review).length > 0 ||
+    p.exams.length > 0 ||
     p.streak.current > 0 ||
     p.lastSession != null
   );
@@ -48,12 +49,13 @@ export async function loadServerProgress(
   userId: string,
 ): Promise<Progress | null> {
   try {
-    const [up, qz, rv] = await Promise.all([
+    const [up, qz, rv, ex] = await Promise.all([
       supabase.from("user_progress").select("schema_version,streak,tz,last_session,updated_at").eq("user_id", userId).maybeSingle(),
       supabase.from("quiz_progress").select("lesson_slug,best_score,last_score,attempts,last_at,passed_at").eq("user_id", userId),
       supabase.from("review_items").select("question_id,box,due,last,reps,lapses").eq("user_id", userId),
+      supabase.from("exam_attempts").select("id,mode,at,score,correct,total,passed,by_function").eq("user_id", userId).order("at", { ascending: false }),
     ]);
-    if (up.error || qz.error || rv.error) return null;
+    if (up.error || qz.error || rv.error || ex.error) return null;
 
     const base = defaultProgress();
     base.userId = userId;
@@ -75,6 +77,10 @@ export async function loadServerProgress(
         box: r.box, due: r.due, last: r.last, reps: r.reps, lapses: r.lapses,
       };
     }
+    base.exams = (ex.data ?? []).map((r) => ({
+      id: r.id, mode: r.mode, at: r.at, score: r.score, correct: r.correct,
+      total: r.total, passed: r.passed, byFunction: (r.by_function ?? {}) as ExamAttempt["byFunction"],
+    }));
     return base;
   } catch {
     return null;
@@ -103,6 +109,11 @@ export async function saveServerProgress(
       reps: r.reps, lapses: r.lapses, updated_at: now,
     }));
     if (reviewRows.length) await supabase.from("review_items").upsert(reviewRows, { onConflict: "user_id,question_id" });
+    const examRows = p.exams.map((e) => ({
+      user_id: userId, id: e.id, mode: e.mode, at: e.at, score: e.score,
+      correct: e.correct, total: e.total, passed: e.passed, by_function: e.byFunction, updated_at: now,
+    }));
+    if (examRows.length) await supabase.from("exam_attempts").upsert(examRows, { onConflict: "user_id,id" });
   } catch {
     /* best-effort — localStorage remains the cache */
   }

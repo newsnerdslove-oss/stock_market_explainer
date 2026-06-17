@@ -20,9 +20,10 @@ type Phase = "setup" | "running" | "results";
  * spaced-repetition schedule and counts as training today.
  */
 export function ExamApp({ allQuestions }: { allQuestions: Question[] }) {
-  const { recordReview, markActiveToday } = useProgress();
+  const { progress, hydrated, recordReview, recordExam, markActiveToday } = useProgress();
   const [phase, setPhase] = useState<Phase>("setup");
   const [exam, setExam] = useState<SelectedExam | null>(null);
+  const [modeId, setModeId] = useState<string>("");
   const [result, setResult] = useState<ExamResult | null>(null);
   // Guards against a double-submit race (timer hitting 0 and the button firing
   // in the same tick would otherwise grade — and record reviews — twice).
@@ -44,6 +45,7 @@ export function ExamApp({ allQuestions }: { allQuestions: Question[] }) {
     const selected = selectExamQuestions(mode, allQuestions); // Math.random — on user action only
     if (selected.questions.length === 0) return;
     submittedRef.current = false;
+    setModeId(modeId);
     setExam(selected);
     setResult(null);
     setPhase("running");
@@ -57,6 +59,20 @@ export function ExamApp({ allQuestions }: { allQuestions: Question[] }) {
     const missed = new Set(res.missed.map((m) => m.question.id));
     for (const q of exam.questions) recordReview(q.id, !missed.has(q.id));
     markActiveToday();
+    // Persist the attempt to exam history (newest-first, capped).
+    const at = new Date().toISOString();
+    recordExam({
+      id: `${modeId}-${at}`,
+      mode: modeId,
+      at,
+      score: res.score,
+      correct: res.correct,
+      total: res.total,
+      passed: res.passed,
+      byFunction: Object.fromEntries(
+        res.byFunction.map((f) => [f.tag, { correct: f.correct, total: f.total }]),
+      ),
+    });
     setResult(res);
     setPhase("results");
   }
@@ -80,5 +96,11 @@ export function ExamApp({ allQuestions }: { allQuestions: Question[] }) {
     );
   }
 
-  return <ExamSetup availability={availability} onStart={start} />;
+  return (
+    <ExamSetup
+      availability={availability}
+      exams={hydrated ? progress.exams : []}
+      onStart={start}
+    />
+  );
 }

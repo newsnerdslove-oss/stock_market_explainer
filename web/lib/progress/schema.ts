@@ -7,7 +7,10 @@
 // not a redesign. v2 (Phase 2b) adds `review` (Leitner spaced repetition),
 // `streak`, and `tz`; this file is the one place that knows the shape.
 
-export const CURRENT_VERSION = 2;
+export const CURRENT_VERSION = 3;
+
+/** Most recent exam attempts kept per user (newest first). Older ones are dropped. */
+export const MAX_EXAM_HISTORY = 50;
 
 /** Mastery thresholds (fractions of the quiz answered correctly). */
 export const PASS_SCORE = 0.8;
@@ -44,6 +47,23 @@ export interface ReviewItem {
   lapses: number;
 }
 
+/** One completed practice-exam attempt. Keyed by `id` in `exams` (the PK server-side). */
+export interface ExamAttempt {
+  /** Unique, stable id — `<mode>-<ISO timestamp>`. */
+  id: string;
+  /** ExamMode id (e.g. "mock", "drill-fn3"). */
+  mode: string;
+  /** ISO timestamp the exam was submitted. */
+  at: string;
+  /** Overall fraction correct, 0..1. */
+  score: number;
+  correct: number;
+  total: number;
+  passed: boolean;
+  /** Per-function tally, keyed by function tag (e.g. "fn:3"). */
+  byFunction: Record<string, { correct: number; total: number }>;
+}
+
 export interface StreakState {
   /** Current consecutive-day streak. */
   current: number;
@@ -63,6 +83,8 @@ export interface Progress {
   quizzes: Record<string, QuizProgress>;
   /** Per-question spaced-repetition state, keyed by question id. */
   review: Record<string, ReviewItem>;
+  /** Completed practice-exam attempts, newest first (capped at MAX_EXAM_HISTORY). */
+  exams: ExamAttempt[];
   streak: StreakState;
   /** IANA time zone, so "today" is computed on the learner's local calendar day. */
   tz: string;
@@ -82,6 +104,7 @@ export function defaultProgress(): Progress {
     userId: null,
     quizzes: {},
     review: {},
+    exams: [],
     streak: defaultStreak(),
     tz: "",
     lastSession: null,
@@ -104,6 +127,16 @@ export function migrate(raw: unknown): Progress {
     v && typeof v === "object" && !Array.isArray(v) ? { ...fallback, ...(v as object) } : fallback;
   const str = (v: unknown, fallback: string): string => (typeof v === "string" ? v : fallback);
   const strOrNull = (v: unknown): string | null => (typeof v === "string" ? v : null);
+  // Keep only well-formed exam attempts from a v3 blob; absent/corrupt -> [].
+  const exams = (v: unknown): ExamAttempt[] =>
+    Array.isArray(v)
+      ? (v.filter(
+          (e) =>
+            e && typeof e === "object" &&
+            typeof (e as ExamAttempt).id === "string" &&
+            typeof (e as ExamAttempt).score === "number",
+        ) as ExamAttempt[]).slice(0, MAX_EXAM_HISTORY)
+      : [];
   // Construct explicitly (rather than spreading `s`) so unknown or wrong-typed
   // fields from corrupt/tampered storage can't leak into Progress.
   return {
@@ -111,6 +144,7 @@ export function migrate(raw: unknown): Progress {
     userId: strOrNull(s.userId),
     quizzes: obj(s.quizzes, base.quizzes),
     review: obj(s.review, base.review),
+    exams: exams(s.exams),
     streak: obj(s.streak, base.streak),
     tz: str(s.tz, base.tz),
     lastSession: strOrNull(s.lastSession),
