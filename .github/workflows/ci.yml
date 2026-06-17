@@ -1,0 +1,41 @@
+name: CI
+
+# Gate every PR (and pushes to main) on the same checks we run locally:
+# typecheck, the vitest suite, and a production build.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npm test
+
+      # next/font fetches the webfonts at build time (CI has network); the app
+      # builds without Supabase/tutor env (both are handled gracefully).
+      - name: Build
+        run: npm run build
