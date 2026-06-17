@@ -213,6 +213,15 @@ import { questions as confirmationsSettlementT1AndRegT } from "@/lib/quiz/conten
 import { questions as booksRecordsStatementsAndAcats } from "@/lib/quiz/content/accounts/books-records-statements-and-acats";
 import { questions as settlementDeliveryEdgeCasesAndExDate } from "@/lib/quiz/content/accounts/settlement-delivery-edge-cases-and-ex-date";
 
+// 400-level: Seeking business & communications (Series 7 Function 1).
+import { questions as communicationsThreeCategories } from "@/lib/quiz/content/communications/communications-three-categories";
+import { questions as approvalFilingRecordkeeping } from "@/lib/quiz/content/communications/approval-filing-recordkeeping";
+import { questions as contentStandardsProhibitedPractices } from "@/lib/quiz/content/communications/content-standards-prohibited-practices";
+import { questions as testimonialsEndorsementsRatings } from "@/lib/quiz/content/communications/testimonials-endorsements-ratings";
+import { questions as telemarketingColdCalling } from "@/lib/quiz/content/communications/telemarketing-cold-calling";
+import { questions as prospectingAppearancesSocialMedia } from "@/lib/quiz/content/communications/prospecting-appearances-social-media";
+import { questions as recommendationsRequiredDisclosures } from "@/lib/quiz/content/communications/recommendations-required-disclosures";
+
 // Single source of truth for the question bank, keyed by lesson slug. Mirrors
 // lib/lessons/index.ts; later phases swap this for Supabase-backed queries while
 // keeping the same Question shape and helper signatures.
@@ -403,6 +412,14 @@ const byLesson: Record<string, Question[]> = {
   "confirmations-settlement-t1-and-reg-t": confirmationsSettlementT1AndRegT,
   "books-records-statements-and-acats": booksRecordsStatementsAndAcats,
   "settlement-delivery-edge-cases-and-ex-date": settlementDeliveryEdgeCasesAndExDate,
+  // Seeking business & communications (400, F1)
+  "communications-three-categories": communicationsThreeCategories,
+  "approval-filing-recordkeeping": approvalFilingRecordkeeping,
+  "content-standards-prohibited-practices": contentStandardsProhibitedPractices,
+  "testimonials-endorsements-ratings": testimonialsEndorsementsRatings,
+  "telemarketing-cold-calling": telemarketingColdCalling,
+  "prospecting-appearances-social-media": prospectingAppearancesSocialMedia,
+  "recommendations-required-disclosures": recommendationsRequiredDisclosures,
 };
 
 /** Questions for one lesson's quiz, in authored order. Empty if none exist. */

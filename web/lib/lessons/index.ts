@@ -214,6 +214,15 @@ import { lesson as confirmationsSettlementT1AndRegT } from "@/lib/lessons/conten
 import { lesson as booksRecordsStatementsAndAcats } from "@/lib/lessons/content/accounts/books-records-statements-and-acats";
 import { lesson as settlementDeliveryEdgeCasesAndExDate } from "@/lib/lessons/content/accounts/settlement-delivery-edge-cases-and-ex-date";
 
+// 400-level: Seeking business & communications (Series 7 Function 1).
+import { lesson as communicationsThreeCategories } from "@/lib/lessons/content/communications/communications-three-categories";
+import { lesson as approvalFilingRecordkeeping } from "@/lib/lessons/content/communications/approval-filing-recordkeeping";
+import { lesson as contentStandardsProhibitedPractices } from "@/lib/lessons/content/communications/content-standards-prohibited-practices";
+import { lesson as testimonialsEndorsementsRatings } from "@/lib/lessons/content/communications/testimonials-endorsements-ratings";
+import { lesson as telemarketingColdCalling } from "@/lib/lessons/content/communications/telemarketing-cold-calling";
+import { lesson as prospectingAppearancesSocialMedia } from "@/lib/lessons/content/communications/prospecting-appearances-social-media";
+import { lesson as recommendationsRequiredDisclosures } from "@/lib/lessons/content/communications/recommendations-required-disclosures";
+
 // The single source of truth for the lesson bank. Display order is computed from
 // the taxonomy (track → module → moduleOrder via getOrderedLessons); this array's
 // order only needs to contain every lesson. Grouped by module for readability.
@@ -397,6 +406,14 @@ export const lessons: Lesson[] = [
   confirmationsSettlementT1AndRegT,
   booksRecordsStatementsAndAcats,
   settlementDeliveryEdgeCasesAndExDate,
+  // Seeking business & communications (400, F1)
+  communicationsThreeCategories,
+  approvalFilingRecordkeeping,
+  contentStandardsProhibitedPractices,
+  testimonialsEndorsementsRatings,
+  telemarketingColdCalling,
+  prospectingAppearancesSocialMedia,
+  recommendationsRequiredDisclosures,
   // Crypto: DeFi & derivatives (300)
   defiLendingAndBorrowing,
   liquidityProvidingImpermanentLoss,
