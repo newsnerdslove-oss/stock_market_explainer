@@ -96,7 +96,12 @@ export default async function Home() {
       </section>
 
       <section className="mt-12">
-        <h2 className="text-sm font-medium text-muted">Market service</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-medium text-muted">Market service</h2>
+          <span className="rounded-full border border-streak/40 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-streak">
+            Delayed
+          </span>
+        </div>
         {demo ? (
           <div className="mt-3">
             <p className="text-xs text-muted">
