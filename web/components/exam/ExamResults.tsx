@@ -105,6 +105,8 @@ export function ExamResults({
         </button>
       </div>
 
+      <p className="mt-3 text-xs text-faint">Saved to your exam history.</p>
+
       {/* Missed-question review */}
       {showReview && (
         <section className="mt-6 space-y-4">

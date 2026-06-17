@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { loadProgress, saveProgress } from "@/lib/progress/storage";
-import { defaultProgress, PASS_SCORE, type Progress, type QuizProgress } from "@/lib/progress/schema";
+import { defaultProgress, MAX_EXAM_HISTORY, PASS_SCORE, type ExamAttempt, type Progress, type QuizProgress } from "@/lib/progress/schema";
 import { grade, newItem, todayInTz } from "@/lib/review/schedule";
 import { completeSession } from "@/lib/progress/streak";
 import { createClient, supabaseConfigured } from "@/lib/supabase/client";
@@ -21,6 +21,8 @@ interface ProgressContextValue {
   recordQuizAttempt: (lessonSlug: string, score: number) => void;
   /** Record one answer to a question into the spaced-repetition schedule. */
   recordReview: (questionId: string, correct: boolean) => void;
+  /** Record a completed practice-exam attempt (stored newest-first, capped). */
+  recordExam: (attempt: ExamAttempt) => void;
   /** Count today as a training day for the streak, without marking the daily review done. */
   markActiveToday: () => void;
   /** Mark today's daily review session complete (advances the streak AND the review). */
@@ -169,6 +171,15 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const recordExam = useCallback((attempt: ExamAttempt) => {
+    if (!hydratedRef.current) return;
+    setProgress((prev) => ({
+      ...prev,
+      exams: [attempt, ...prev.exams].slice(0, MAX_EXAM_HISTORY),
+      updatedAt: new Date().toISOString(),
+    }));
+  }, []);
+
   const markActiveToday = useCallback(() => {
     if (!hydratedRef.current) return;
     setProgress((prev) => {
@@ -202,6 +213,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         hydrated,
         recordQuizAttempt,
         recordReview,
+        recordExam,
         markActiveToday,
         completeDailySession,
       }}
