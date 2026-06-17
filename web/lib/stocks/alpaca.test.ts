@@ -1,0 +1,55 @@
+import { describe, it, expect, afterEach } from "vitest";
+import { mapAlpacaQuote, mapAlpacaBars, alpacaConfigured } from "@/lib/stocks/alpaca";
+
+describe("alpacaConfigured", () => {
+  const k = process.env.ALPACA_API_KEY_ID;
+  const s = process.env.ALPACA_API_SECRET_KEY;
+  afterEach(() => {
+    if (k === undefined) delete process.env.ALPACA_API_KEY_ID;
+    else process.env.ALPACA_API_KEY_ID = k;
+    if (s === undefined) delete process.env.ALPACA_API_SECRET_KEY;
+    else process.env.ALPACA_API_SECRET_KEY = s;
+  });
+
+  it("is true only when both keys are present", () => {
+    process.env.ALPACA_API_KEY_ID = "x";
+    process.env.ALPACA_API_SECRET_KEY = "y";
+    expect(alpacaConfigured()).toBe(true);
+    delete process.env.ALPACA_API_SECRET_KEY;
+    expect(alpacaConfigured()).toBe(false);
+  });
+});
+
+describe("mapAlpacaQuote", () => {
+  it("uses last trade for price and the real (tight) bid/ask", () => {
+    const q = mapAlpacaQuote("AAPL", { p: 300.0, t: "2026-06-17T14:00:00Z" }, { bp: 299.98, ap: 300.02 });
+    expect(q).toEqual({ symbol: "AAPL", price: 300, bid: 299.98, ask: 300.02, timestamp: "2026-06-17T14:00:00Z", source: "alpaca-iex" });
+  });
+
+  it("collapses an implausibly wide (off-hours IEX) spread to the last trade", () => {
+    const q = mapAlpacaQuote("AAPL", { p: 296, t: "t" }, { bp: 279.62, ap: 309.91 }); // ~10% spread
+    expect(q.bid).toBe(296);
+    expect(q.ask).toBe(296);
+  });
+
+  it("falls back to last trade when bid/ask are missing", () => {
+    const q = mapAlpacaQuote("AAPL", { p: 296, t: "t" }, null);
+    expect(q.bid).toBe(296);
+    expect(q.ask).toBe(296);
+  });
+});
+
+describe("mapAlpacaBars", () => {
+  it("maps OHLCV, keeps ascending order, caps at limit", () => {
+    const bars = [
+      { o: 300.8, h: 301.95, l: 300.75, c: 300.8, v: 18913, t: "2026-06-17T13:30:00Z" },
+      { o: 300.8, h: 300.85, l: 299.56, c: 299.93, v: 11486, t: "2026-06-17T13:31:00Z" },
+      { o: 299.94, h: 301.61, l: 299.94, c: 301.21, v: 10313, t: "2026-06-17T13:32:00Z" },
+    ];
+    const { candles, source } = mapAlpacaBars("AAPL", bars, 2);
+    expect(source).toBe("alpaca-iex");
+    expect(candles).toHaveLength(2);
+    expect(candles[0].time < candles[1].time).toBe(true);
+    expect(candles[1]).toMatchObject({ time: "2026-06-17T13:32:00Z", open: 299.94, high: 301.61, low: 299.94, close: 301.21, volume: 10313 });
+  });
+});

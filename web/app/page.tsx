@@ -1,12 +1,24 @@
 import Link from "next/link";
 import { getHealth, getQuote, type Quote } from "@/lib/marketService";
+import { alpacaConfigured, fetchAlpacaQuote } from "@/lib/stocks/alpaca";
 import { CryptoTicker } from "@/components/CryptoTicker";
 
+const DEMO_SYMBOLS = ["AAPL", "MSFT", "TSLA"];
+
 async function loadDemo(): Promise<{ provider: string; quotes: Quote[] } | null> {
+  // Prefer Alpaca's real-time IEX feed when configured; fall back to the mock
+  // market-service if it errors or isn't set up.
+  if (alpacaConfigured()) {
+    try {
+      const quotes = await Promise.all(DEMO_SYMBOLS.map(fetchAlpacaQuote));
+      return { provider: "alpaca-iex", quotes };
+    } catch {
+      /* fall through to the market-service */
+    }
+  }
   try {
     const health = await getHealth();
-    const symbols = ["AAPL", "MSFT", "TSLA"];
-    const quotes = await Promise.all(symbols.map(getQuote));
+    const quotes = await Promise.all(DEMO_SYMBOLS.map(getQuote));
     return { provider: health.provider, quotes };
   } catch {
     return null; // market-service not running yet
@@ -75,10 +87,16 @@ export default async function Home() {
 
       <section className="mt-12">
         <div className="flex items-center gap-2">
-          <h2 className="text-sm font-medium text-muted">Market service</h2>
-          <span className="rounded-full border border-streak/40 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-streak">
-            Delayed
-          </span>
+          <h2 className="text-sm font-medium text-muted">Stocks</h2>
+          {demo?.provider === "alpaca-iex" ? (
+            <span className="rounded-full border border-up/40 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-up">
+              IEX · live
+            </span>
+          ) : (
+            <span className="rounded-full border border-streak/40 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-streak">
+              Delayed
+            </span>
+          )}
         </div>
         {demo ? (
           <div className="mt-3">
