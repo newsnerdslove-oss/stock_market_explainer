@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useToast } from "@/components/Toast";
 import { TradingProvider, useTrading } from "@/lib/trading/useTrading";
 import { equity, unrealizedPnL } from "@/lib/trading/ledger";
 import type { OrderSide, OrderType } from "@/lib/trading/schema";
@@ -20,6 +21,13 @@ export function Simulator() {
 
 function SimulatorBody() {
   const { portfolio, prices, ready, configured, refresh } = useTrading();
+  // Quote freshness — set on the client (avoids an SSR/hydration mismatch).
+  const [refreshedAt, setRefreshedAt] = useState<number | null>(null);
+  useEffect(() => setRefreshedAt(Date.now()), []);
+  const doRefresh = () => {
+    void refresh();
+    setRefreshedAt(Date.now());
+  };
 
   if (!configured) {
     return (
@@ -50,11 +58,18 @@ function SimulatorBody() {
 
       {/* positions */}
       <section className="rounded-lg border border-strong bg-surface p-5">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <h2 className="text-sm font-medium text-ink">Positions</h2>
-          <button type="button" onClick={() => void refresh()} className="text-xs text-muted transition hover:text-ink">
-            Refresh prices
-          </button>
+          <div className="flex items-center gap-3">
+            {refreshedAt && (
+              <span className="font-mono text-xs text-faint" title="Quotes are delayed mock data">
+                as of {new Date(refreshedAt).toLocaleTimeString()} · delayed
+              </span>
+            )}
+            <button type="button" onClick={doRefresh} className="text-xs text-muted transition hover:text-ink">
+              Refresh prices
+            </button>
+          </div>
         </div>
         {positions.length === 0 ? (
           <p className="mt-3 text-sm text-muted">No positions yet — place an order below.</p>
@@ -124,6 +139,7 @@ function Stat({ label, value, color }: { label: string; value: string; color?: s
 
 function OrderTicket({ onPlaced }: { onPlaced: () => void }) {
   const { placeOrder } = useTrading();
+  const toast = useToast();
   const [symbol, setSymbol] = useState("AAPL");
   const [side, setSide] = useState<OrderSide>("buy");
   const [type, setType] = useState<OrderType>("market");
@@ -144,9 +160,17 @@ function OrderTicket({ onPlaced }: { onPlaced: () => void }) {
       limitPrice: type === "limit" ? Number(limit) : null,
     });
     setBusy(false);
-    if (res.status === "rejected") setMsg({ kind: "err", text: res.reason ?? "Order rejected." });
-    else if (res.status === "pending") setMsg({ kind: "warn", text: "Limit order placed — it'll fill when the price crosses. Use Refresh to re-check." });
-    else setMsg({ kind: "ok", text: `Filled at ${money(res.filledPrice ?? 0)}.` });
+    if (res.status === "rejected") {
+      setMsg({ kind: "err", text: res.reason ?? "Order rejected." });
+    } else if (res.status === "pending") {
+      setMsg({ kind: "warn", text: "Limit order placed — it'll fill when the price crosses. Use Refresh to re-check." });
+    } else {
+      setMsg({ kind: "ok", text: `Filled at ${money(res.filledPrice ?? 0)}.` });
+      toast(
+        `Filled: ${side === "buy" ? "bought" : "sold"} ${qty} ${symbol.trim().toUpperCase()} @ ${money(res.filledPrice ?? 0)}`,
+        "ok",
+      );
+    }
     onPlaced();
   }
 

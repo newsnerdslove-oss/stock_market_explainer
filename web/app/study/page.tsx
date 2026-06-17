@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { examLessonFunctions } from "@/lib/exam/lessonFunctions";
 import { StudyPlanView } from "@/components/exam/StudyPlanView";
 
@@ -14,11 +13,7 @@ export default function StudyPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-16">
-      <Link href="/exam" className="text-sm text-muted transition hover:text-ink">
-        ← Exam
-      </Link>
-
-      <h1 className="mt-4 text-4xl font-medium tracking-tight">Study plan</h1>
+      <h1 className="text-4xl font-medium tracking-tight">Study plan</h1>
       <p className="mt-3 text-muted">
         Your next steps, in order — built from your exam history and lesson progress to close the gaps
         that matter most for the <span className="font-mono">72%</span> pass bar.

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { getAllQuestions } from "@/lib/quiz";
 import { ExamApp } from "@/components/exam/ExamApp";
 
@@ -14,11 +13,7 @@ export default function ExamPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-16">
-      <Link href="/" className="text-sm text-muted transition hover:text-ink">
-        ← Home
-      </Link>
-
-      <h1 className="mt-4 text-4xl font-medium tracking-tight">Exam</h1>
+      <h1 className="text-4xl font-medium tracking-tight">Exam</h1>
       <p className="mt-3 text-muted">
         Timed, Series 7-style practice exams over the mastery curriculum — weighted by exam function,
         scored at <span className="font-mono">72%</span>, with a breakdown of where to study next.
