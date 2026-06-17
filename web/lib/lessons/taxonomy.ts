@@ -58,6 +58,10 @@ export const MODULES = [
   { id: "markets-risk", trackId: "markets", title: "Risk management", order: 8, level: 200, description: "Position sizing, risk per trade, stops, risk/reward, drawdown, diversification." },
   { id: "markets-structure", trackId: "markets", title: "Market structure", order: 9, level: 200, description: "Order book & depth, market makers, exchanges/ECNs/dark pools, clearing & settlement, extended hours, halts." },
   { id: "markets-derivatives", trackId: "markets", title: "Derivatives intro", order: 10, level: 200, description: "What a derivative is, calls & puts, option premium & leverage, futures." },
+  // 300-level: Strategy & professional toolkit.
+  { id: "markets-options", trackId: "markets", title: "Options strategies", order: 11, level: 300, description: "Greeks, covered calls, protective puts, spreads, straddles, iron condors — with payoff diagrams." },
+  { id: "markets-margin", trackId: "markets", title: "Margin & leverage", order: 12, level: 300, description: "Margin accounts, Reg T, maintenance & calls, buying power, short selling, day-trading margin." },
+  { id: "markets-styles", trackId: "markets", title: "Trading styles", order: 13, level: 300, description: "Day/swing/position trading, scalping, systematic vs discretionary, and trading psychology." },
   { id: "crypto-100", trackId: "crypto", title: "Crypto basics", order: 1, level: 100, description: "Coins vs. tokens, exchanges vs. wallets, supply, volatility, and custody." },
   { id: "crypto-200", trackId: "crypto", title: "Crypto: wallets, DeFi & on-chain", order: 2, level: 200, description: "Hot/cold wallets, on-chain vs exchange price, stablecoins, gas, DEX vs CEX, staking, on-chain data." },
 ] as const satisfies readonly ModuleDef[];

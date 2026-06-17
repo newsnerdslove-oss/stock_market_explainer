@@ -45,6 +45,8 @@ function sectionToText(s: Section): string | null {
       return s.terms.map((t) => `${t.term}: ${strip(t.def)}`).join(" ");
     case "chart":
       return s.caption ? strip(s.caption) : null;
+    case "payoff":
+      return [s.title, s.caption].filter(Boolean).map((t) => strip(t as string)).join(" ") || null;
   }
 }
 

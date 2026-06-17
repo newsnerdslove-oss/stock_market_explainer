@@ -1,5 +1,6 @@
 import type { Section } from "@/lib/lessons/types";
 import { CandleAnatomy } from "@/components/charts/CandleAnatomy";
+import { PayoffDiagram } from "@/components/charts/PayoffDiagram";
 import { inline } from "@/lib/inline";
 
 // Color encodes meaning (design principle #3): learn=violet, up=green, streak=amber.
@@ -68,6 +69,16 @@ function SectionBlock({ section }: { section: Section }) {
         </figure>
       );
     }
+
+    case "payoff":
+      return (
+        <figure className="mt-8 rounded-lg border border-strong bg-surface p-5">
+          <PayoffDiagram legs={section.legs} title={section.title} />
+          {section.caption && (
+            <figcaption className="mt-3 text-center text-xs text-faint">{section.caption}</figcaption>
+          )}
+        </figure>
+      );
   }
 }
 

@@ -13,6 +13,21 @@ export type ChartKind = "candle-anatomy";
 export type CalloutTone = "info" | "tip" | "warn";
 
 /**
+ * One leg of an options/stock position, used to draw a payoff-at-expiration
+ * diagram. The renderer computes the P/L curve, breakevens, and max profit/loss
+ * from the legs — authors specify the position, not the math.
+ * Option `qty` is in contracts (×100 shares); stock `qty` is in shares; a stock
+ * leg uses `premium` as its entry price and omits `strike`.
+ */
+export type PayoffLeg = {
+  instrument: "call" | "put" | "stock";
+  side: "long" | "short";
+  strike?: number;
+  premium?: number;
+  qty?: number;
+};
+
+/**
  * A single block within a lesson. Text bodies support a tiny inline syntax:
  *   **bold**  and  `code`.
  */
@@ -22,6 +37,7 @@ export type Section =
   | { type: "list"; items: string[]; ordered?: boolean }
   | { type: "callout"; tone?: CalloutTone; body: string }
   | { type: "chart"; kind: ChartKind; caption?: string }
+  | { type: "payoff"; legs: PayoffLeg[]; title?: string; caption?: string }
   | { type: "keyTerms"; terms: { term: string; def: string }[] };
 
 export interface Lesson {

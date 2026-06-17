@@ -105,6 +105,33 @@ import { lesson as dexVsCex } from "@/lib/lessons/content/crypto-200/dex-vs-cex"
 import { lesson as staking } from "@/lib/lessons/content/crypto-200/staking";
 import { lesson as readingOnChainData } from "@/lib/lessons/content/crypto-200/reading-on-chain-data";
 
+// 300-level: Options strategies.
+import { lesson as optionsGreeks } from "@/lib/lessons/content/options/options-greeks";
+import { lesson as coveredCall } from "@/lib/lessons/content/options/covered-call";
+import { lesson as protectivePut } from "@/lib/lessons/content/options/protective-put";
+import { lesson as cashSecuredPut } from "@/lib/lessons/content/options/cash-secured-put";
+import { lesson as bullCallSpread } from "@/lib/lessons/content/options/bull-call-spread";
+import { lesson as bearPutSpread } from "@/lib/lessons/content/options/bear-put-spread";
+import { lesson as bullPutSpreadCredit } from "@/lib/lessons/content/options/bull-put-spread-credit";
+import { lesson as longStraddle } from "@/lib/lessons/content/options/long-straddle";
+import { lesson as ironCondor } from "@/lib/lessons/content/options/iron-condor";
+
+// 300-level: Margin & leverage.
+import { lesson as marginAccountsRegT } from "@/lib/lessons/content/margin/margin-accounts-and-regulation-t";
+import { lesson as maintenanceMarginCalls } from "@/lib/lessons/content/margin/maintenance-margin-and-margin-calls";
+import { lesson as buyingPowerLeverage } from "@/lib/lessons/content/margin/buying-power-and-leverage-math";
+import { lesson as shortSellingMargin } from "@/lib/lessons/content/margin/short-selling-on-margin";
+import { lesson as realCostsRisksMargin } from "@/lib/lessons/content/margin/real-costs-and-risks-of-margin";
+import { lesson as dayTradingBuyingPower } from "@/lib/lessons/content/margin/day-trading-buying-power";
+
+// 300-level: Trading styles.
+import { lesson as dayTrading } from "@/lib/lessons/content/styles/day-trading";
+import { lesson as swingTrading } from "@/lib/lessons/content/styles/swing-trading";
+import { lesson as positionTrading } from "@/lib/lessons/content/styles/position-trading-trend-following";
+import { lesson as scalping } from "@/lib/lessons/content/styles/scalping";
+import { lesson as systematicVsDiscretionary } from "@/lib/lessons/content/styles/systematic-vs-discretionary-edges";
+import { lesson as tradingPsychology } from "@/lib/lessons/content/styles/trading-psychology-and-plan";
+
 // The single source of truth for the lesson bank. Display order is computed from
 // the taxonomy (track → module → moduleOrder via getOrderedLessons); this array's
 // order only needs to contain every lesson. Grouped by module for readability.
@@ -199,6 +226,30 @@ export const lessons: Lesson[] = [
   dexVsCex,
   staking,
   readingOnChainData,
+  // Options strategies (300)
+  optionsGreeks,
+  coveredCall,
+  protectivePut,
+  cashSecuredPut,
+  bullCallSpread,
+  bearPutSpread,
+  bullPutSpreadCredit,
+  longStraddle,
+  ironCondor,
+  // Margin & leverage (300)
+  marginAccountsRegT,
+  maintenanceMarginCalls,
+  buyingPowerLeverage,
+  shortSellingMargin,
+  realCostsRisksMargin,
+  dayTradingBuyingPower,
+  // Trading styles (300)
+  dayTrading,
+  swingTrading,
+  positionTrading,
+  scalping,
+  systematicVsDiscretionary,
+  tradingPsychology,
 ];
 
 export function getAllLessons(): Lesson[] {
