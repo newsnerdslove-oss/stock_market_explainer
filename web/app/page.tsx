@@ -34,15 +34,8 @@ export default async function Home() {
   const demo = await loadDemo();
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-16">
-      <div className="flex items-center gap-2.5">
-        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-up text-canvas">
-          <span className="text-sm font-medium">$</span>
-        </div>
-        <span className="text-sm font-medium tracking-tight">Explainer</span>
-      </div>
-
-      <h1 className="mt-8 text-4xl font-medium tracking-tight">
+    <main className="mx-auto max-w-3xl px-6 pb-16 pt-12">
+      <h1 className="text-4xl font-medium tracking-tight">
         Learn the markets. <span className="text-muted">Daily.</span>
       </h1>
       <p className="mt-3 max-w-xl text-muted">
@@ -50,7 +43,7 @@ export default async function Home() {
         mastery — with a paper-trading simulator on near-real-time quotes.
       </p>
 
-      <div className="mt-6 flex items-center gap-3">
+      <div className="mt-6 flex flex-wrap items-center gap-3">
         <Link
           href="/learn"
           className="inline-flex items-center gap-2 rounded-md bg-up px-4 py-2 text-sm font-medium text-canvas transition hover:opacity-90"
@@ -62,24 +55,6 @@ export default async function Home() {
           className="inline-flex items-center gap-2 rounded-md border border-strong px-4 py-2 text-sm text-ink transition hover:bg-surface-2"
         >
           Daily review →
-        </Link>
-        <Link
-          href="/progress"
-          className="inline-flex items-center gap-2 rounded-md border border-strong px-4 py-2 text-sm text-ink transition hover:bg-surface-2"
-        >
-          My progress →
-        </Link>
-        <Link
-          href="/exam"
-          className="inline-flex items-center gap-2 rounded-md border border-strong px-4 py-2 text-sm text-ink transition hover:bg-surface-2"
-        >
-          Practice exam →
-        </Link>
-        <Link
-          href="/simulator"
-          className="inline-flex items-center gap-2 rounded-md border border-strong px-4 py-2 text-sm text-ink transition hover:bg-surface-2"
-        >
-          Simulator →
         </Link>
       </div>
 

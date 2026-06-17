@@ -14,7 +14,7 @@ export default function TodayPage() {
   const allQuestions = getAllQuestions();
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
+    <main className="mx-auto max-w-2xl px-6 pb-16 pt-10">
       <h1 className="text-4xl font-medium tracking-tight">Today</h1>
       <p className="mt-3 text-muted">
         A few minutes of review keeps what you&apos;ve learned from fading — and keeps your streak alive.

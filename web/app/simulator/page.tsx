@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function SimulatorPage() {
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
+    <main className="mx-auto max-w-2xl px-6 pb-16 pt-10">
       <h1 className="text-4xl font-medium tracking-tight">Simulator</h1>
       <p className="mt-3 text-muted">
         Practice trading with <span className="font-mono text-ink">$100,000</span> of virtual cash — no real money.

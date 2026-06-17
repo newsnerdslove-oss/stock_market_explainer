@@ -108,8 +108,12 @@ function StepRow({ step, n }: { step: StudyStep; n: number }) {
           </span>
         </span>
         <span
-          className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wide ${
-            isDrill ? "border-learn/50 text-learn" : step.kind === "lesson" && step.revisit ? "border-streak/50 text-streak" : "border-strong text-muted"
+          className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wide ${
+            isDrill
+              ? "bg-learn font-medium text-canvas" // a test/action — filled
+              : step.kind === "lesson" && step.revisit
+                ? "border border-streak/50 text-streak" // revisit — amber outline
+                : "border border-strong text-muted" // read a lesson — neutral outline
           }`}
         >
           {isDrill ? "test" : step.kind === "lesson" && step.revisit ? "revisit" : "learn"}

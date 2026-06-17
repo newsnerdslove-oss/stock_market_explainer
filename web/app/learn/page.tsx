@@ -21,7 +21,7 @@ export default function LearnIndex() {
   }));
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-16">
+    <main className="mx-auto max-w-3xl px-6 pb-16 pt-10">
       <h1 className="text-4xl font-medium tracking-tight">Learn</h1>
 
       <LearnList lessons={lessons} />
