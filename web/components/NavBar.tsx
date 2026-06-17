@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useProgress } from "@/lib/progress/useProgress";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const DESTINATIONS = [
   { href: "/learn", label: "Learn" },
@@ -50,14 +51,14 @@ export function NavBar() {
           );
         })}
 
-        {streak > 0 && (
-          <span
-            className="ml-auto flex shrink-0 items-center gap-1 pl-2 font-mono text-xs text-streak"
-            title="Day streak"
-          >
-            🔥 {streak}
-          </span>
-        )}
+        <div className="ml-auto flex shrink-0 items-center gap-1 pl-2">
+          {streak > 0 && (
+            <span className="flex items-center gap-1 font-mono text-xs text-streak" title="Day streak">
+              🔥 {streak}
+            </span>
+          )}
+          <ThemeToggle />
+        </div>
       </nav>
     </header>
   );

@@ -39,17 +39,25 @@ export const metadata: Metadata = {
   },
 };
 
-// Pins the mobile browser chrome to the app canvas and the standard viewport.
+// Pins the mobile browser chrome to the canvas of whichever theme is active.
 export const viewport: Viewport = {
-  themeColor: "#0B0E14",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#0B0E14" },
+    { media: "(prefers-color-scheme: light)", color: "#F4F6FA" },
+  ],
   width: "device-width",
   initialScale: 1,
 };
 
+// Applies the saved (or system-preferred) theme before first paint, so there's
+// no flash of the wrong theme. Inline + synchronous at the top of <body>.
+const THEME_INIT = `(function(){try{var t=localStorage.getItem('theme');if(!t){t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}if(t==='light'){document.documentElement.classList.add('light');}}catch(e){}})();`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
       <body className="min-h-screen font-sans antialiased">
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
         <ProgressProvider>
           <ToastProvider>
             <NavBar />
