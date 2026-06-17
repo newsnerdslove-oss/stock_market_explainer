@@ -7,18 +7,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        canvas: "#0B0E14",
-        surface: "#141922",
-        "surface-2": "#1B212C",
-        hairline: "#1E2530",
-        strong: "#232A36",
-        ink: "#E8EDF4", // text-primary
-        muted: "#8A94A6", // text-secondary
-        faint: "#5A6376", // text-tertiary
-        up: "#2BD17E",
-        down: "#FF5C5C",
-        learn: "#8B7CF6",
-        streak: "#F5A623",
+        // Channel-based vars (set in globals.css per theme) so every utility —
+        // including opacity modifiers like bg-up/10 — flows through the tokens.
+        canvas: "rgb(var(--bg-canvas) / <alpha-value>)",
+        surface: "rgb(var(--bg-surface) / <alpha-value>)",
+        "surface-2": "rgb(var(--bg-surface-2) / <alpha-value>)",
+        hairline: "rgb(var(--border-hairline) / <alpha-value>)",
+        strong: "rgb(var(--border-strong) / <alpha-value>)",
+        ink: "rgb(var(--text-primary) / <alpha-value>)",
+        muted: "rgb(var(--text-secondary) / <alpha-value>)",
+        faint: "rgb(var(--text-tertiary) / <alpha-value>)",
+        up: "rgb(var(--up) / <alpha-value>)",
+        down: "rgb(var(--down) / <alpha-value>)",
+        learn: "rgb(var(--learn) / <alpha-value>)",
+        streak: "rgb(var(--streak) / <alpha-value>)",
       },
       fontFamily: {
         // The CSS vars are set by next/font in app/layout.tsx; the fallbacks keep

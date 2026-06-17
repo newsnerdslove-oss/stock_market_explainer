@@ -2,26 +2,46 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Design tokens as CSS variables — see docs/DESIGN_SYSTEM.md */
+/* Design tokens — see docs/DESIGN_SYSTEM.md. Stored as space-separated RGB
+   CHANNELS (not hex) so Tailwind's `rgb(var(--x) / <alpha-value>)` can apply
+   opacity modifiers (bg-up/10, border-strong/40, …) and a theme can swap them. */
 :root {
   color-scheme: dark;
-  --bg-canvas: #0b0e14;
-  --bg-surface: #141922;
-  --bg-surface-2: #1b212c;
-  --border-hairline: #1e2530;
-  --border-strong: #232a36;
-  --text-primary: #e8edf4;
-  --text-secondary: #8a94a6;
-  --text-tertiary: #5a6376;
-  --up: #2bd17e;
-  --down: #ff5c5c;
-  --learn: #8b7cf6;
-  --streak: #f5a623;
+  --bg-canvas: 11 14 20;
+  --bg-surface: 20 25 34;
+  --bg-surface-2: 27 33 44;
+  --border-hairline: 30 37 48;
+  --border-strong: 35 42 54;
+  --text-primary: 232 237 244;
+  --text-secondary: 138 148 166;
+  --text-tertiary: 90 99 118;
+  --up: 43 209 126;
+  --down: 255 92 92;
+  --learn: 139 124 246;
+  --streak: 245 166 35;
+}
+
+/* Light theme: the neutral ramp inverted. Semantic hues stay recognizable but are
+   shaded darker so text/buttons clear WCAG AA contrast on the light canvas. */
+.light {
+  color-scheme: light;
+  --bg-canvas: 244 246 250;
+  --bg-surface: 255 255 255;
+  --bg-surface-2: 234 238 244;
+  --border-hairline: 226 231 238;
+  --border-strong: 207 214 224;
+  --text-primary: 16 21 31;
+  --text-secondary: 88 96 114;
+  --text-tertiary: 107 116 132;
+  --up: 11 122 68;
+  --down: 201 42 42;
+  --learn: 91 71 196;
+  --streak: 180 83 9;
 }
 
 body {
-  background: var(--bg-canvas);
-  color: var(--text-primary);
+  background: rgb(var(--bg-canvas));
+  color: rgb(var(--text-primary));
 }
 
 /* All numeric data aligns on tabular figures (design principle #2). */
@@ -42,7 +62,7 @@ summary::-webkit-details-marker {
    (`:focus-visible`), not mouse clicks. */
 :focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(139, 124, 246, 0.45); /* --learn at ~45% */
+  box-shadow: 0 0 0 3px rgb(var(--learn) / 0.45);
   border-radius: 6px;
 }
 
