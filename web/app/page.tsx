@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getHealth, getQuote, type Quote } from "@/lib/marketService";
+import { CryptoTicker } from "@/components/CryptoTicker";
 
 async function loadDemo(): Promise<{ provider: string; quotes: Quote[] } | null> {
   try {
@@ -69,6 +70,8 @@ export default async function Home() {
           </div>
         ))}
       </section>
+
+      <CryptoTicker />
 
       <section className="mt-12">
         <div className="flex items-center gap-2">
