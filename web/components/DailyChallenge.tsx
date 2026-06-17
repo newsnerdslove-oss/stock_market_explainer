@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTrading } from "@/lib/trading/useTrading";
+import { useProgress } from "@/lib/progress/useProgress";
+import { useToast } from "@/components/Toast";
 import { dailyChallenge } from "@/lib/challenge/daily";
 
 // The challenge rotates by UTC calendar day. Computed on the client (after mount)
@@ -20,11 +22,28 @@ function useToday(): string | null {
  */
 export function DailyChallengeCard() {
   const { portfolio } = useTrading();
+  const { markActiveToday } = useProgress();
+  const toast = useToast();
   const today = useToday();
-  if (!today) return null;
 
-  const ch = dailyChallenge(today);
-  const done = ch.isDone(portfolio, today);
+  const ch = today ? dailyChallenge(today) : null;
+  const done = ch ? ch.isDone(portfolio, today!) : false;
+
+  // Completing the challenge counts as training today (advances the streak, like
+  // finishing a quiz). markActiveToday is idempotent. `wasDone` starts null so an
+  // already-done-on-mount challenge still credits the streak but doesn't toast;
+  // only an in-session open→done transition celebrates.
+  const wasDone = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (!today) return;
+    if (done) markActiveToday();
+    if (wasDone.current === false && done) {
+      toast("Challenge complete — counted toward your streak 🔥", "ok");
+    }
+    wasDone.current = done;
+  }, [done, today, markActiveToday, toast]);
+
+  if (!today || !ch) return null;
 
   return (
     <section className={`rounded-lg border p-4 ${done ? "border-up/40 bg-up/10" : "border-streak/30 bg-streak/5"}`}>
@@ -37,6 +56,7 @@ export function DailyChallengeCard() {
         </span>
       </div>
       <p className="mt-1.5 text-sm text-muted">{ch.prompt}</p>
+      {done && <p className="mt-1.5 text-xs text-up">Counted toward today&apos;s streak.</p>}
     </section>
   );
 }
