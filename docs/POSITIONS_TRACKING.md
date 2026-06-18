@@ -1,9 +1,32 @@
 # Enhanced Positions & Position-History Drill-Down — Feature Plan (parked)
 
 **Status:** Parked / not started.
-**Reference screenshot:** _Not yet received_ — the requested screenshot didn't
-attach. The exact columns, layout, and metric set below are a best-effort from the
-description and **must be reconciled against the screenshot** before Phase 2.
+**Reference screenshot:** [`docs/assets/positions-reference.png`](./assets/positions-reference.png)
+— a Fidelity-style holdings table. Columns below are reconciled to it.
+
+### Exact columns from the reference (positions view v2)
+Grouped **by account** (e.g. "Individual – TOD", "Traditional IRA"), each group with
+a **Cash** row and an **Account total** row:
+
+| Column | Source |
+|---|---|
+| **Symbol** (+ company name subtitle) | position + a name lookup |
+| **Last price** | `/api/quote` |
+| **Last price change** ($) | quote vs prior close |
+| **Today's gain/loss** ($) | qty × today's price change |
+| **Today's gain/loss** (%) | derived |
+| **Total gain/loss** ($) | market value − cost basis total |
+| **Total gain/loss** (%) | derived |
+| **Current value** (market value) | qty × last |
+| **% of account** (allocation) | value / account equity |
+| **Quantity** | position (fractional ok) |
+| **Average cost basis** | derived from fills |
+| **Cost basis total** | qty × avg cost |
+| **52-week range** (mini range bar w/ lo–hi) | needs 52-wk high/low data |
+
+Plus per-row "Manage dividends" affordance, an "As of …" freshness timestamp, and
+account subtotals. (Multi-account grouping is brokerage-style; our sim is a single
+paper account today — **decision:** keep one account, or introduce account buckets.)
 
 ## Goal / outcome
 Turn the simulator's thin positions list into a rich, brokerage-grade view with
@@ -24,12 +47,15 @@ cost over time, realized P&L per round-trip, holding period, and value history.
 - **Gap:** average-cost only (no per-fill lots), capped order history (can't
   reconstruct long lifecycles), no per-symbol realized P&L, no value-over-time.
 
-## Candidate metrics (positions view v2 — reconcile with screenshot)
-Per position: quantity · average cost · last/mark · market value · day change
-($ / %) · unrealized P&L ($ / %) · **total return** ($ / %) · cost basis ·
-realized P&L (this symbol) · **allocation %** of portfolio · holding period /
-opened date · (options: strike/expiry/Greeks/DTE). Portfolio header: equity, cash,
-total unrealized, total realized, day change, # positions.
+## New data the reference columns require (beyond today's ledger)
+- **Prior close** per symbol → "today's gain/loss" ($ and %). Add to the quote or
+  derive from daily candles.
+- **52-week high/low** per symbol → the range bar. New data: a daily-bars/stat
+  fetch (Alpaca/Coinbase) — cache it; this is the main *new market-data* need.
+- **Company name** per symbol → the subtitle. A small symbol→name map or an
+  assets lookup (ties to the charting feature's symbol search).
+- Everything else (avg cost, cost basis total, market value, total G/L, % of
+  account, quantity) derives from the **fill log + live mark** below.
 
 ## Drill-down (per symbol, over time)
 - **Fill timeline** — every buy/sell with date, qty, price, side, resulting position.
