@@ -8,8 +8,9 @@ const money = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigi
 
 /**
  * A live crypto price strip streamed over the Coinbase WebSocket — real-time,
- * unlike the home page's delayed mock-stock widget. Each row flashes its tick
- * direction; a dot shows the live connection.
+ * unlike the home page's delayed mock-stock widget. The hook throttles updates to
+ * ~4/sec; the price stays in a steady colour and a brief tint flashes on each
+ * change so movement is legible without strobing. A dot shows the connection.
  */
 export function CryptoTicker() {
   const { prices, status } = useCryptoPrices(PRODUCTS);
@@ -29,18 +30,26 @@ export function CryptoTicker() {
       <div className="mt-3 overflow-hidden rounded-lg border border-strong bg-surface">
         {PRODUCTS.map((p, i) => {
           const live = prices[p];
-          const tone = live?.dir === "up" ? "text-up" : live?.dir === "down" ? "text-down" : "text-ink";
+          const arrow = live?.dir === "up" ? "text-up" : live?.dir === "down" ? "text-down" : "text-faint";
           return (
             <Link
               key={p}
               href={`/symbol/${p}`}
-              className={`flex items-center justify-between px-4 py-3 transition hover:bg-surface-2 ${i > 0 ? "border-t border-hairline" : ""}`}
+              className={`relative flex items-center justify-between overflow-hidden px-4 py-3 transition hover:bg-surface-2 ${i > 0 ? "border-t border-hairline" : ""}`}
             >
-              <span className="font-mono text-sm text-ink">{p}</span>
-              <span className={`font-mono text-sm ${tone}`}>
+              {/* Fade-flash on change: keyed by tick time so it remounts & replays. */}
+              {live && live.dir !== "flat" && (
+                <span
+                  key={live.at}
+                  aria-hidden
+                  className={`animate-tick-flash pointer-events-none absolute inset-0 ${live.dir === "up" ? "bg-up/15" : "bg-down/15"}`}
+                />
+              )}
+              <span className="relative font-mono text-sm text-ink">{p}</span>
+              <span className="relative flex items-baseline gap-1 font-mono text-sm text-ink tabular-nums">
                 {live ? money(live.price) : <span className="text-faint">—</span>}
                 {live && live.dir !== "flat" && (
-                  <span className="ml-1 text-xs" aria-hidden>
+                  <span className={`text-[10px] ${arrow}`} aria-hidden>
                     {live.dir === "up" ? "▲" : "▼"}
                   </span>
                 )}
