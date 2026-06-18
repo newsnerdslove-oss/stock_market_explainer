@@ -7,9 +7,11 @@ import { LessonRenderer } from "@/components/LessonRenderer";
 import { AskTutor } from "@/components/AskTutor";
 import { QuizCard } from "@/components/QuizCard";
 import { PatternSpotter } from "@/components/PatternSpotter";
+import { BacktestSandbox } from "@/components/BacktestSandbox";
 
-// Lessons that get the interactive pattern-spotter trainer below their quiz.
+// Lessons that get an interactive widget below their quiz.
 const SPOTTER_LESSONS = new Set(["candlestick-patterns-reversal"]);
+const BACKTEST_LESSONS = new Set(["what-backtesting-is-and-why"]);
 
 // Pre-render every lesson at build time.
 export function generateStaticParams() {
@@ -62,6 +64,7 @@ export default function LessonPage({ params }: { params: { slug: string } }) {
       )}
 
       {SPOTTER_LESSONS.has(lesson.slug) && <PatternSpotter />}
+      {BACKTEST_LESSONS.has(lesson.slug) && <BacktestSandbox />}
 
       <AskTutor slug={lesson.slug} />
 
