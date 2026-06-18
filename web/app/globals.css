@@ -66,6 +66,13 @@ summary::-webkit-details-marker {
   border-radius: 6px;
 }
 
+/* View Transitions: a quick, subtle crossfade between routes. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 200ms;
+  animation-timing-function: ease;
+}
+
 /* Respect reduced-motion: collapse transitions and the loading-skeleton pulse. */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -75,5 +82,11 @@ summary::-webkit-details-marker {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+  /* Pseudo-elements aren't matched by `*` — disable the route crossfade too. */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }
