@@ -198,6 +198,8 @@ function OrderTicket({ onPlaced }: { onPlaced: () => void }) {
   }, [symbol]);
 
   const estCost = lastPrice != null && Number(qty) > 0 ? lastPrice * Number(qty) : null;
+  // Quantity is a count of shares (stocks) or coin units (crypto) — never dollars.
+  const unitLabel = isCryptoSymbol(symbol.trim().toUpperCase()) ? "Units" : "Shares";
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -226,6 +228,7 @@ function OrderTicket({ onPlaced }: { onPlaced: () => void }) {
   }
 
   const inputCls = "rounded-md border border-strong bg-canvas px-3 py-2 text-sm text-ink placeholder:text-faint focus:border-learn focus:outline-none";
+  const labelCls = "text-[11px] font-medium uppercase tracking-wide text-faint";
 
   return (
     <section className="rounded-lg border border-learn/30 bg-learn/5 p-5">
@@ -257,18 +260,33 @@ function OrderTicket({ onPlaced }: { onPlaced: () => void }) {
         ))}
       </div>
       <form onSubmit={submit} className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <input value={symbol} onChange={(e) => setSymbol(e.target.value)} placeholder="AAPL" aria-label="Symbol" className={`${inputCls} uppercase`} />
-        <select value={side} onChange={(e) => setSide(e.target.value as OrderSide)} aria-label="Side" className={inputCls}>
-          <option value="buy">Buy</option>
-          <option value="sell">Sell</option>
-        </select>
-        <select value={type} onChange={(e) => setType(e.target.value as OrderType)} aria-label="Order type" className={inputCls}>
-          <option value="market">Market</option>
-          <option value="limit">Limit</option>
-        </select>
-        <input value={qty} onChange={(e) => setQty(e.target.value)} inputMode="decimal" placeholder="Qty" aria-label="Quantity" className={`${inputCls} font-mono`} />
+        <label className="flex flex-col gap-1">
+          <span className={labelCls}>Symbol</span>
+          <input value={symbol} onChange={(e) => setSymbol(e.target.value)} placeholder="AAPL" className={`${inputCls} uppercase`} />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className={labelCls}>Side</span>
+          <select value={side} onChange={(e) => setSide(e.target.value as OrderSide)} className={inputCls}>
+            <option value="buy">Buy</option>
+            <option value="sell">Sell</option>
+          </select>
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className={labelCls}>Type</span>
+          <select value={type} onChange={(e) => setType(e.target.value as OrderType)} className={inputCls}>
+            <option value="market">Market</option>
+            <option value="limit">Limit</option>
+          </select>
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className={labelCls}>{unitLabel}</span>
+          <input value={qty} onChange={(e) => setQty(e.target.value)} inputMode="decimal" placeholder="0" className={`${inputCls} font-mono`} />
+        </label>
         {type === "limit" && (
-          <input value={limit} onChange={(e) => setLimit(e.target.value)} inputMode="decimal" placeholder="Limit price" aria-label="Limit price" className={`${inputCls} col-span-2 font-mono`} />
+          <label className="col-span-2 flex flex-col gap-1">
+            <span className={labelCls}>Limit price ($)</span>
+            <input value={limit} onChange={(e) => setLimit(e.target.value)} inputMode="decimal" placeholder="0.00" className={`${inputCls} font-mono`} />
+          </label>
         )}
         <button
           type="submit"
@@ -285,7 +303,7 @@ function OrderTicket({ onPlaced }: { onPlaced: () => void }) {
       )}
       {estCost != null && (
         <p className="mt-2 text-xs text-muted">
-          ≈ <span className="font-mono text-ink">{money(estCost)}</span> at last{" "}
+          ≈ <span className="font-mono text-ink">{money(estCost)}</span> — {qty} {unitLabel.toLowerCase()} at{" "}
           <span className="font-mono">{money(lastPrice as number)}</span>
         </p>
       )}
