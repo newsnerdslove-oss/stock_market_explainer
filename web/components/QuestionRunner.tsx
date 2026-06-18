@@ -4,6 +4,8 @@ import { useState } from "react";
 import { checkAnswer } from "@/lib/quiz/check";
 import type { ChoiceQuestion } from "@/lib/quiz/types";
 import { inline } from "@/lib/inline";
+import { PatternChart } from "@/components/charts/PatternChart";
+import type { OHLC } from "@/lib/charts/patterns";
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -71,6 +73,12 @@ export function QuestionRunner({
         {idx + 1} / {total}
       </p>
       <p className="mt-2 leading-relaxed text-ink">{inline(q.prompt)}</p>
+
+      {q.type === "chart" && Array.isArray(q.chartData) && (
+        <div className="mt-4">
+          <PatternChart candles={q.chartData as OHLC[]} />
+        </div>
+      )}
 
       <div className="mt-4 space-y-2" role="group" aria-label="Answer choices">
         {q.choices.map((c) => (
