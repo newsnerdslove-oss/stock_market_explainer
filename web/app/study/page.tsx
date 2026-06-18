@@ -16,7 +16,8 @@ export default function StudyPage() {
       <h1 className="text-4xl font-medium tracking-tight">Study plan</h1>
       <p className="mt-3 text-muted">
         Your next steps, in order — built from your exam history and lesson progress to close the gaps
-        that matter most for the <span className="font-mono">72%</span> pass bar.
+        that matter most for the <span className="font-mono">72%</span>{" "}
+        pass bar.
       </p>
 
       <StudyPlanView examLessons={examLessons} />

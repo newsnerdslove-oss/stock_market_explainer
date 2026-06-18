@@ -86,8 +86,8 @@ function Intro({ count, onStart }: { count: number; onStart: () => void }) {
     <div className="mt-4">
       <p className="text-sm text-muted">
         {count} quick question{count === 1 ? "" : "s"} on this lesson. Score{" "}
-        <span className="font-mono text-ink">{Math.round(PASS_SCORE * 100)}%</span> to unlock the next
-        one. Retry as many times as you like.
+        <span className="font-mono text-ink">{Math.round(PASS_SCORE * 100)}%</span>{" "}
+        to unlock the next one. Retry as many times as you like.
       </p>
       <div className="mt-4">
         <button

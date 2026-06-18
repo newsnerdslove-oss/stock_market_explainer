@@ -2,7 +2,44 @@
 // effort like the progress store. Reuses the Phase 3 anonymous/real session.
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { emptyPortfolio, STARTING_CASH, type Order, type Portfolio } from "@/lib/trading/schema";
+import { emptyPortfolio, STARTING_CASH, type Order, type Portfolio, type Position } from "@/lib/trading/schema";
+
+// ── Local cache ─────────────────────────────────────────────────────────────
+// localStorage is the instant, offline source of truth (like the progress store);
+// Supabase is layered under it for durable, cross-device persistence when present.
+// This lets the simulator work with no backend configured.
+const LS_KEY = "sme.portfolio.v1";
+
+/** Load the portfolio cached in localStorage, or null if absent/corrupt. */
+export function loadLocalPortfolio(): Portfolio | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(LS_KEY);
+    if (!raw) return null;
+    const p = JSON.parse(raw) as Partial<Portfolio> | null;
+    if (!p || typeof p.cash !== "number" || typeof p.realized !== "number") return null;
+    if (typeof p.positions !== "object" || !p.positions || !Array.isArray(p.orders)) return null;
+    const pf = emptyPortfolio();
+    pf.userId = typeof p.userId === "string" ? p.userId : null;
+    pf.cash = p.cash;
+    pf.realized = p.realized;
+    pf.positions = p.positions as Record<string, Position>;
+    pf.orders = p.orders as Order[];
+    return pf;
+  } catch {
+    return null;
+  }
+}
+
+/** Cache the portfolio in localStorage so the simulator persists without a backend. */
+export function saveLocalPortfolio(pf: Portfolio): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(LS_KEY, JSON.stringify(pf));
+  } catch {
+    /* ignore quota/serialization errors */
+  }
+}
 
 /** Load the user's portfolio, or null if they have no portfolio row yet. */
 export async function loadPortfolio(supabase: SupabaseClient, userId: string): Promise<Portfolio | null> {
