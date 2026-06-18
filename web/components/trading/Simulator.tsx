@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useToast } from "@/components/Toast";
 import { DailyChallengeCard } from "@/components/DailyChallenge";
-import { isCryptoSymbol } from "@/lib/crypto/products";
+import { coinbaseProduct, isCryptoSymbol } from "@/lib/crypto/products";
+import { useCryptoPrices } from "@/lib/crypto/useCryptoPrices";
 import { getQuoteViaApi } from "@/lib/marketService";
 import { TradingProvider, useTrading } from "@/lib/trading/useTrading";
 import { equity, unrealizedPnL } from "@/lib/trading/ledger";
@@ -33,6 +34,31 @@ function SimulatorBody() {
     setRefreshedAt(Date.now());
   };
 
+  // Stream live prices for held crypto over the Coinbase WS and merge them over
+  // the REST `prices`, so equity and unrealized P&L tick in real time. (Stocks
+  // stay on REST — the free Alpaca IEX tier has no WS here.)
+  const heldCryptoProducts = useMemo(() => {
+    const set = new Set<string>();
+    for (const sym of Object.keys(portfolio.positions)) {
+      const product = coinbaseProduct(sym);
+      if (product) set.add(product);
+    }
+    return [...set];
+  }, [portfolio.positions]);
+  const { prices: livePrices } = useCryptoPrices(heldCryptoProducts);
+  const marked = useMemo(() => {
+    const m: Record<string, number> = { ...prices };
+    for (const sym of Object.keys(portfolio.positions)) {
+      const product = coinbaseProduct(sym);
+      if (product && livePrices[product]) m[sym] = livePrices[product].price;
+    }
+    return m;
+  }, [prices, livePrices, portfolio.positions]);
+  const isLive = (sym: string) => {
+    const product = coinbaseProduct(sym);
+    return Boolean(product && livePrices[product]);
+  };
+
   if (!configured) {
     return (
       <p className="mt-8 rounded-lg border border-streak/40 bg-streak/10 p-4 text-sm text-streak">
@@ -44,9 +70,9 @@ function SimulatorBody() {
   if (!ready) return <div className="mt-8 h-40 animate-pulse rounded-lg border border-hairline bg-surface/50" aria-hidden />;
 
   const positions = Object.values(portfolio.positions);
-  const eq = equity(portfolio, prices);
+  const eq = equity(portfolio, marked);
   let unreal = 0;
-  for (const p of positions) unreal += unrealizedPnL(p.avgCost, prices[p.symbol] ?? p.avgCost, p.qty);
+  for (const p of positions) unreal += unrealizedPnL(p.avgCost, marked[p.symbol] ?? p.avgCost, p.qty);
 
   return (
     <div className="mt-8 space-y-6">
@@ -92,14 +118,17 @@ function SimulatorBody() {
             </thead>
             <tbody className="font-mono">
               {positions.map((p) => {
-                const last = prices[p.symbol] ?? p.avgCost;
+                const last = marked[p.symbol] ?? p.avgCost;
                 const u = unrealizedPnL(p.avgCost, last, p.qty);
                 return (
                   <tr key={p.symbol} className="border-t border-hairline">
                     <td className="py-1.5 font-sans text-ink">{p.symbol}</td>
                     <td className="py-1.5 text-right text-muted">{fmtQty(p.qty)}</td>
                     <td className="py-1.5 text-right text-muted">{money(p.avgCost)}</td>
-                    <td className="py-1.5 text-right text-muted">{money(last)}</td>
+                    <td className="py-1.5 text-right text-muted">
+                      {isLive(p.symbol) && <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-up align-middle" title="Live" aria-hidden />}
+                      {money(last)}
+                    </td>
                     <td className={`py-1.5 text-right ${pnlColor(u)}`}>{signed(u)}</td>
                   </tr>
                 );
