@@ -66,6 +66,21 @@ summary::-webkit-details-marker {
   border-radius: 6px;
 }
 
+/* Live-price tick flash: a faint tint that fades out on each price change, so the
+   eye catches movement without the number itself strobing. Replayed by remounting
+   a keyed element. Neutralized by the reduced-motion block below. */
+@keyframes tickFlash {
+  from {
+    opacity: 0.6;
+  }
+  to {
+    opacity: 0;
+  }
+}
+.animate-tick-flash {
+  animation: tickFlash 600ms ease-out forwards;
+}
+
 /* View Transitions: a quick, subtle crossfade between routes. */
 ::view-transition-old(root),
 ::view-transition-new(root) {

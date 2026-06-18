@@ -6,9 +6,9 @@ export type TickDirection = "up" | "down" | "flat";
 
 export interface LivePrice {
   price: number;
-  /** Direction of the most recent tick vs the previous one. */
+  /** Net direction since the last *displayed* value (not the last raw tick). */
   dir: TickDirection;
-  /** ISO time of the tick. */
+  /** ISO time of the latest tick folded into this update. */
   at: string;
 }
 
@@ -16,11 +16,18 @@ export type FeedStatus = "connecting" | "open" | "closed";
 
 const WS_URL = "wss://ws-feed.exchange.coinbase.com";
 
+// Coinbase streams many ticks/sec; rendering each one makes the UI strobe. We
+// buffer the latest tick per product and flush to React state on this cadence —
+// ~4 updates/sec reads as "live" without the blinking, and direction is measured
+// over the whole window (net move) so brief oscillation doesn't flash.
+const FLUSH_MS = 250;
+
 /**
  * Live crypto prices over the Coinbase public WebSocket (no API key). Subscribes
- * to the `ticker` channel for the given Coinbase product ids and streams updates;
- * reconnects with a short backoff if the socket drops. Client-only — guarded for
- * SSR. Pass a stable array (or it'll reconnect when the identity changes).
+ * to the `ticker` channel for the given Coinbase product ids and streams updates,
+ * throttled to {@link FLUSH_MS}; reconnects with a short backoff if the socket
+ * drops. Client-only — guarded for SSR. Pass a stable array (or it'll reconnect
+ * when the identity changes).
  */
 export function useCryptoPrices(productIds: string[]): {
   prices: Record<string, LivePrice>;
@@ -39,7 +46,28 @@ export function useCryptoPrices(productIds: string[]): {
     let ws: WebSocket | null = null;
     let stopped = false;
     let retry: ReturnType<typeof setTimeout> | null = null;
-    const last: Record<string, number> = {};
+    // Latest raw tick per product, awaiting the next flush.
+    const pending: Record<string, { price: number; at: string }> = {};
+    // Last price we actually rendered, to measure net direction at flush time.
+    const shown: Record<string, number> = {};
+
+    const flush = setInterval(() => {
+      const ids = Object.keys(pending);
+      if (ids.length === 0) return;
+      setPrices((prev) => {
+        const next = { ...prev };
+        for (const id of ids) {
+          const { price, at } = pending[id];
+          const before = shown[id];
+          const dir: TickDirection =
+            before == null || price === before ? "flat" : price > before ? "up" : "down";
+          shown[id] = price;
+          next[id] = { price, dir, at };
+          delete pending[id];
+        }
+        return next;
+      });
+    }, FLUSH_MS);
 
     function connect() {
       setStatus("connecting");
@@ -56,10 +84,8 @@ export function useCryptoPrices(productIds: string[]): {
           if (m.type !== "ticker" || !m.product_id || m.price == null) return;
           const price = Number(m.price);
           if (!Number.isFinite(price)) return;
-          const prev = last[m.product_id];
-          const dir: TickDirection = prev == null ? "flat" : price > prev ? "up" : price < prev ? "down" : "flat";
-          last[m.product_id] = price;
-          setPrices((p) => ({ ...p, [m.product_id]: { price, dir, at: m.time ?? "" } }));
+          // Overwrite — only the most recent tick in the window survives to render.
+          pending[m.product_id] = { price, at: m.time ?? "" };
         } catch {
           /* ignore malformed frames */
         }
@@ -75,6 +101,7 @@ export function useCryptoPrices(productIds: string[]): {
     connect();
     return () => {
       stopped = true;
+      clearInterval(flush);
       if (retry) clearTimeout(retry);
       ws?.close();
     };
