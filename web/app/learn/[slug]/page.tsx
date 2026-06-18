@@ -18,14 +18,16 @@ export function generateStaticParams() {
   return getAllLessons().map((l) => ({ slug: l.slug }));
 }
 
-export function generateMetadata({ params }: { params: { slug: string } }) {
-  const lesson = getLesson(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const lesson = getLesson(slug);
   if (!lesson) return {};
   return { title: `${lesson.title} — Learn`, description: lesson.summary };
 }
 
-export default function LessonPage({ params }: { params: { slug: string } }) {
-  const lesson = getLesson(params.slug);
+export default async function LessonPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const lesson = getLesson(slug);
   if (!lesson) notFound();
 
   const ordered = getOrderedLessons();

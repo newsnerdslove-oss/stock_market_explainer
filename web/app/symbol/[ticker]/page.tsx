@@ -2,8 +2,9 @@ import Link from "next/link";
 import { SymbolChart } from "@/components/charts/SymbolChart";
 import { getCandles, getQuote, type Candle, type Quote } from "@/lib/marketService";
 
-export function generateMetadata({ params }: { params: { ticker: string } }) {
-  const sym = params.ticker.toUpperCase();
+export async function generateMetadata({ params }: { params: Promise<{ ticker: string }> }) {
+  const { ticker } = await params;
+  const sym = ticker.toUpperCase();
   return {
     title: `${sym} — Stock Market Explainer`,
     description: `Live candlestick chart for ${sym}.`,
@@ -13,8 +14,9 @@ export function generateMetadata({ params }: { params: { ticker: string } }) {
 const money = (n: number) =>
   `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-export default async function SymbolPage({ params }: { params: { ticker: string } }) {
-  const symbol = params.ticker.toUpperCase();
+export default async function SymbolPage({ params }: { params: Promise<{ ticker: string }> }) {
+  const { ticker } = await params;
+  const symbol = ticker.toUpperCase();
 
   // Best-effort initial load for fast first paint; the chart polls client-side, so
   // an offline market-service degrades gracefully rather than crashing the page.

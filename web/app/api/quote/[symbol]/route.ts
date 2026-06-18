@@ -8,16 +8,17 @@ import { alpacaConfigured, fetchAlpacaQuote } from "@/lib/stocks/alpaca";
 // can't hit the market-service cross-origin). Routing: crypto → Coinbase (public,
 // no key); stocks → Alpaca's free IEX feed when configured (falling back to the
 // mock market-service on error); otherwise the market-service.
-export async function GET(_req: Request, { params }: { params: { symbol: string } }) {
-  const product = coinbaseProduct(params.symbol);
+export async function GET(_req: Request, { params }: { params: Promise<{ symbol: string }> }) {
+  const { symbol } = await params;
+  const product = coinbaseProduct(symbol);
   try {
     let quote;
     if (product) {
-      quote = await fetchCoinbaseQuote(params.symbol, product);
+      quote = await fetchCoinbaseQuote(symbol, product);
     } else if (alpacaConfigured()) {
-      quote = await fetchAlpacaQuote(params.symbol).catch(() => getQuote(params.symbol));
+      quote = await fetchAlpacaQuote(symbol).catch(() => getQuote(symbol));
     } else {
-      quote = await getQuote(params.symbol);
+      quote = await getQuote(symbol);
     }
     return NextResponse.json(quote, { headers: { "Cache-Control": "no-store" } });
   } catch {

@@ -8,18 +8,19 @@ import { alpacaConfigured, fetchAlpacaCandles } from "@/lib/stocks/alpaca";
 // can't hit the market-service cross-origin). Routing: crypto → Coinbase 1-min
 // candles; stocks → Alpaca's free IEX bars when configured (falling back to the
 // mock market-service on error); otherwise the market-service.
-export async function GET(req: Request, { params }: { params: { symbol: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ symbol: string }> }) {
+  const { symbol } = await params;
   const limitParam = new URL(req.url).searchParams.get("limit");
   const limit = Math.min(Math.max(Number(limitParam) || 60, 1), 1000);
-  const product = coinbaseProduct(params.symbol);
+  const product = coinbaseProduct(symbol);
   try {
     let candles;
     if (product) {
-      candles = await fetchCoinbaseCandles(params.symbol, product, limit);
+      candles = await fetchCoinbaseCandles(symbol, product, limit);
     } else if (alpacaConfigured()) {
-      candles = await fetchAlpacaCandles(params.symbol, limit).catch(() => getCandles(params.symbol, limit));
+      candles = await fetchAlpacaCandles(symbol, limit).catch(() => getCandles(symbol, limit));
     } else {
-      candles = await getCandles(params.symbol, limit);
+      candles = await getCandles(symbol, limit);
     }
     return NextResponse.json(candles, { headers: { "Cache-Control": "no-store" } });
   } catch {
