@@ -1,4 +1,5 @@
 import type { Question } from "@/lib/quiz/types";
+import { bullishEngulfing, bearishEngulfing, hammer, shootingStar, doji } from "@/lib/charts/patterns";
 
 // Quiz for the "Candlestick Patterns: Doji, Hammer, Engulfing" lesson.
 export const questions: Question[] = [
@@ -142,5 +143,102 @@ export const questions: Question[] = [
     correctId: "b",
     explanation:
       "**Context is everything.** The same shape is a hammer after a downtrend but a hanging man after an uptrend. Read the candle plus its location plus confirmation — never the shape alone.",
+  },
+
+  // ── Read-a-chart questions: a candlestick chart is shown, identify the pattern ──
+  {
+    id: "candlestick-patterns-reversal.q9",
+    lessonSlug: "candlestick-patterns-reversal",
+    type: "chart",
+    chartKind: "candles",
+    chartData: bullishEngulfing(),
+    difficulty: "medium",
+    tags: ["technical", "candlesticks", "chart-reading", "engulfing"],
+    prompt: "Read the chart. After the downtrend, the last two candles form which reversal pattern?",
+    choices: [
+      { id: "a", text: "Bullish engulfing" },
+      { id: "b", text: "Bearish engulfing", feedback: "A bearish engulfing is a big red candle swallowing a green one after an *up*trend — the opposite of this." },
+      { id: "c", text: "Shooting star" },
+      { id: "d", text: "Doji" },
+    ],
+    correctId: "a",
+    explanation:
+      "A small red candle followed by a larger **green** candle whose body engulfs it, after a downtrend — a **bullish engulfing**, a reversal-up signal.",
+  },
+  {
+    id: "candlestick-patterns-reversal.q10",
+    lessonSlug: "candlestick-patterns-reversal",
+    type: "chart",
+    chartKind: "candles",
+    chartData: bearishEngulfing(),
+    difficulty: "medium",
+    tags: ["technical", "candlesticks", "chart-reading", "engulfing"],
+    prompt: "Read the chart. After the uptrend, the last two candles form which reversal pattern?",
+    choices: [
+      { id: "a", text: "Bullish engulfing", feedback: "Bullish engulfing is a green candle swallowing a red one after a *down*trend — the mirror image of this." },
+      { id: "b", text: "Bearish engulfing" },
+      { id: "c", text: "Hammer" },
+      { id: "d", text: "Doji" },
+    ],
+    correctId: "b",
+    explanation:
+      "A small green candle followed by a larger **red** candle that engulfs it, after an uptrend — a **bearish engulfing**, a reversal-down signal.",
+  },
+  {
+    id: "candlestick-patterns-reversal.q11",
+    lessonSlug: "candlestick-patterns-reversal",
+    type: "chart",
+    chartKind: "candles",
+    chartData: hammer(),
+    difficulty: "medium",
+    tags: ["technical", "candlesticks", "chart-reading", "hammer"],
+    prompt: "Read the chart. The final candle — small body up top, long lower wick, after a downtrend — is a…",
+    choices: [
+      { id: "a", text: "Hammer" },
+      { id: "b", text: "Shooting star", feedback: "A shooting star has the long wick on *top* and appears after an uptrend — this is its inverse." },
+      { id: "c", text: "Bearish engulfing" },
+      { id: "d", text: "Doji" },
+    ],
+    correctId: "a",
+    explanation:
+      "Small body near the top + a long lower wick + after a downtrend = a **hammer**, a bullish-reversal candidate (sellers pushed it down, buyers reclaimed).",
+  },
+  {
+    id: "candlestick-patterns-reversal.q12",
+    lessonSlug: "candlestick-patterns-reversal",
+    type: "chart",
+    chartKind: "candles",
+    chartData: shootingStar(),
+    difficulty: "medium",
+    tags: ["technical", "candlesticks", "chart-reading", "shooting-star"],
+    prompt: "Read the chart. The final candle — small body down low, long upper wick, after an uptrend — is a…",
+    choices: [
+      { id: "a", text: "Hammer", feedback: "A hammer has the long wick *below* and appears after a downtrend — this is its inverse." },
+      { id: "b", text: "Shooting star" },
+      { id: "c", text: "Bullish engulfing" },
+      { id: "d", text: "Doji" },
+    ],
+    correctId: "b",
+    explanation:
+      "Small body near the bottom + a long upper wick + after an uptrend = a **shooting star**, a bearish-reversal candidate (buyers spiked it, sellers slammed it back).",
+  },
+  {
+    id: "candlestick-patterns-reversal.q13",
+    lessonSlug: "candlestick-patterns-reversal",
+    type: "chart",
+    chartKind: "candles",
+    chartData: doji(),
+    difficulty: "easy",
+    tags: ["technical", "candlesticks", "chart-reading", "doji"],
+    prompt: "Read the chart. The final candle opens and closes at nearly the same level with wicks both ways — that's a…",
+    choices: [
+      { id: "a", text: "Doji" },
+      { id: "b", text: "Hammer", feedback: "A hammer has a small *body* and one long lower wick; a doji has almost no body at all." },
+      { id: "c", text: "Bullish engulfing" },
+      { id: "d", text: "Shooting star" },
+    ],
+    correctId: "a",
+    explanation:
+      "Open ≈ close (a near-nonexistent body) with wicks on both sides is a **doji** — indecision; a potential turning point when it follows a strong trend.",
   },
 ];

@@ -7,7 +7,7 @@
 import type { ModuleId } from "@/lib/lessons/taxonomy";
 
 /** Identifiers for built-in chart explainers the renderer knows how to draw. */
-export type ChartKind = "candle-anatomy";
+export type ChartKind = "candle-anatomy" | "candles";
 
 /** Visual tone for a callout box. */
 export type CalloutTone = "info" | "tip" | "warn";

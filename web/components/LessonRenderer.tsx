@@ -59,7 +59,9 @@ function SectionBlock({ section }: { section: Section }) {
       );
 
     case "chart": {
-      const Chart = charts[section.kind];
+      // Only lesson-embeddable charts live here; the "candles" kind is quiz-only.
+      const Chart = charts[section.kind as keyof typeof charts];
+      if (!Chart) return null;
       return (
         <figure className="mt-8 flex flex-col items-center rounded-lg border border-strong bg-surface p-6">
           <Chart />
