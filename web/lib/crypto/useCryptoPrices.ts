@@ -18,9 +18,9 @@ const WS_URL = "wss://ws-feed.exchange.coinbase.com";
 
 // Coinbase streams many ticks/sec; rendering each one makes the UI strobe. We
 // buffer the latest tick per product and flush to React state on this cadence —
-// ~4 updates/sec reads as "live" without the blinking, and direction is measured
+// 5 updates/sec reads as "live" without the blinking, and direction is measured
 // over the whole window (net move) so brief oscillation doesn't flash.
-const FLUSH_MS = 250;
+const FLUSH_MS = 200;
 
 /**
  * Live crypto prices over the Coinbase public WebSocket (no API key). Subscribes
