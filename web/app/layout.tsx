@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { ViewTransition } from "react";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ProgressProvider } from "@/lib/progress/useProgress";
@@ -61,7 +62,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ProgressProvider>
           <ToastProvider>
             <NavBar />
-            {children}
+            {/* Crossfade page content on navigation; NavBar stays put. */}
+            <ViewTransition>{children}</ViewTransition>
           </ToastProvider>
         </ProgressProvider>
       </body>
