@@ -5,7 +5,7 @@ import { createClient, supabaseConfigured } from "@/lib/supabase/client";
 import { ensureSession } from "@/lib/progress/serverSync";
 import { getQuoteViaApi } from "@/lib/marketService";
 import { evaluateOrder, type FillResult, type OrderRequest } from "@/lib/trading/ledger";
-import { ensurePortfolio, insertOrder, savePortfolio, updateOrder } from "@/lib/trading/store";
+import { insertOrder, loadLocalPortfolio, loadPortfolio, savePortfolio, saveLocalPortfolio, updateOrder } from "@/lib/trading/store";
 import { emptyPortfolio, type Order, type Portfolio } from "@/lib/trading/schema";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -49,25 +49,34 @@ export function TradingProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!configured) {
-      setReady(true);
-      return;
-    }
+    // localStorage-first: load instantly so the simulator works with no backend.
+    const local = loadLocalPortfolio() ?? emptyPortfolio();
+    setPortfolio(local);
+    setReady(true);
+    void refreshPrices(Object.keys(local.positions));
+
+    if (!configured) return; // local-only mode
+
+    // Layer Supabase under localStorage for durable, cross-device persistence.
     let cancelled = false;
     (async () => {
       const sb = createClient();
       sbRef.current = sb;
       const uid = await ensureSession(sb);
-      if (cancelled || !uid) {
-        setReady(true);
-        return;
-      }
+      if (cancelled || !uid) return;
       uidRef.current = uid;
-      const pf = await ensurePortfolio(sb, uid);
+      const server = await loadPortfolio(sb, uid);
       if (cancelled) return;
-      setPortfolio(pf);
-      await refreshPrices(Object.keys(pf.positions));
-      if (!cancelled) setReady(true);
+      if (server) {
+        // The server copy is the source of truth across devices.
+        setPortfolio(server);
+        saveLocalPortfolio(server);
+        void refreshPrices(Object.keys(server.positions));
+      } else {
+        // No server portfolio yet — seed it from the local one.
+        await savePortfolio(sb, uid, pfRef.current);
+        for (const o of [...pfRef.current.orders].reverse()) await insertOrder(sb, uid, o);
+      }
     })();
     return () => {
       cancelled = true;
@@ -75,10 +84,6 @@ export function TradingProvider({ children }: { children: ReactNode }) {
   }, [configured, refreshPrices]);
 
   const placeOrder = useCallback(async (req: OrderRequest): Promise<FillResult> => {
-    const sb = sbRef.current;
-    const uid = uidRef.current;
-    if (!sb || !uid) return { status: "rejected", reason: "Simulator isn't ready yet." };
-
     const quote = await getQuoteViaApi(req.symbol).catch(() => null);
     if (!quote) return { status: "rejected", reason: `Couldn't get a quote for ${req.symbol}.` };
     setPrices((p) => ({ ...p, [req.symbol]: quote.price }));
@@ -97,21 +102,27 @@ export function TradingProvider({ children }: { children: ReactNode }) {
       filledPrice: result.filledPrice ?? null,
       createdAt: new Date().toISOString(),
     };
-    await insertOrder(sb, uid, order);
     const withOrder: Portfolio = { ...next, orders: [order, ...next.orders].slice(0, 50) };
-    if (result.status === "filled") await savePortfolio(sb, uid, withOrder);
     setPortfolio(withOrder);
+    saveLocalPortfolio(withOrder); // always persist locally
+
+    // Best-effort server sync when Supabase is configured + signed in.
+    const sb = sbRef.current;
+    const uid = uidRef.current;
+    if (sb && uid) {
+      await insertOrder(sb, uid, order);
+      if (result.status === "filled") await savePortfolio(sb, uid, withOrder);
+    }
     return result;
   }, []);
 
   const refresh = useCallback(async () => {
-    const sb = sbRef.current;
-    const uid = uidRef.current;
-    if (!sb || !uid) return;
     const pf = pfRef.current;
     const pendingSyms = pf.orders.filter((o) => o.status === "pending").map((o) => o.symbol);
     await refreshPrices([...Object.keys(pf.positions), ...pendingSyms]);
 
+    const sb = sbRef.current;
+    const uid = uidRef.current;
     let cur = pf;
     let changed = false;
     for (const o of pf.orders) {
@@ -129,12 +140,13 @@ export function TradingProvider({ children }: { children: ReactNode }) {
           ...nextPf,
           orders: cur.orders.map((x) => (x.id === o.id ? { ...x, status: "filled" as const, filledPrice: result.filledPrice ?? null } : x)),
         };
-        await updateOrder(sb, uid, o.id, "filled", result.filledPrice ?? null);
+        if (sb && uid) await updateOrder(sb, uid, o.id, "filled", result.filledPrice ?? null);
       }
     }
     if (changed) {
-      await savePortfolio(sb, uid, cur);
       setPortfolio(cur);
+      saveLocalPortfolio(cur);
+      if (sb && uid) await savePortfolio(sb, uid, cur);
     }
   }, [refreshPrices]);
 

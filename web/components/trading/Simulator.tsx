@@ -59,14 +59,6 @@ function SimulatorBody() {
     return Boolean(product && livePrices[product]);
   };
 
-  if (!configured) {
-    return (
-      <p className="mt-8 rounded-lg border border-streak/40 bg-streak/10 p-4 text-sm text-streak">
-        The simulator needs the local Supabase backend running and configured. Start it with{" "}
-        <code className="font-mono">supabase start</code> and set the NEXT_PUBLIC_SUPABASE_* env vars.
-      </p>
-    );
-  }
   if (!ready) return <div className="mt-8 h-40 animate-pulse rounded-lg border border-hairline bg-surface/50" aria-hidden />;
 
   const positions = Object.values(portfolio.positions);
@@ -158,6 +150,12 @@ function SimulatorBody() {
             ))}
           </ul>
         </section>
+      )}
+
+      {!configured && (
+        <p className="text-xs text-faint">
+          Saved on this device. Sign-in sync isn’t configured, so your paper portfolio won’t follow you to another browser.
+        </p>
       )}
     </div>
   );
