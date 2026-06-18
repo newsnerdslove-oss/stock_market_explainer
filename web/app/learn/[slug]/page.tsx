@@ -6,6 +6,10 @@ import { getQuiz } from "@/lib/quiz";
 import { LessonRenderer } from "@/components/LessonRenderer";
 import { AskTutor } from "@/components/AskTutor";
 import { QuizCard } from "@/components/QuizCard";
+import { PatternSpotter } from "@/components/PatternSpotter";
+
+// Lessons that get the interactive pattern-spotter trainer below their quiz.
+const SPOTTER_LESSONS = new Set(["candlestick-patterns-reversal"]);
 
 // Pre-render every lesson at build time.
 export function generateStaticParams() {
@@ -56,6 +60,8 @@ export default function LessonPage({ params }: { params: { slug: string } }) {
           next={next ? { slug: next.slug, title: next.title } : null}
         />
       )}
+
+      {SPOTTER_LESSONS.has(lesson.slug) && <PatternSpotter />}
 
       <AskTutor slug={lesson.slug} />
 
