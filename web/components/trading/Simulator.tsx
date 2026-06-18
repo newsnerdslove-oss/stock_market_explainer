@@ -5,11 +5,13 @@ import Link from "next/link";
 import { useToast } from "@/components/Toast";
 import { DailyChallengeCard } from "@/components/DailyChallenge";
 import { isCryptoSymbol } from "@/lib/crypto/products";
+import { getQuoteViaApi } from "@/lib/marketService";
 import { TradingProvider, useTrading } from "@/lib/trading/useTrading";
 import { equity, unrealizedPnL } from "@/lib/trading/ledger";
 import type { OrderSide, OrderType } from "@/lib/trading/schema";
 
 const money = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const fmtQty = (n: number) => (Number.isInteger(n) ? String(n) : n.toLocaleString("en-US", { maximumFractionDigits: 6 }));
 const signed = (n: number) => `${n >= 0 ? "+" : "-"}${money(Math.abs(n))}`;
 const pnlColor = (n: number) => (n > 0 ? "text-up" : n < 0 ? "text-down" : "text-muted");
 
@@ -95,7 +97,7 @@ function SimulatorBody() {
                 return (
                   <tr key={p.symbol} className="border-t border-hairline">
                     <td className="py-1.5 font-sans text-ink">{p.symbol}</td>
-                    <td className="py-1.5 text-right text-muted">{p.qty}</td>
+                    <td className="py-1.5 text-right text-muted">{fmtQty(p.qty)}</td>
                     <td className="py-1.5 text-right text-muted">{money(p.avgCost)}</td>
                     <td className="py-1.5 text-right text-muted">{money(last)}</td>
                     <td className={`py-1.5 text-right ${pnlColor(u)}`}>{signed(u)}</td>
@@ -115,7 +117,7 @@ function SimulatorBody() {
             {portfolio.orders.slice(0, 8).map((o) => (
               <li key={o.id} className="flex items-center justify-between text-muted">
                 <span>
-                  <span className={o.side === "buy" ? "text-up" : "text-down"}>{o.side.toUpperCase()}</span> {o.qty} {o.symbol}{" "}
+                  <span className={o.side === "buy" ? "text-up" : "text-down"}>{o.side.toUpperCase()}</span> {fmtQty(o.qty)} {o.symbol}{" "}
                   <span className="text-faint">
                     {o.type}{o.type === "limit" && o.limitPrice ? ` @ ${money(o.limitPrice)}` : ""}
                   </span>
@@ -151,6 +153,24 @@ function OrderTicket({ onPlaced }: { onPlaced: () => void }) {
   const [limit, setLimit] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ kind: "ok" | "warn" | "err"; text: string } | null>(null);
+  // Last price for the typed symbol, to preview an order's cost before submitting.
+  const [lastPrice, setLastPrice] = useState<number | null>(null);
+  useEffect(() => {
+    const sym = symbol.trim().toUpperCase();
+    if (!sym) {
+      setLastPrice(null);
+      return;
+    }
+    let cancelled = false;
+    getQuoteViaApi(sym)
+      .then((q) => !cancelled && setLastPrice(q.price))
+      .catch(() => !cancelled && setLastPrice(null));
+    return () => {
+      cancelled = true;
+    };
+  }, [symbol]);
+
+  const estCost = lastPrice != null && Number(qty) > 0 ? lastPrice * Number(qty) : null;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -200,7 +220,7 @@ function OrderTicket({ onPlaced }: { onPlaced: () => void }) {
             type="button"
             onClick={() => {
               setSymbol(s);
-              if (isCryptoSymbol(s)) setQty("1");
+              if (isCryptoSymbol(s)) setQty("0.1"); // fractional — 1 BTC would be most of the account
             }}
             className="rounded-full border border-strong px-2.5 py-1 text-xs text-muted transition hover:text-ink"
           >
@@ -219,7 +239,7 @@ function OrderTicket({ onPlaced }: { onPlaced: () => void }) {
           <option value="market">Market</option>
           <option value="limit">Limit</option>
         </select>
-        <input value={qty} onChange={(e) => setQty(e.target.value)} inputMode="numeric" placeholder="Qty" aria-label="Quantity" className={`${inputCls} font-mono`} />
+        <input value={qty} onChange={(e) => setQty(e.target.value)} inputMode="decimal" placeholder="Qty" aria-label="Quantity" className={`${inputCls} font-mono`} />
         {type === "limit" && (
           <input value={limit} onChange={(e) => setLimit(e.target.value)} inputMode="decimal" placeholder="Limit price" aria-label="Limit price" className={`${inputCls} col-span-2 font-mono`} />
         )}
@@ -234,6 +254,12 @@ function OrderTicket({ onPlaced }: { onPlaced: () => void }) {
       {msg && (
         <p className={`mt-3 text-sm ${msg.kind === "ok" ? "text-up" : msg.kind === "warn" ? "text-streak" : "text-down"}`} role="alert">
           {msg.text}
+        </p>
+      )}
+      {estCost != null && (
+        <p className="mt-2 text-xs text-muted">
+          ≈ <span className="font-mono text-ink">{money(estCost)}</span> at last{" "}
+          <span className="font-mono">{money(lastPrice as number)}</span>
         </p>
       )}
       <p className="mt-2 text-xs text-faint">Paper trading only · ${"​"}100k virtual cash · market buys fill at the ask, sells at the bid.</p>
