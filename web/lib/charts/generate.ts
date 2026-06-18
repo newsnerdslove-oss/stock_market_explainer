@@ -112,3 +112,27 @@ export function generatePattern(pattern: PatternId, seed: number): GeneratedChar
 export function isCorrectPick(index: number, signalIndex: number, tol = 1): boolean {
   return Math.abs(index - signalIndex) <= tol;
 }
+
+/**
+ * A long, realistic price series for the backtesting sandbox — a random walk
+ * whose drift occasionally flips (regime changes), so trends and reversals (and
+ * therefore real pattern occurrences) emerge naturally rather than being injected.
+ * Seeded for reproducibility.
+ */
+export function generateMarket(seed: number, n = 120): OHLC[] {
+  const rng = mulberry32(seed);
+  const out: OHLC[] = [];
+  let price = 80 + rng() * 60;
+  let drift = (rng() - 0.5) * 1.4;
+  const vol = 1.4 + rng() * 1.4;
+  for (let i = 0; i < n; i++) {
+    if (rng() < 0.12) drift = (rng() - 0.5) * 1.4; // occasional regime shift
+    const open = price + (rng() - 0.5) * vol * 0.3;
+    const close = open + drift + (rng() - 0.5) * vol;
+    const high = Math.max(open, close) + rng() * vol * 0.6;
+    const low = Math.min(open, close) - rng() * vol * 0.6;
+    out.push({ open, high, low, close });
+    price = close;
+  }
+  return out;
+}
