@@ -7,7 +7,7 @@ import { PayoffDiagram } from "@/components/charts/PayoffDiagram";
 import { getQuoteViaApi } from "@/lib/marketService";
 import { generateChain, type ChainContract } from "@/lib/options/chain";
 import { standardExpiries } from "@/lib/options/sim";
-import { contractKey } from "@/lib/options/ledger";
+import { contractKey, reservedMargin, type OptionAction } from "@/lib/options/ledger";
 import { useTrading } from "@/lib/trading/useTrading";
 import type { OptionType } from "@/lib/options/blackScholes";
 
@@ -76,8 +76,11 @@ export function OptionsTrade() {
 
   const heldKey = sel && expiry ? contractKey({ underlying: underlying.trim().toUpperCase(), type: sel.type, strike: sel.strike, expiry: expiry.date }) : null;
   const heldQty = heldKey ? (portfolio.optionLegs[heldKey]?.qty ?? 0) : 0;
+  const buyingPower = portfolio.cash - reservedMargin({ cash: portfolio.cash, realized: portfolio.realized, legs: portfolio.optionLegs });
+  // Margin a write of the selected contract would reserve (put: cash-secured; call: underlying value).
+  const writeMargin = sel ? (sel.type === "put" ? sel.strike : spot ?? 0) * 100 * (Number(contracts) || 1) : 0;
 
-  async function trade(action: "buy_to_open" | "sell_to_close") {
+  async function trade(action: OptionAction) {
     if (!sel || !expiry) return;
     const n = Number(contracts);
     if (!Number.isInteger(n) || n <= 0) {
@@ -97,7 +100,7 @@ export function OptionsTrade() {
     if (res.status === "rejected") {
       toast(res.reason ?? "Order rejected.", "err");
     } else {
-      const verb = action === "buy_to_open" ? "Bought" : "Sold";
+      const verb = action.startsWith("buy") ? "Bought" : action === "sell_to_open" ? "Wrote" : "Sold";
       toast(`${verb} ${n} ${underlying.toUpperCase()} ${sel.strike}${sel.type === "call" ? "C" : "P"} @ ${money(res.premiumPerShare ?? 0)}`, "ok");
       void refresh();
     }
@@ -193,7 +196,10 @@ export function OptionsTrade() {
                 <h3 className="font-mono text-sm text-ink">
                   {underlying.toUpperCase()} {selected.strike}{selected.type === "call" ? "C" : "P"} · {expiry.label}
                 </h3>
-                <span className="text-xs text-muted">{expiry.days} days to expiry{heldQty > 0 ? ` · you hold ${heldQty}` : ""}</span>
+                <span className="text-xs text-muted">
+                  {expiry.days} days to expiry
+                  {heldQty !== 0 ? ` · you hold ${heldQty > 0 ? `${heldQty} long` : `${-heldQty} short`}` : ""}
+                </span>
               </div>
 
               <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
@@ -221,25 +227,35 @@ export function OptionsTrade() {
                     className="w-24 rounded-md border border-strong bg-canvas px-3 py-2 text-sm font-mono text-ink focus:border-learn focus:outline-none"
                   />
                 </label>
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => trade("buy_to_open")}
-                  className="rounded-md bg-up px-4 py-2 text-sm font-medium text-canvas transition hover:opacity-90 disabled:opacity-40"
-                >
-                  {busy ? "…" : `Buy to open · ${money((selected.quote.price * 100 * (Number(contracts) || 1)))}`}
-                </button>
-                {heldQty > 0 && (
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => trade("sell_to_close")}
-                    className="rounded-md border border-strong px-4 py-2 text-sm text-ink transition hover:bg-surface-2 disabled:opacity-40"
-                  >
-                    Sell to close
-                  </button>
+                {heldQty < 0 ? (
+                  <>
+                    <button type="button" disabled={busy} onClick={() => trade("sell_to_open")} className="rounded-md bg-down px-4 py-2 text-sm font-medium text-canvas transition hover:opacity-90 disabled:opacity-40">
+                      {busy ? "…" : `Write more · margin ${money(writeMargin)}`}
+                    </button>
+                    <button type="button" disabled={busy} onClick={() => trade("buy_to_close")} className="rounded-md border border-strong px-4 py-2 text-sm text-ink transition hover:bg-surface-2 disabled:opacity-40">
+                      Buy to close
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button type="button" disabled={busy} onClick={() => trade("buy_to_open")} className="rounded-md bg-up px-4 py-2 text-sm font-medium text-canvas transition hover:opacity-90 disabled:opacity-40">
+                      {busy ? "…" : `Buy to open · ${money(selected.quote.price * 100 * (Number(contracts) || 1))}`}
+                    </button>
+                    {heldQty > 0 ? (
+                      <button type="button" disabled={busy} onClick={() => trade("sell_to_close")} className="rounded-md border border-strong px-4 py-2 text-sm text-ink transition hover:bg-surface-2 disabled:opacity-40">
+                        Sell to close
+                      </button>
+                    ) : (
+                      <button type="button" disabled={busy} onClick={() => trade("sell_to_open")} className="rounded-md bg-down px-4 py-2 text-sm font-medium text-canvas transition hover:opacity-90 disabled:opacity-40">
+                        {busy ? "…" : `Write (sell) · margin ${money(writeMargin)}`}
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
+              <p className="mt-2 text-xs text-faint">
+                Buying power <span className="font-mono text-muted">{money(buyingPower)}</span> · writing reserves collateral (put: cash-secured, call: underlying value).
+              </p>
             </div>
           )}
         </>

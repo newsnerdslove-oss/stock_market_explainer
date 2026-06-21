@@ -7,6 +7,8 @@ import {
   legUnrealized,
   evaluateOptionOrder,
   settleExpirations,
+  reservedMargin,
+  buyingPower,
   type OptionsBook,
   type OptionOrder,
 } from "@/lib/options/ledger";
@@ -99,6 +101,75 @@ describe("sell_to_close", () => {
     const opened = evaluateOptionOrder(book(), order({ contracts: 1 }), 5).book;
     const { book: b } = evaluateOptionOrder(opened, order({ action: "sell_to_close", contracts: 1 }), 2);
     expect(b.realized).toBe((2 - 5) * 100 * 1); // −300
+  });
+});
+
+describe("sell_to_open (writing) + margin", () => {
+  // Cash-secured put: reserve strike × 100 per contract.
+  const PUT_MARGIN = 300 * 100;
+
+  it("credits the premium, opens a short, and reserves margin", () => {
+    const { book: b, result } = evaluateOptionOrder(book(), order({ type: "put", action: "sell_to_open", contracts: 2 }), 4, PUT_MARGIN);
+    expect(result.status).toBe("filled");
+    expect(result.cashFlow).toBe(800); // +4 × 100 × 2 received
+    expect(b.cash).toBe(100_800);
+    const leg = b.legs["AAPL|put|300|2026-07-17"];
+    expect(leg).toMatchObject({ qty: -2, avgPrice: 4, marginPerContract: PUT_MARGIN });
+    expect(reservedMargin(b)).toBe(2 * PUT_MARGIN); // 60,000
+    expect(buyingPower(b)).toBe(100_800 - 60_000);
+  });
+
+  it("rejects writing when margin exceeds buying power", () => {
+    const small = book({ cash: 10_000 });
+    const { result } = evaluateOptionOrder(small, order({ type: "put", action: "sell_to_open", contracts: 1 }), 4, PUT_MARGIN);
+    expect(result.status).toBe("rejected");
+  });
+
+  it("averages the premium received across two writes", () => {
+    let b = evaluateOptionOrder(book(), order({ type: "put", action: "sell_to_open", contracts: 1 }), 4, PUT_MARGIN).book;
+    b = evaluateOptionOrder(b, order({ type: "put", action: "sell_to_open", contracts: 1 }), 6, PUT_MARGIN).book;
+    const leg = b.legs["AAPL|put|300|2026-07-17"];
+    expect(leg.qty).toBe(-2);
+    expect(leg.avgPrice).toBeCloseTo(5, 9);
+  });
+
+  it("buy_to_close books a profit when bought back cheaper and releases margin", () => {
+    const opened = evaluateOptionOrder(book(), order({ type: "put", action: "sell_to_open", contracts: 2 }), 5, PUT_MARGIN).book;
+    const { book: b, result } = evaluateOptionOrder(opened, order({ type: "put", action: "buy_to_close", contracts: 2 }), 2);
+    expect(result.status).toBe("filled");
+    expect(result.realizedDelta).toBe((5 - 2) * 100 * 2); // +600
+    expect(b.realized).toBe(600);
+    expect(b.legs["AAPL|put|300|2026-07-17"]).toBeUndefined();
+    expect(reservedMargin(b)).toBe(0);
+    // cash: 100000 + (5×100×2) − (2×100×2) = 100000 + 1000 − 400
+    expect(b.cash).toBe(100_600);
+  });
+
+  it("guards the wrong action against an existing position", () => {
+    const longBook = evaluateOptionOrder(book(), order({ contracts: 1 }), 5).book; // long call
+    expect(evaluateOptionOrder(longBook, order({ action: "sell_to_open", contracts: 1 }), 5, 1000).result.status).toBe("rejected");
+    const shortBook = evaluateOptionOrder(book(), order({ type: "put", action: "sell_to_open", contracts: 1 }), 5, PUT_MARGIN).book;
+    expect(evaluateOptionOrder(shortBook, order({ type: "put", action: "buy_to_open", contracts: 1 }), 5).result.status).toBe("rejected");
+  });
+});
+
+describe("short expiry settlement", () => {
+  const writePut = () => evaluateOptionOrder(book(), order({ type: "put", action: "sell_to_open", contracts: 1 }), 5, 30000).book; // strike 300
+
+  it("OTM short put expires worthless — keep the full premium", () => {
+    const b = writePut();
+    const { book: after, settled } = settleExpirations(b, "2026-07-17", { AAPL: 320 }); // above strike → put OTM
+    expect(settled[0].intrinsicPerShare).toBe(0);
+    expect(after.realized).toBe(5 * 100); // +500 kept
+    expect(after.legs["AAPL|put|300|2026-07-17"]).toBeUndefined();
+  });
+
+  it("ITM short put pays intrinsic and books the net loss", () => {
+    const b = writePut();
+    const { book: after } = settleExpirations(b, "2026-07-17", { AAPL: 280 }); // 20 ITM
+    // pay intrinsic 20×100, net realized = (intrinsic − avg)×100×qty = (20−5)×100×(−1) = −1500
+    expect(after.cash).toBe(b.cash - 20 * 100);
+    expect(after.realized).toBe(-1500);
   });
 });
 
