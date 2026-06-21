@@ -25,6 +25,8 @@ export function loadLocalPortfolio(): Portfolio | null {
     pf.realized = p.realized;
     pf.positions = p.positions as Record<string, Position>;
     pf.orders = p.orders as Order[];
+    // optionLegs is newer than the v1 key — default for portfolios saved before it.
+    if (p.optionLegs && typeof p.optionLegs === "object") pf.optionLegs = p.optionLegs as Portfolio["optionLegs"];
     return pf;
   } catch {
     return null;

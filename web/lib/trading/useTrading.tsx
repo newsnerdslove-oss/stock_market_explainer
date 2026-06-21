@@ -5,9 +5,21 @@ import { createClient, supabaseConfigured } from "@/lib/supabase/client";
 import { ensureSession } from "@/lib/progress/serverSync";
 import { getQuoteViaApi } from "@/lib/marketService";
 import { evaluateOrder, type FillResult, type OrderRequest } from "@/lib/trading/ledger";
+import { evaluateOptionOrder, settleExpirations, type OptionAction, type OptionResult, type OptionsBook } from "@/lib/options/ledger";
+import { markPremium } from "@/lib/options/sim";
+import type { OptionType } from "@/lib/options/blackScholes";
 import { insertOrder, loadLocalPortfolio, loadPortfolio, savePortfolio, saveLocalPortfolio, updateOrder } from "@/lib/trading/store";
 import { emptyPortfolio, type Order, type Portfolio } from "@/lib/trading/schema";
 import type { SupabaseClient } from "@supabase/supabase-js";
+
+export interface OptionTradeRequest {
+  underlying: string;
+  type: OptionType;
+  strike: number;
+  expiry: string; // ISO YYYY-MM-DD
+  action: OptionAction;
+  contracts: number;
+}
 
 interface TradingContextValue {
   portfolio: Portfolio;
@@ -16,6 +28,8 @@ interface TradingContextValue {
   ready: boolean;
   configured: boolean;
   placeOrder: (req: OrderRequest) => Promise<FillResult>;
+  /** Buy-to-open / sell-to-close an option; filled at a Black-Scholes premium. */
+  placeOptionOrder: (req: OptionTradeRequest) => Promise<OptionResult>;
   /** Re-fetch prices for held + pending symbols and fill any crossed limit orders. */
   refresh: () => Promise<void>;
 }
@@ -68,10 +82,12 @@ export function TradingProvider({ children }: { children: ReactNode }) {
       const server = await loadPortfolio(sb, uid);
       if (cancelled) return;
       if (server) {
-        // The server copy is the source of truth across devices.
-        setPortfolio(server);
-        saveLocalPortfolio(server);
-        void refreshPrices(Object.keys(server.positions));
+        // The server copy is the source of truth across devices — but option legs
+        // aren't persisted server-side yet, so keep the local ones.
+        const merged: Portfolio = { ...server, optionLegs: local.optionLegs };
+        setPortfolio(merged);
+        saveLocalPortfolio(merged);
+        void refreshPrices(Object.keys(merged.positions));
       } else {
         // No server portfolio yet — seed it from the local one.
         await savePortfolio(sb, uid, pfRef.current);
@@ -116,10 +132,84 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     return result;
   }, []);
 
+  const placeOptionOrder = useCallback(async (req: OptionTradeRequest): Promise<OptionResult> => {
+    const quote = await getQuoteViaApi(req.underlying).catch(() => null);
+    if (!quote) return { status: "rejected", reason: `Couldn't get a quote for ${req.underlying}.` };
+    setPrices((p) => ({ ...p, [req.underlying]: quote.price }));
+
+    // Fill at a Black-Scholes premium off the live underlying.
+    const fill = markPremium({ underlying: req.underlying, type: req.type, strike: req.strike, expiry: req.expiry }, quote.price, new Date());
+    const pf = pfRef.current;
+    const book: OptionsBook = { cash: pf.cash, realized: pf.realized, legs: pf.optionLegs };
+    const { book: after, result } = evaluateOptionOrder(
+      book,
+      { underlying: req.underlying, type: req.type, strike: req.strike, expiry: req.expiry, action: req.action, contracts: req.contracts },
+      fill,
+    );
+    if (result.status === "rejected") return result;
+
+    // Record an order-history row (reusing the stock Order shape, with a contract label).
+    const label = `${req.underlying} ${req.strike}${req.type === "call" ? "C" : "P"} ${req.expiry}`;
+    const order: Order = {
+      id: crypto.randomUUID(),
+      symbol: label,
+      side: req.action === "buy_to_open" ? "buy" : "sell",
+      type: "market",
+      qty: req.contracts,
+      limitPrice: null,
+      status: "filled",
+      filledPrice: result.premiumPerShare ?? fill,
+      createdAt: new Date().toISOString(),
+    };
+    const updated: Portfolio = { ...pf, cash: after.cash, realized: after.realized, optionLegs: after.legs, orders: [order, ...pf.orders].slice(0, 50) };
+    setPortfolio(updated);
+    saveLocalPortfolio(updated);
+
+    // Best-effort server sync of cash/realized + order history (legs are local-only this phase).
+    const sb = sbRef.current;
+    const uid = uidRef.current;
+    if (sb && uid) {
+      await insertOrder(sb, uid, order);
+      await savePortfolio(sb, uid, updated);
+    }
+    return result;
+  }, []);
+
+  // Cash-settle any expired option legs to intrinsic, using the current underlying
+  // price (a sim simplification — we don't store the historical price at expiry).
+  const settleExpiredOptions = useCallback(async () => {
+    const pf = pfRef.current;
+    const today = new Date().toISOString().slice(0, 10);
+    const due = Object.values(pf.optionLegs).filter((l) => l.expiry <= today);
+    if (!due.length) return;
+    const unders = [...new Set(due.map((l) => l.underlying))];
+    const priced = await Promise.all(
+      unders.map(async (u) => {
+        const q = await getQuoteViaApi(u).catch(() => null);
+        return q ? ([u, q.price] as const) : null;
+      }),
+    );
+    const underlyingPrices: Record<string, number> = {};
+    for (const e of priced) if (e) underlyingPrices[e[0]] = e[1];
+    const book: OptionsBook = { cash: pf.cash, realized: pf.realized, legs: pf.optionLegs };
+    const { book: after, settled } = settleExpirations(book, today, underlyingPrices);
+    if (!settled.length) return;
+    const updated: Portfolio = { ...pf, cash: after.cash, realized: after.realized, optionLegs: after.legs };
+    setPortfolio(updated);
+    saveLocalPortfolio(updated);
+  }, []);
+
+  // Settle expirations once the portfolio has loaded.
+  useEffect(() => {
+    if (ready) void settleExpiredOptions();
+  }, [ready, settleExpiredOptions]);
+
   const refresh = useCallback(async () => {
     const pf = pfRef.current;
     const pendingSyms = pf.orders.filter((o) => o.status === "pending").map((o) => o.symbol);
-    await refreshPrices([...Object.keys(pf.positions), ...pendingSyms]);
+    const optionUnders = Object.values(pf.optionLegs).map((l) => l.underlying);
+    await refreshPrices([...Object.keys(pf.positions), ...pendingSyms, ...optionUnders]);
+    await settleExpiredOptions();
 
     const sb = sbRef.current;
     const uid = uidRef.current;
@@ -151,7 +241,7 @@ export function TradingProvider({ children }: { children: ReactNode }) {
   }, [refreshPrices]);
 
   return (
-    <Ctx.Provider value={{ portfolio, prices, ready, configured, placeOrder, refresh }}>
+    <Ctx.Provider value={{ portfolio, prices, ready, configured, placeOrder, placeOptionOrder, refresh }}>
       {children}
     </Ctx.Provider>
   );

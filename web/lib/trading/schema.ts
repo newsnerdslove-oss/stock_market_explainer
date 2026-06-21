@@ -2,6 +2,8 @@
 // (lib/trading/store.ts), and mutated by a deterministic local ledger
 // (lib/trading/ledger.ts) that fills against the market-service quote feed.
 
+import type { OptionLeg } from "@/lib/options/ledger";
+
 export const STARTING_CASH = 100_000;
 
 export type OrderSide = "buy" | "sell";
@@ -32,12 +34,14 @@ export interface Order {
 export interface Portfolio {
   userId: string | null;
   cash: number;
-  /** Cumulative realized P&L locked in on sells. */
+  /** Cumulative realized P&L locked in on sells (stocks + options). */
   realized: number;
   positions: Record<string, Position>; // keyed by symbol
+  /** Open option legs, keyed by contractKey (lib/options/ledger). Shares `cash`. */
+  optionLegs: Record<string, OptionLeg>;
   orders: Order[]; // most recent first
 }
 
 export function emptyPortfolio(): Portfolio {
-  return { userId: null, cash: STARTING_CASH, realized: 0, positions: {}, orders: [] };
+  return { userId: null, cash: STARTING_CASH, realized: 0, positions: {}, optionLegs: {}, orders: [] };
 }
