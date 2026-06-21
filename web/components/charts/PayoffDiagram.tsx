@@ -3,6 +3,7 @@
 // Pure SVG (no hooks/DOM) so it renders server-side. Colors mirror design tokens.
 
 import type { PayoffLeg } from "@/lib/lessons/types";
+import { totalPayoff as totalPnl } from "@/lib/options/strategy";
 
 const UP = "#2BD17E";
 const DOWN = "#FF5C5C";
@@ -10,20 +11,6 @@ const INK = "#E8EDF4";
 const MUTED = "#8A94A6";
 const FAINT = "#5A6376";
 const STRONG = "#232A36";
-
-function legPnl(leg: PayoffLeg, s: number): number {
-  const qty = leg.qty ?? 1;
-  const prem = leg.premium ?? 0;
-  if (leg.instrument === "stock") {
-    return (leg.side === "long" ? s - prem : prem - s) * qty;
-  }
-  const strike = leg.strike ?? 0;
-  const intrinsic = leg.instrument === "call" ? Math.max(0, s - strike) : Math.max(0, strike - s);
-  const per = leg.side === "long" ? intrinsic - prem : prem - intrinsic;
-  return per * qty * 100;
-}
-
-const totalPnl = (legs: PayoffLeg[], s: number) => legs.reduce((sum, l) => sum + legPnl(l, s), 0);
 
 const fmt = (v: number) => `${v < 0 ? "−" : ""}$${Math.abs(Math.round(v)).toLocaleString("en-US")}`;
 const fmtPrice = (v: number) => `$${(Math.round(v * 100) / 100).toLocaleString("en-US")}`;
