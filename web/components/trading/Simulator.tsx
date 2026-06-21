@@ -4,11 +4,15 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useToast } from "@/components/Toast";
 import { DailyChallengeCard } from "@/components/DailyChallenge";
+import { OptionsTrade } from "@/components/trading/OptionsTrade";
+import { OptionPositions } from "@/components/trading/OptionPositions";
 import { coinbaseProduct, isCryptoSymbol } from "@/lib/crypto/products";
 import { useCryptoPrices } from "@/lib/crypto/useCryptoPrices";
 import { getQuoteViaApi } from "@/lib/marketService";
 import { TradingProvider, useTrading } from "@/lib/trading/useTrading";
 import { equity, unrealizedPnL } from "@/lib/trading/ledger";
+import { legUnrealized, CONTRACT_MULTIPLIER } from "@/lib/options/ledger";
+import { markPremium } from "@/lib/options/sim";
 import type { OrderSide, OrderType } from "@/lib/trading/schema";
 
 const money = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -26,6 +30,7 @@ export function Simulator() {
 
 function SimulatorBody() {
   const { portfolio, prices, ready, configured, refresh } = useTrading();
+  const [tradeMode, setTradeMode] = useState<"stocks" | "options">("stocks");
   // Quote freshness — set on the client (avoids an SSR/hydration mismatch).
   const [refreshedAt, setRefreshedAt] = useState<number | null>(null);
   useEffect(() => setRefreshedAt(Date.now()), []);
@@ -62,9 +67,20 @@ function SimulatorBody() {
   if (!ready) return <div className="mt-8 h-40 animate-pulse rounded-lg border border-hairline bg-surface/50" aria-hidden />;
 
   const positions = Object.values(portfolio.positions);
-  const eq = equity(portfolio, marked);
   let unreal = 0;
   for (const p of positions) unreal += unrealizedPnL(p.avgCost, marked[p.symbol] ?? p.avgCost, p.qty);
+
+  // Fold option legs into equity + unrealized (marked to a Black-Scholes premium).
+  // The body only renders post-`ready` (client), so new Date() is hydration-safe.
+  let optionValue = 0;
+  for (const l of Object.values(portfolio.optionLegs)) {
+    const spot = marked[l.underlying];
+    if (spot == null) continue;
+    const mark = markPremium(l, spot, new Date());
+    optionValue += mark * CONTRACT_MULTIPLIER * l.qty;
+    unreal += legUnrealized(l, mark);
+  }
+  const eq = equity(portfolio, marked) + optionValue;
 
   return (
     <div className="mt-8 space-y-6">
@@ -78,7 +94,22 @@ function SimulatorBody() {
         <Stat label="Unrealized P&L" value={signed(unreal)} color={pnlColor(unreal)} />
       </section>
 
-      <OrderTicket onPlaced={refresh} />
+      {/* stocks vs options ticket */}
+      <section className="rounded-lg border border-learn/30 bg-learn/5 p-5">
+        <div className="mb-4 inline-flex rounded-md border border-strong p-0.5 text-sm">
+          {(["stocks", "options"] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setTradeMode(m)}
+              className={`rounded px-3 py-1 capitalize transition ${tradeMode === m ? "bg-learn text-canvas" : "text-muted hover:text-ink"}`}
+            >
+              {m}
+            </button>
+          ))}
+        </div>
+        {tradeMode === "stocks" ? <OrderTicket onPlaced={refresh} bare /> : <OptionsTrade />}
+      </section>
 
       {/* positions */}
       <section className="rounded-lg border border-strong bg-surface p-5">
@@ -130,6 +161,8 @@ function SimulatorBody() {
         )}
       </section>
 
+      <OptionPositions />
+
       {/* recent orders */}
       {portfolio.orders.length > 0 && (
         <section className="rounded-lg border border-strong bg-surface p-5">
@@ -170,7 +203,7 @@ function Stat({ label, value, color }: { label: string; value: string; color?: s
   );
 }
 
-function OrderTicket({ onPlaced }: { onPlaced: () => void }) {
+function OrderTicket({ onPlaced, bare = false }: { onPlaced: () => void; bare?: boolean }) {
   const { placeOrder } = useTrading();
   const toast = useToast();
   const [symbol, setSymbol] = useState("AAPL");
@@ -230,14 +263,15 @@ function OrderTicket({ onPlaced }: { onPlaced: () => void }) {
   const inputCls = "rounded-md border border-strong bg-canvas px-3 py-2 text-sm text-ink placeholder:text-faint focus:border-learn focus:outline-none";
   const labelCls = "text-[11px] font-medium uppercase tracking-wide text-faint";
 
+  const Wrapper = bare ? "div" : "section";
   return (
-    <section className="rounded-lg border border-learn/30 bg-learn/5 p-5">
+    <Wrapper className={bare ? "" : "rounded-lg border border-learn/30 bg-learn/5 p-5"}>
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-medium text-ink">Place an order</h2>
+        {!bare && <h2 className="text-sm font-medium text-ink">Place an order</h2>}
         {symbol.trim() && (
           <Link
             href={`/symbol/${encodeURIComponent(symbol.trim().toUpperCase())}`}
-            className="text-xs text-learn transition hover:opacity-80"
+            className="ml-auto text-xs text-learn transition hover:opacity-80"
           >
             View {symbol.trim().toUpperCase()} chart →
           </Link>
@@ -308,6 +342,6 @@ function OrderTicket({ onPlaced }: { onPlaced: () => void }) {
         </p>
       )}
       <p className="mt-2 text-xs text-faint">Paper trading only · ${"​"}100k virtual cash · market buys fill at the ask, sells at the bid.</p>
-    </section>
+    </Wrapper>
   );
 }
