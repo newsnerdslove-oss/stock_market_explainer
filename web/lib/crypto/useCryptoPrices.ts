@@ -54,19 +54,20 @@ export function useCryptoPrices(productIds: string[]): {
     const flush = setInterval(() => {
       const ids = Object.keys(pending);
       if (ids.length === 0) return;
-      setPrices((prev) => {
-        const next = { ...prev };
-        for (const id of ids) {
-          const { price, at } = pending[id];
-          const before = shown[id];
-          const dir: TickDirection =
-            before == null || price === before ? "flat" : price > before ? "up" : "down";
-          shown[id] = price;
-          next[id] = { price, dir, at };
-          delete pending[id];
-        }
-        return next;
-      });
+      // Compute the batch and mutate `pending`/`shown` OUT here — never inside the
+      // setState updater, which React may invoke more than once (StrictMode,
+      // re-render) and must stay pure, or the second run reads already-deleted keys.
+      const updates: Record<string, LivePrice> = {};
+      for (const id of ids) {
+        const { price, at } = pending[id];
+        delete pending[id];
+        const before = shown[id];
+        const dir: TickDirection =
+          before == null || price === before ? "flat" : price > before ? "up" : "down";
+        shown[id] = price;
+        updates[id] = { price, dir, at };
+      }
+      setPrices((prev) => ({ ...prev, ...updates }));
     }, FLUSH_MS);
 
     function connect() {
