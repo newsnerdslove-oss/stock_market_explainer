@@ -8,10 +8,12 @@ import { AskTutor } from "@/components/AskTutor";
 import { QuizCard } from "@/components/QuizCard";
 import { PatternSpotter } from "@/components/PatternSpotter";
 import { BacktestSandbox } from "@/components/BacktestSandbox";
+import { GreeksLab } from "@/components/options/GreeksLab";
 
 // Lessons that get an interactive widget below their quiz.
 const SPOTTER_LESSONS = new Set(["candlestick-patterns-reversal"]);
 const BACKTEST_LESSONS = new Set(["what-backtesting-is-and-why"]);
+const GREEKS_LAB_LESSONS = new Set(["options-greeks"]);
 
 // Pre-render every lesson at build time.
 export function generateStaticParams() {
@@ -67,6 +69,7 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
 
       {SPOTTER_LESSONS.has(lesson.slug) && <PatternSpotter />}
       {BACKTEST_LESSONS.has(lesson.slug) && <BacktestSandbox />}
+      {GREEKS_LAB_LESSONS.has(lesson.slug) && <GreeksLab />}
 
       <AskTutor slug={lesson.slug} />
 
