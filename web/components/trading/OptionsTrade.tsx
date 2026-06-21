@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useToast } from "@/components/Toast";
 import { PayoffDiagram } from "@/components/charts/PayoffDiagram";
 import { getQuoteViaApi } from "@/lib/marketService";
@@ -104,6 +105,14 @@ export function OptionsTrade() {
 
   return (
     <div className="space-y-4">
+      {/* learn tie-in */}
+      <p className="text-xs text-muted">
+        New to options? Try the{" "}
+        <Link href="/learn/options-greeks" className="text-learn hover:opacity-80">Greeks lab</Link>{" "}
+        and the{" "}
+        <Link href="/learn/options-strategy-matrix" className="text-learn hover:opacity-80">strategy builder</Link>.
+      </p>
+
       {/* underlying + spot */}
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1">

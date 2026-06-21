@@ -16,6 +16,8 @@ const SPOTTER_LESSONS = new Set(["candlestick-patterns-reversal"]);
 const BACKTEST_LESSONS = new Set(["what-backtesting-is-and-why"]);
 const GREEKS_LAB_LESSONS = new Set(["options-greeks"]);
 const STRATEGY_BUILDER_LESSONS = new Set(["options-strategy-matrix"]);
+// Options lessons get a "practice in the simulator" tie-in.
+const OPTIONS_MODULES = new Set(["markets-options", "markets-adv-options"]);
 
 // Pre-render every lesson at build time.
 export function generateStaticParams() {
@@ -73,6 +75,19 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
       {BACKTEST_LESSONS.has(lesson.slug) && <BacktestSandbox />}
       {GREEKS_LAB_LESSONS.has(lesson.slug) && <GreeksLab />}
       {STRATEGY_BUILDER_LESSONS.has(lesson.slug) && <StrategyBuilder />}
+
+      {OPTIONS_MODULES.has(lesson.moduleId) && (
+        <section className="mt-12 rounded-lg border border-up/30 bg-up/5 p-5">
+          <h2 className="text-sm font-medium text-ink">Practice in the simulator</h2>
+          <p className="mt-1 text-sm text-muted">
+            Trade calls and puts at live Black-Scholes prices, build the strategies you just learned, and watch the Greeks and P&amp;L
+            move — paper money only.
+          </p>
+          <Link href="/simulator" className="mt-3 inline-block rounded-md bg-up px-4 py-2 text-sm font-medium text-canvas transition hover:opacity-90">
+            Open the options simulator →
+          </Link>
+        </section>
+      )}
 
       <AskTutor slug={lesson.slug} />
 
