@@ -25,11 +25,13 @@ export function OptionPositions() {
   async function close(l: OptionLeg) {
     const key = `${l.underlying}|${l.type}|${l.strike}|${l.expiry}`;
     setBusy(key);
-    const res = await placeOptionOrder({ underlying: l.underlying, type: l.type, strike: l.strike, expiry: l.expiry, action: "sell_to_close", contracts: l.qty });
+    // Long legs sell to close; short legs buy to close.
+    const action = l.qty > 0 ? "sell_to_close" : "buy_to_close";
+    const res = await placeOptionOrder({ underlying: l.underlying, type: l.type, strike: l.strike, expiry: l.expiry, action, contracts: Math.abs(l.qty) });
     setBusy(null);
     if (res.status === "rejected") toast(res.reason ?? "Couldn't close.", "err");
     else {
-      toast(`Closed ${l.qty} ${label(l)} @ ${money(res.premiumPerShare ?? 0)}`, "ok");
+      toast(`Closed ${Math.abs(l.qty)} ${label(l)} @ ${money(res.premiumPerShare ?? 0)}`, "ok");
       void refresh();
     }
   }
@@ -64,7 +66,7 @@ export function OptionPositions() {
                   <td className="py-1.5 font-sans text-ink">
                     {label(l)} <span className="text-xs text-faint">{l.expiry}</span>
                   </td>
-                  <td className="py-1.5 text-right text-muted">{l.qty}</td>
+                  <td className={`py-1.5 text-right ${l.qty < 0 ? "text-down" : "text-muted"}`}>{l.qty > 0 ? l.qty : `${-l.qty} short`}</td>
                   <td className="py-1.5 text-right text-muted">{money(l.avgPrice)}</td>
                   <td className="py-1.5 text-right text-muted">{money(mark)}</td>
                   <td className="py-1.5 text-right text-muted">{money(value)}</td>

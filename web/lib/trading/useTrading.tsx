@@ -139,12 +139,16 @@ export function TradingProvider({ children }: { children: ReactNode }) {
 
     // Fill at a Black-Scholes premium off the live underlying.
     const fill = markPremium({ underlying: req.underlying, type: req.type, strike: req.strike, expiry: req.expiry }, quote.price, new Date());
+    // Collateral for writing: a put is cash-secured (strike×100); a call is secured
+    // against the underlying value (spot×100). Conservative vs real spread margin.
+    const marginPerContract = req.action === "sell_to_open" ? (req.type === "put" ? req.strike : quote.price) * 100 : 0;
     const pf = pfRef.current;
     const book: OptionsBook = { cash: pf.cash, realized: pf.realized, legs: pf.optionLegs };
     const { book: after, result } = evaluateOptionOrder(
       book,
       { underlying: req.underlying, type: req.type, strike: req.strike, expiry: req.expiry, action: req.action, contracts: req.contracts },
       fill,
+      marginPerContract,
     );
     if (result.status === "rejected") return result;
 
@@ -153,7 +157,7 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     const order: Order = {
       id: crypto.randomUUID(),
       symbol: label,
-      side: req.action === "buy_to_open" ? "buy" : "sell",
+      side: req.action.startsWith("buy") ? "buy" : "sell",
       type: "market",
       qty: req.contracts,
       limitPrice: null,

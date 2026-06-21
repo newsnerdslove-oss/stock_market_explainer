@@ -22,10 +22,12 @@ export interface OptionLeg {
   strike: number;
   /** Expiry as an ISO date (YYYY-MM-DD). */
   expiry: string;
-  /** Contracts held — signed (+long / −short). Phase 2 fills the long side only. */
+  /** Contracts held — signed (+long / −short). */
   qty: number;
-  /** Average premium paid per share (≥ 0). */
+  /** Average premium paid (long) or received (short) per share (≥ 0). */
   avgPrice: number;
+  /** Short legs only: collateral reserved per contract (long legs: 0/undefined). */
+  marginPerContract?: number;
 }
 
 export interface OptionsBook {
@@ -37,7 +39,7 @@ export interface OptionsBook {
   legs: Record<string, OptionLeg>;
 }
 
-export type OptionAction = "buy_to_open" | "sell_to_close";
+export type OptionAction = "buy_to_open" | "sell_to_close" | "sell_to_open" | "buy_to_close";
 
 export interface OptionOrder {
   underlying: string;
@@ -70,6 +72,20 @@ export function premiumCash(pricePerShare: number, contracts: number): number {
   return pricePerShare * CONTRACT_MULTIPLIER * contracts;
 }
 
+/** Total collateral reserved against short legs (a buying-power reduction). */
+export function reservedMargin(book: OptionsBook): number {
+  let m = 0;
+  for (const leg of Object.values(book.legs)) {
+    if (leg.qty < 0) m += (leg.marginPerContract ?? 0) * -leg.qty;
+  }
+  return m;
+}
+
+/** Cash not tied up as short-collateral — what's available to spend or reserve. */
+export function buyingPower(book: OptionsBook): number {
+  return book.cash - reservedMargin(book);
+}
+
 /** Intrinsic value per share at a given underlying price. */
 export function intrinsicPerShare(type: OptionType, strike: number, underlying: number): number {
   return type === "call" ? Math.max(underlying - strike, 0) : Math.max(strike - underlying, 0);
@@ -85,56 +101,80 @@ const isWholePositive = (n: number) => Number.isFinite(n) && n > 0 && Number.isI
 /**
  * Apply an option order to a book at a given fill premium. Returns a NEW book
  * (inputs untouched) and a result. Rejections leave the book unchanged.
+ *
+ * Opening a short (`sell_to_open`) reserves `marginPerContract` of collateral per
+ * contract — the caller computes it (e.g. a cash-secured put reserves strike×100,
+ * a short call reserves the underlying value). Buying power = cash − reserved.
  */
 export function evaluateOptionOrder(
   book: OptionsBook,
   order: OptionOrder,
   fillPremium: number,
+  marginPerContract = 0,
 ): { book: OptionsBook; result: OptionResult } {
   const unchanged = { book, result: { status: "rejected" } as OptionResult };
+  const reject = (reason: string) => ({ ...unchanged, result: { status: "rejected" as const, reason } });
 
-  if (!isWholePositive(order.contracts)) {
-    return { ...unchanged, result: { status: "rejected", reason: "Contracts must be a whole number ≥ 1." } };
-  }
-  if (!Number.isFinite(fillPremium) || fillPremium < 0) {
-    return { ...unchanged, result: { status: "rejected", reason: "Invalid fill premium." } };
-  }
+  if (!isWholePositive(order.contracts)) return reject("Contracts must be a whole number ≥ 1.");
+  if (!Number.isFinite(fillPremium) || fillPremium < 0) return reject("Invalid fill premium.");
 
   const key = contractKey(order);
   const existing = book.legs[key];
   const cash = premiumCash(fillPremium, order.contracts);
+  const avail = buyingPower(book);
+  const meta = { underlying: order.underlying, type: order.type, strike: order.strike, expiry: order.expiry };
 
-  if (order.action === "buy_to_open") {
-    if (cash > book.cash) {
-      return { ...unchanged, result: { status: "rejected", reason: "Not enough cash for the premium." } };
+  switch (order.action) {
+    case "buy_to_open": {
+      if (existing && existing.qty < 0) return reject("You're short this contract — use buy to close.");
+      if (cash > avail) return reject("Not enough buying power for the premium.");
+      const prevQty = existing?.qty ?? 0;
+      const prevAvg = existing?.avgPrice ?? 0;
+      const newQty = prevQty + order.contracts;
+      const newAvg = (prevQty * prevAvg + order.contracts * fillPremium) / newQty;
+      const legs = { ...book.legs, [key]: { ...meta, qty: newQty, avgPrice: newAvg } };
+      return { book: { ...book, cash: book.cash - cash, legs }, result: { status: "filled", premiumPerShare: fillPremium, cashFlow: -cash } };
     }
-    const prevQty = existing?.qty ?? 0;
-    const prevAvg = existing?.avgPrice ?? 0;
-    const newQty = prevQty + order.contracts;
-    const newAvg = (prevQty * prevAvg + order.contracts * fillPremium) / newQty;
-    const legs = {
-      ...book.legs,
-      [key]: { underlying: order.underlying, type: order.type, strike: order.strike, expiry: order.expiry, qty: newQty, avgPrice: newAvg },
-    };
-    return {
-      book: { ...book, cash: book.cash - cash, legs },
-      result: { status: "filled", premiumPerShare: fillPremium, cashFlow: -cash },
-    };
-  }
 
-  // sell_to_close — reduce a long position.
-  if (!existing || existing.qty < order.contracts) {
-    return { ...unchanged, result: { status: "rejected", reason: "You don't hold enough contracts to close." } };
+    case "sell_to_close": {
+      if (!existing || existing.qty < order.contracts) return reject("You don't hold enough contracts to close.");
+      const realizedDelta = (fillPremium - existing.avgPrice) * CONTRACT_MULTIPLIER * order.contracts;
+      const remaining = existing.qty - order.contracts;
+      const legs = { ...book.legs };
+      if (remaining <= 1e-9) delete legs[key];
+      else legs[key] = { ...existing, qty: remaining };
+      return {
+        book: { ...book, cash: book.cash + cash, realized: book.realized + realizedDelta, legs },
+        result: { status: "filled", premiumPerShare: fillPremium, cashFlow: cash, realizedDelta },
+      };
+    }
+
+    case "sell_to_open": {
+      if (existing && existing.qty > 0) return reject("You're long this contract — use sell to close.");
+      const margin = marginPerContract * order.contracts;
+      if (margin > avail) return reject("Not enough buying power for the margin.");
+      const prevAbs = existing ? -existing.qty : 0;
+      const prevAvg = existing?.avgPrice ?? 0;
+      const newAbs = prevAbs + order.contracts;
+      const newAvg = (prevAbs * prevAvg + order.contracts * fillPremium) / newAbs;
+      const legs = { ...book.legs, [key]: { ...meta, qty: -newAbs, avgPrice: newAvg, marginPerContract } };
+      return { book: { ...book, cash: book.cash + cash, legs }, result: { status: "filled", premiumPerShare: fillPremium, cashFlow: cash } };
+    }
+
+    case "buy_to_close": {
+      if (!existing || existing.qty >= 0 || -existing.qty < order.contracts) return reject("You're not short enough contracts to close.");
+      if (cash > book.cash) return reject("Not enough cash to buy the contracts back.");
+      const realizedDelta = (existing.avgPrice - fillPremium) * CONTRACT_MULTIPLIER * order.contracts;
+      const remainingAbs = -existing.qty - order.contracts;
+      const legs = { ...book.legs };
+      if (remainingAbs <= 1e-9) delete legs[key];
+      else legs[key] = { ...existing, qty: -remainingAbs };
+      return {
+        book: { ...book, cash: book.cash - cash, realized: book.realized + realizedDelta, legs },
+        result: { status: "filled", premiumPerShare: fillPremium, cashFlow: -cash, realizedDelta },
+      };
+    }
   }
-  const realizedDelta = (fillPremium - existing.avgPrice) * CONTRACT_MULTIPLIER * order.contracts;
-  const remaining = existing.qty - order.contracts;
-  const legs = { ...book.legs };
-  if (remaining <= 1e-9) delete legs[key];
-  else legs[key] = { ...existing, qty: remaining };
-  return {
-    book: { ...book, cash: book.cash + cash, realized: book.realized + realizedDelta, legs },
-    result: { status: "filled", premiumPerShare: fillPremium, cashFlow: cash, realizedDelta },
-  };
 }
 
 export interface Settlement {
