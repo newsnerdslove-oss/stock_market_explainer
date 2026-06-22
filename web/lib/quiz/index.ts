@@ -48,6 +48,7 @@ import { questions as cryptoMarketCapAndSupply } from "@/lib/quiz/content/crypto
 import { questions as crypto247Markets } from "@/lib/quiz/content/crypto/crypto-24-7-markets";
 import { questions as cryptoVolatility } from "@/lib/quiz/content/crypto/crypto-volatility";
 import { questions as custodyAndKeys } from "@/lib/quiz/content/crypto/custody-and-keys";
+import { questions as howACryptoTransactionWorks } from "@/lib/quiz/content/crypto/how-a-crypto-transaction-works";
 
 // 200-level: Technical analysis.
 import { questions as movingAverages } from "@/lib/quiz/content/technical/moving-averages-sma-vs-ema";
@@ -60,6 +61,7 @@ import { questions as candlestickPatterns } from "@/lib/quiz/content/technical/c
 import { questions as chartPatterns } from "@/lib/quiz/content/technical/chart-patterns-measured-moves";
 import { questions as divergence } from "@/lib/quiz/content/technical/divergence-price-vs-indicator";
 import { questions as multiTimeframe } from "@/lib/quiz/content/technical/multi-timeframe-analysis";
+import { questions as marketBreadthAndSentiment } from "@/lib/quiz/content/technical/market-breadth-and-sentiment";
 
 // 200-level: Fundamental analysis.
 import { questions as incomeStatement } from "@/lib/quiz/content/fundamental/the-income-statement";
@@ -103,6 +105,7 @@ import { questions as gasAndNetworkFees } from "@/lib/quiz/content/crypto-200/ga
 import { questions as dexVsCex } from "@/lib/quiz/content/crypto-200/dex-vs-cex";
 import { questions as staking } from "@/lib/quiz/content/crypto-200/staking";
 import { questions as readingOnChainData } from "@/lib/quiz/content/crypto-200/reading-on-chain-data";
+import { questions as tokenApprovalsAndWalletDrainers } from "@/lib/quiz/content/crypto-200/token-approvals-and-wallet-drainers";
 
 // 300-level: Options strategies.
 import { questions as optionsGreeks } from "@/lib/quiz/content/options/options-greeks";
@@ -148,6 +151,7 @@ import { questions as diversificationAndCorrelation } from "@/lib/quiz/content/p
 import { questions as mptAndEfficientFrontier } from "@/lib/quiz/content/portfolio/mpt-and-efficient-frontier";
 import { questions as rebalancing } from "@/lib/quiz/content/portfolio/rebalancing";
 import { questions as riskToleranceAndTimeHorizon } from "@/lib/quiz/content/portfolio/risk-tolerance-and-time-horizon";
+import { questions as betaCapmAndAlpha } from "@/lib/quiz/content/portfolio/beta-capm-and-alpha";
 
 // 300-level: Backtesting.
 import { questions as whatBacktestingIsAndWhy } from "@/lib/quiz/content/backtesting/what-backtesting-is-and-why";
@@ -162,6 +166,7 @@ import { questions as perpetualFuturesAndFunding } from "@/lib/quiz/content/cryp
 import { questions as leverageAndLiquidationCrypto } from "@/lib/quiz/content/crypto-300/leverage-and-liquidation-in-crypto";
 import { questions as bridgesAndCrossChainRisk } from "@/lib/quiz/content/crypto-300/bridges-and-cross-chain-risk";
 import { questions as cryptoRiskManagement } from "@/lib/quiz/content/crypto-300/crypto-risk-management-and-portfolio";
+import { questions as spotEtpsEtfsAndTrusts } from "@/lib/quiz/content/crypto-300/spot-etps-etfs-and-trusts";
 
 // 400-level: Advanced options.
 import { questions as optionsStrategyMatrix } from "@/lib/quiz/content/adv-options/options-strategy-matrix";
@@ -224,6 +229,16 @@ import { questions as telemarketingColdCalling } from "@/lib/quiz/content/commun
 import { questions as prospectingAppearancesSocialMedia } from "@/lib/quiz/content/communications/prospecting-appearances-social-media";
 import { questions as recommendationsRequiredDisclosures } from "@/lib/quiz/content/communications/recommendations-required-disclosures";
 
+// Depth-gap lessons (batch 2)
+import { questions as sipcProtectionAndCustomerAssets } from "@/lib/quiz/content/accounts/sipc-protection-and-customer-assets";
+import { questions as retirementAndEducationAccounts } from "@/lib/quiz/content/accounts/retirement-and-education-accounts";
+import { questions as optionsTaxationBasisProceedsExpiration } from "@/lib/quiz/content/adv-options/options-taxation-basis-proceeds-expiration";
+import { questions as optionsCommunicationsAndTheOdd } from "@/lib/quiz/content/communications/options-communications-and-the-odd";
+import { questions as municipalNewIssueOfficialStatementAndSyndicate } from "@/lib/quiz/content/muni-debt/municipal-new-issue-official-statement-and-syndicate";
+import { questions as realizedVsUnrealizedGain } from "@/lib/quiz/content/owning-position/realized-vs-unrealized-gain";
+import { questions as orderDurationAndQualifiers } from "@/lib/quiz/content/quotes-orders/order-duration-and-qualifiers";
+import { questions as typesOfInvestmentRisk } from "@/lib/quiz/content/risk/types-of-investment-risk";
+
 // Single source of truth for the question bank, keyed by lesson slug. Mirrors
 // lib/lessons/index.ts; later phases swap this for Supabase-backed queries while
 // keeping the same Question shape and helper signatures.
@@ -269,6 +284,7 @@ const byLesson: Record<string, Question[]> = {
   "crypto-24-7-markets": crypto247Markets,
   "crypto-volatility": cryptoVolatility,
   "custody-and-keys": custodyAndKeys,
+  "how-a-crypto-transaction-works": howACryptoTransactionWorks,
   // Technical analysis (200)
   "moving-averages-sma-vs-ema": movingAverages,
   "rsi-relative-strength-index": rsi,
@@ -280,6 +296,7 @@ const byLesson: Record<string, Question[]> = {
   "chart-patterns-measured-moves": chartPatterns,
   "divergence-price-vs-indicator": divergence,
   "multi-timeframe-analysis": multiTimeframe,
+  "market-breadth-and-sentiment": marketBreadthAndSentiment,
   // Fundamental analysis (200)
   "the-income-statement": incomeStatement,
   "the-balance-sheet": balanceSheet,
@@ -318,6 +335,7 @@ const byLesson: Record<string, Question[]> = {
   "dex-vs-cex": dexVsCex,
   staking,
   "reading-on-chain-data": readingOnChainData,
+  "token-approvals-and-wallet-drainers": tokenApprovalsAndWalletDrainers,
   // Options strategies (300)
   "options-greeks": optionsGreeks,
   "covered-call": coveredCall,
@@ -358,6 +376,7 @@ const byLesson: Record<string, Question[]> = {
   "mpt-and-efficient-frontier": mptAndEfficientFrontier,
   rebalancing,
   "risk-tolerance-and-time-horizon": riskToleranceAndTimeHorizon,
+  "beta-capm-and-alpha": betaCapmAndAlpha,
   // Backtesting (300)
   "what-backtesting-is-and-why": whatBacktestingIsAndWhy,
   "overfitting-and-curve-fitting": overfittingAndCurveFitting,
@@ -424,6 +443,15 @@ const byLesson: Record<string, Question[]> = {
   "telemarketing-cold-calling": telemarketingColdCalling,
   "prospecting-appearances-social-media": prospectingAppearancesSocialMedia,
   "recommendations-required-disclosures": recommendationsRequiredDisclosures,
+  // Depth-gap lessons (batch 2)
+  "sipc-protection-and-customer-assets": sipcProtectionAndCustomerAssets,
+  "retirement-and-education-accounts": retirementAndEducationAccounts,
+  "options-taxation-basis-proceeds-expiration": optionsTaxationBasisProceedsExpiration,
+  "options-communications-and-the-odd": optionsCommunicationsAndTheOdd,
+  "municipal-new-issue-official-statement-and-syndicate": municipalNewIssueOfficialStatementAndSyndicate,
+  "realized-vs-unrealized-gain": realizedVsUnrealizedGain,
+  "order-duration-and-qualifiers": orderDurationAndQualifiers,
+  "types-of-investment-risk": typesOfInvestmentRisk,
 };
 
 /** Questions for one lesson's quiz, in authored order. Empty if none exist. */

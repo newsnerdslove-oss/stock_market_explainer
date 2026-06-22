@@ -49,6 +49,7 @@ import { lesson as cryptoMarketCapAndSupply } from "@/lib/lessons/content/crypto
 import { lesson as crypto247Markets } from "@/lib/lessons/content/crypto/crypto-24-7-markets";
 import { lesson as cryptoVolatility } from "@/lib/lessons/content/crypto/crypto-volatility";
 import { lesson as custodyAndKeys } from "@/lib/lessons/content/crypto/custody-and-keys";
+import { lesson as howACryptoTransactionWorks } from "@/lib/lessons/content/crypto/how-a-crypto-transaction-works";
 
 // 200-level: Technical analysis.
 import { lesson as movingAverages } from "@/lib/lessons/content/technical/moving-averages-sma-vs-ema";
@@ -61,6 +62,7 @@ import { lesson as candlestickPatterns } from "@/lib/lessons/content/technical/c
 import { lesson as chartPatterns } from "@/lib/lessons/content/technical/chart-patterns-measured-moves";
 import { lesson as divergence } from "@/lib/lessons/content/technical/divergence-price-vs-indicator";
 import { lesson as multiTimeframe } from "@/lib/lessons/content/technical/multi-timeframe-analysis";
+import { lesson as marketBreadthAndSentiment } from "@/lib/lessons/content/technical/market-breadth-and-sentiment";
 
 // 200-level: Fundamental analysis.
 import { lesson as incomeStatement } from "@/lib/lessons/content/fundamental/the-income-statement";
@@ -104,6 +106,7 @@ import { lesson as gasAndNetworkFees } from "@/lib/lessons/content/crypto-200/ga
 import { lesson as dexVsCex } from "@/lib/lessons/content/crypto-200/dex-vs-cex";
 import { lesson as staking } from "@/lib/lessons/content/crypto-200/staking";
 import { lesson as readingOnChainData } from "@/lib/lessons/content/crypto-200/reading-on-chain-data";
+import { lesson as tokenApprovalsAndWalletDrainers } from "@/lib/lessons/content/crypto-200/token-approvals-and-wallet-drainers";
 
 // 300-level: Options strategies.
 import { lesson as optionsGreeks } from "@/lib/lessons/content/options/options-greeks";
@@ -149,6 +152,7 @@ import { lesson as diversificationAndCorrelation } from "@/lib/lessons/content/p
 import { lesson as mptAndEfficientFrontier } from "@/lib/lessons/content/portfolio/mpt-and-efficient-frontier";
 import { lesson as rebalancing } from "@/lib/lessons/content/portfolio/rebalancing";
 import { lesson as riskToleranceAndTimeHorizon } from "@/lib/lessons/content/portfolio/risk-tolerance-and-time-horizon";
+import { lesson as betaCapmAndAlpha } from "@/lib/lessons/content/portfolio/beta-capm-and-alpha";
 
 // 300-level: Backtesting.
 import { lesson as whatBacktestingIsAndWhy } from "@/lib/lessons/content/backtesting/what-backtesting-is-and-why";
@@ -163,6 +167,7 @@ import { lesson as perpetualFuturesAndFunding } from "@/lib/lessons/content/cryp
 import { lesson as leverageAndLiquidationCrypto } from "@/lib/lessons/content/crypto-300/leverage-and-liquidation-in-crypto";
 import { lesson as bridgesAndCrossChainRisk } from "@/lib/lessons/content/crypto-300/bridges-and-cross-chain-risk";
 import { lesson as cryptoRiskManagement } from "@/lib/lessons/content/crypto-300/crypto-risk-management-and-portfolio";
+import { lesson as spotEtpsEtfsAndTrusts } from "@/lib/lessons/content/crypto-300/spot-etps-etfs-and-trusts";
 
 // 400-level: Advanced options.
 import { lesson as optionsStrategyMatrix } from "@/lib/lessons/content/adv-options/options-strategy-matrix";
@@ -225,6 +230,16 @@ import { lesson as telemarketingColdCalling } from "@/lib/lessons/content/commun
 import { lesson as prospectingAppearancesSocialMedia } from "@/lib/lessons/content/communications/prospecting-appearances-social-media";
 import { lesson as recommendationsRequiredDisclosures } from "@/lib/lessons/content/communications/recommendations-required-disclosures";
 
+// Depth-gap lessons (batch 2)
+import { lesson as sipcProtectionAndCustomerAssets } from "@/lib/lessons/content/accounts/sipc-protection-and-customer-assets";
+import { lesson as retirementAndEducationAccounts } from "@/lib/lessons/content/accounts/retirement-and-education-accounts";
+import { lesson as optionsTaxationBasisProceedsExpiration } from "@/lib/lessons/content/adv-options/options-taxation-basis-proceeds-expiration";
+import { lesson as optionsCommunicationsAndTheOdd } from "@/lib/lessons/content/communications/options-communications-and-the-odd";
+import { lesson as municipalNewIssueOfficialStatementAndSyndicate } from "@/lib/lessons/content/muni-debt/municipal-new-issue-official-statement-and-syndicate";
+import { lesson as realizedVsUnrealizedGain } from "@/lib/lessons/content/owning-position/realized-vs-unrealized-gain";
+import { lesson as orderDurationAndQualifiers } from "@/lib/lessons/content/quotes-orders/order-duration-and-qualifiers";
+import { lesson as typesOfInvestmentRisk } from "@/lib/lessons/content/risk/types-of-investment-risk";
+
 // The single source of truth for the lesson bank. Display order is computed from
 // the taxonomy (track → module → moduleOrder via getOrderedLessons); this array's
 // order only needs to contain every lesson. Grouped by module for readability.
@@ -270,6 +285,7 @@ export const lessons: Lesson[] = [
   crypto247Markets,
   cryptoVolatility,
   custodyAndKeys,
+  howACryptoTransactionWorks,
   // Technical analysis (200)
   movingAverages,
   rsi,
@@ -281,6 +297,7 @@ export const lessons: Lesson[] = [
   chartPatterns,
   divergence,
   multiTimeframe,
+  marketBreadthAndSentiment,
   // Fundamental analysis (200)
   incomeStatement,
   balanceSheet,
@@ -319,6 +336,7 @@ export const lessons: Lesson[] = [
   dexVsCex,
   staking,
   readingOnChainData,
+  tokenApprovalsAndWalletDrainers,
   // Options strategies (300)
   optionsGreeks,
   coveredCall,
@@ -359,6 +377,7 @@ export const lessons: Lesson[] = [
   mptAndEfficientFrontier,
   rebalancing,
   riskToleranceAndTimeHorizon,
+  betaCapmAndAlpha,
   // Backtesting (300)
   whatBacktestingIsAndWhy,
   overfittingAndCurveFitting,
@@ -425,6 +444,16 @@ export const lessons: Lesson[] = [
   leverageAndLiquidationCrypto,
   bridgesAndCrossChainRisk,
   cryptoRiskManagement,
+  spotEtpsEtfsAndTrusts,
+  // Depth-gap lessons (batch 2)
+  sipcProtectionAndCustomerAssets,
+  retirementAndEducationAccounts,
+  optionsTaxationBasisProceedsExpiration,
+  optionsCommunicationsAndTheOdd,
+  municipalNewIssueOfficialStatementAndSyndicate,
+  realizedVsUnrealizedGain,
+  orderDurationAndQualifiers,
+  typesOfInvestmentRisk,
 ];
 
 export function getAllLessons(): Lesson[] {
