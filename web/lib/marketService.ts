@@ -26,6 +26,15 @@ export type Candles = {
   candles: Candle[];
 };
 
+/** Slow-moving daily stats for a symbol — prior close (today's change) + 52-week range. */
+export type Snapshot = {
+  symbol: string;
+  prevClose: number;
+  high52: number;
+  low52: number;
+  source: string;
+};
+
 export async function getQuote(symbol: string): Promise<Quote> {
   const res = await fetch(`${BASE}/quote/${encodeURIComponent(symbol)}`, {
     cache: "no-store",
@@ -63,6 +72,13 @@ export async function getCandlesViaApi(symbol: string, limit = 60): Promise<Cand
 export async function getQuoteViaApi(symbol: string): Promise<Quote> {
   const res = await fetch(`/api/quote/${encodeURIComponent(symbol)}`, { cache: "no-store" });
   if (!res.ok) throw new Error(`quote ${res.status}`);
+  return res.json();
+}
+
+/** Same-origin snapshot (prior close + 52-week range) for client components. */
+export async function getSnapshotViaApi(symbol: string): Promise<Snapshot> {
+  const res = await fetch(`/api/snapshot/${encodeURIComponent(symbol)}`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`snapshot ${res.status}`);
   return res.json();
 }
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { mapAlpacaQuote, mapAlpacaBars, alpacaConfigured } from "@/lib/stocks/alpaca";
+import { mapAlpacaQuote, mapAlpacaBars, mapAlpacaSnapshot, alpacaConfigured } from "@/lib/stocks/alpaca";
 
 describe("alpacaConfigured", () => {
   const k = process.env.ALPACA_API_KEY_ID;
@@ -51,5 +51,30 @@ describe("mapAlpacaBars", () => {
     expect(candles).toHaveLength(2);
     expect(candles[0].time < candles[1].time).toBe(true);
     expect(candles[1]).toMatchObject({ time: "2026-06-17T13:32:00Z", open: 299.94, high: 301.61, low: 299.94, close: 301.21, volume: 10313 });
+  });
+});
+
+describe("mapAlpacaSnapshot", () => {
+  const bar = (t: string, o: number, h: number, l: number, c: number) => ({ o, h, l, c, v: 1000, t });
+
+  it("takes prior close as the 2nd-to-last daily bar and 52wk hi/lo from the window", () => {
+    const bars = [
+      bar("2026-01-01", 100, 110, 95, 105),
+      bar("2026-02-01", 105, 150, 90, 140), // window high 150, low 90
+      bar("2026-03-01", 140, 145, 130, 142), // prior close = 142
+      bar("2026-03-02", 142, 148, 141, 147), // today (in progress)
+    ];
+    const s = mapAlpacaSnapshot("AAPL", bars);
+    expect(s.prevClose).toBe(142);
+    expect(s.high52).toBe(150);
+    expect(s.low52).toBe(90);
+    expect(s.source).toBe("alpaca-iex");
+  });
+
+  it("sorts out-of-order bars and degrades to a single bar", () => {
+    const out = mapAlpacaSnapshot("AAPL", [bar("2026-02-01", 1, 2, 1, 2), bar("2026-01-01", 1, 9, 1, 5)]);
+    expect(out.prevClose).toBe(5); // 2026-01-01 is the earlier (2nd-to-last after sort)
+    const one = mapAlpacaSnapshot("AAPL", [bar("2026-01-01", 1, 9, 1, 5)]);
+    expect(one.prevClose).toBe(5);
   });
 });

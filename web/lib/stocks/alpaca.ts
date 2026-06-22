@@ -3,7 +3,7 @@
 // NEXT_PUBLIC), and the routes call these so the browser never sees them. Pure
 // mappers are unit-tested.
 
-import type { Candle, Candles, Quote } from "@/lib/marketService";
+import type { Candle, Candles, Quote, Snapshot } from "@/lib/marketService";
 
 const DATA = "https://data.alpaca.markets/v2";
 
@@ -84,4 +84,29 @@ export async function fetchAlpacaCandles(symbol: string, limit: number): Promise
   if (!res.ok) throw new Error(`alpaca bars ${res.status}`);
   const bars = ((await res.json()).bars ?? []) as AlpacaBar[];
   return mapAlpacaBars(symbol.toUpperCase(), bars, limit);
+}
+
+/** Snapshot from a year of DAILY bars: prior close (2nd-to-last) + 52-week hi/lo. */
+export function mapAlpacaSnapshot(symbol: string, bars: AlpacaBar[]): Snapshot {
+  const sorted = [...bars].sort((a, b) => a.t.localeCompare(b.t));
+  const closes = sorted.map((b) => b.c);
+  // Last daily bar is today's (possibly in-progress); prior close is the one before.
+  const prevClose = closes.length >= 2 ? closes[closes.length - 2] : (closes[closes.length - 1] ?? 0);
+  const high52 = sorted.length ? Math.max(...sorted.map((b) => b.h)) : prevClose;
+  const low52 = sorted.length ? Math.min(...sorted.map((b) => b.l)) : prevClose;
+  return { symbol, prevClose, high52, low52, source: "alpaca-iex" };
+}
+
+export async function fetchAlpacaSnapshot(symbol: string): Promise<Snapshot> {
+  const sym = encodeURIComponent(symbol.toUpperCase());
+  // Alpaca returns bars:null for a daily timeframe without an explicit start, so
+  // anchor ~1 year back (370 days ⇒ ≥252 trading days).
+  const start = new Date(Date.now() - 370 * 86_400_000).toISOString().slice(0, 10);
+  const res = await fetch(`${DATA}/stocks/${sym}/bars?timeframe=1Day&start=${start}&limit=400&feed=iex`, {
+    cache: "no-store",
+    headers: headers(),
+  });
+  if (!res.ok) throw new Error(`alpaca daily bars ${res.status}`);
+  const bars = ((await res.json()).bars ?? []) as AlpacaBar[];
+  return mapAlpacaSnapshot(symbol.toUpperCase(), bars);
 }
