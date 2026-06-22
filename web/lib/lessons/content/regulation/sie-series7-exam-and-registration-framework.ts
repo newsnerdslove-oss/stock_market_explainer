@@ -19,7 +19,7 @@ export const lesson: Lesson = {
     {
       type: "list",
       items: [
-        "`75` scored + `25` pretest = `100` items.",
+        "`75` scored + `5` unscored = `80` items.",
         "`105 minutes`.",
         "`70%` passing score.",
         "**No firm sponsorship** required; it is a **corequisite** for the Series 7.",
@@ -55,7 +55,7 @@ export const lesson: Lesson = {
     {
       type: "keyTerms",
       terms: [
-        { term: "SIE", def: "Securities Industry Essentials — 75 scored + 25 pretest, 105 min, 70% pass; no sponsorship needed; corequisite for the Series 7." },
+        { term: "SIE", def: "Securities Industry Essentials — 75 scored + 5 unscored = 80 items, 105 min, 70% pass; no sponsorship needed; corequisite for the Series 7." },
         { term: "Series 7 (top-off)", def: "125 scored + 5 pretest = 130 items, 225 min, 72% pass; firm sponsorship required, SIE corequisite." },
         { term: "Corequisite", def: "The SIE must be passed alongside the Series 7 top-off to license a General Securities Rep." },
         { term: "Function 3", def: "Provides information / recommendations / records — 91 questions, 72.8% of the Series 7; the dominant function." },

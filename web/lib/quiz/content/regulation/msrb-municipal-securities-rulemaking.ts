@@ -95,14 +95,14 @@ export const questions: Question[] = [
     tags: ["fn:3", "regulation", "msrb", "gifts"],
     prompt: "What is the MSRB gift limit under `Rule G-20` for gifts related to municipal business?",
     choices: [
-      { id: "a", text: "`$100` per person per year" },
+      { id: "a", text: "`$100` per person per year", feedback: "That was the old G-20 limit; it was raised to $300 in 2026 to harmonize with FINRA Rule 3220." },
       { id: "b", text: "`$250` per person per year" },
       { id: "c", text: "`$300` per person per year" },
-      { id: "d", text: "No limit applies to muni gifts", feedback: "The MSRB muni gift cap under G-20 is $100/person/year — distinct from FINRA's $300 limit under Rule 3220." },
+      { id: "d", text: "No limit applies to muni gifts", feedback: "The MSRB muni gift cap under G-20 is $300/person/year (harmonized with FINRA's $300 under Rule 3220)." },
     ],
-    correctId: "a",
+    correctId: "c",
     explanation:
-      "`MSRB Rule G-20` caps muni-business gifts at `$100` per person per year. (Note this differs from FINRA's `$300` limit under `Rule 3220`.)",
+      "`MSRB Rule G-20` caps muni-business gifts at `$300` per person per year — raised from `$100` in 2026 to harmonize with FINRA's `$300` limit under `Rule 3220`.",
   },
   {
     id: "msrb-municipal-securities-rulemaking.q7",
