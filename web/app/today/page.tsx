@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getAllQuestions } from "@/lib/quiz";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { DailyToday } from "@/components/DailyToday";
 import { DailyChallengeTeaser } from "@/components/DailyChallenge";
 import { AuthControls } from "@/components/AuthControls";
@@ -15,7 +16,7 @@ export default function TodayPage() {
   const allQuestions = getAllQuestions();
 
   return (
-    <main className="mx-auto max-w-2xl px-6 pb-16 pt-10">
+    <PageContainer size="prose" className="pb-16 pt-10">
       <h1 className="text-4xl font-medium tracking-tight">Today</h1>
       <p className="mt-3 text-muted">
         A few minutes of review keeps what you&apos;ve learned from fading — and keeps your streak alive.
@@ -41,6 +42,6 @@ export default function TodayPage() {
       <footer className="mt-16 border-t border-hairline pt-6 text-xs text-faint">
         Educational only · paper trading only · not financial advice.
       </footer>
-    </main>
+    </PageContainer>
   );
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { getAllLessons, getLesson, getOrderedLessons } from "@/lib/lessons";
 import { moduleById, trackById } from "@/lib/lessons/taxonomy";
 import { getQuiz } from "@/lib/quiz";
@@ -46,7 +47,7 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
   const track = trackById[mod.trackId];
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
+    <PageContainer size="prose" className="py-16">
       <Link href="/learn" className="text-sm text-muted transition hover:text-ink">
         ← All lessons
       </Link>
@@ -113,6 +114,6 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
       <footer className="mt-12 text-xs text-faint">
         Educational only · paper trading only · not financial advice.
       </footer>
-    </main>
+    </PageContainer>
   );
 }

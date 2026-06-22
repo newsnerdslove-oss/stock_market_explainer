@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { SymbolChart } from "@/components/charts/SymbolChart";
 import { ResearchBar } from "@/components/research/ResearchBar";
 import { getCandles, getQuote, type Candle, type Quote } from "@/lib/marketService";
@@ -32,7 +33,7 @@ export default async function SymbolPage({ params }: { params: Promise<{ ticker:
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-16">
+    <PageContainer size="wide" className="py-16">
       <div className="flex items-center justify-between">
         <Link href="/simulator" className="text-sm text-muted transition hover:text-ink">
           ← Simulator
@@ -73,6 +74,6 @@ export default async function SymbolPage({ params }: { params: Promise<{ ticker:
       <footer className="mt-16 border-t border-hairline pt-6 text-xs text-faint">
         Educational only · paper trading only · not financial advice.
       </footer>
-    </main>
+    </PageContainer>
   );
 }

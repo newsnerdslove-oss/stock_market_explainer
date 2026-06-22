@@ -12,7 +12,7 @@ import type { Candle } from "@/lib/marketService";
 const ResearchChart = dynamic(() => import("./ResearchChart"), {
   ssr: false,
   loading: () => (
-    <div className="h-[480px] w-full animate-pulse rounded-lg border border-hairline bg-surface/50" aria-hidden />
+    <div className="h-[clamp(440px,72vh,860px)] w-full animate-pulse rounded-lg border border-hairline bg-surface/50" aria-hidden />
   ),
 });
 

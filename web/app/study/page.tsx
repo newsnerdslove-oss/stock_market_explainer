@@ -1,5 +1,6 @@
 import { examLessonFunctions } from "@/lib/exam/lessonFunctions";
 import { StudyPlanView } from "@/components/exam/StudyPlanView";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 export const metadata = {
   title: "Study plan — Stock Market Explainer",
@@ -12,7 +13,7 @@ export default function StudyPage() {
   const examLessons = examLessonFunctions();
 
   return (
-    <main className="mx-auto max-w-2xl px-6 pb-16 pt-10">
+    <PageContainer size="prose" className="pb-16 pt-10">
       <h1 className="text-4xl font-medium tracking-tight">Study plan</h1>
       <p className="mt-3 text-muted">
         Your next steps, in order — built from your exam history and lesson progress to close the gaps
@@ -25,6 +26,6 @@ export default function StudyPage() {
       <footer className="mt-16 border-t border-hairline pt-6 text-xs text-faint">
         Educational only · not financial advice · not affiliated with FINRA.
       </footer>
-    </main>
+    </PageContainer>
   );
 }

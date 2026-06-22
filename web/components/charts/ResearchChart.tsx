@@ -83,6 +83,14 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
   const emaRefs = useRef<Record<number, ISeriesApi<"Line">>>({});
   const candlesRef = useRef<Candle[]>([]);
 
+  // Derived caches rebuilt on each load so the crosshair legend is O(1) and never
+  // recomputes indicators on mouse-move (the old per-move recompute was the lag).
+  const emaCacheRef = useRef<Record<number, (number | null)[]>>({});
+  const indexByTimeRef = useRef<Map<number, number>>(new Map());
+  const lastLegendIdxRef = useRef<number>(-1);
+  const pendingLegendRef = useRef<Legend | null>(null);
+  const rafRef = useRef<number | null>(null);
+
   // Drawing state lives in refs (read by the imperative primitive) mirrored into
   // React state (for the toolbar + list). Refs avoid stale closures in the
   // once-subscribed chart event handlers.
@@ -110,6 +118,39 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
     setDrawings(next);
     saveDrawings(symbol, next);
     primitiveRef.current?.requestUpdate();
+  }
+
+  // ----- derived legend helpers (read precomputed caches; no per-move recompute) -----
+  function rebuildDerived(candles: Candle[]) {
+    const closes = candles.map((c) => c.close);
+    const cache: Record<number, (number | null)[]> = {};
+    for (const e of EMAS) cache[e.period] = ema(closes, e.period);
+    emaCacheRef.current = cache;
+    const map = new Map<number, number>();
+    candles.forEach((c, i) => map.set(toSec(c.time) as number, i));
+    indexByTimeRef.current = map;
+  }
+
+  function legendFor(idx: number): Legend {
+    const c = candlesRef.current[idx];
+    const emas: Record<number, number | undefined> = {};
+    for (const e of EMAS) emas[e.period] = emaCacheRef.current[e.period]?.[idx] ?? undefined;
+    return { open: c.open, high: c.high, low: c.low, close: c.close, volume: c.volume, emas };
+  }
+
+  function latestLegendFor(): Legend | null {
+    const cs = candlesRef.current;
+    return cs.length ? legendFor(cs.length - 1) : null;
+  }
+
+  // Coalesce crosshair legend updates to one React commit per animation frame.
+  function scheduleLegend(next: Legend | null) {
+    pendingLegendRef.current = next;
+    if (rafRef.current != null) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      setLegend(pendingLegendRef.current);
+    });
   }
 
   // ----- chart event handlers (rebuilt each render, dispatched via actionsRef) -----
@@ -143,13 +184,13 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
   }
 
   function handleMove(param: MouseEventParams) {
-    // crosshair legend
+    // crosshair legend — O(1) index lookup, cached EMAs, one render per frame, and
+    // only when the hovered candle actually changes (no re-render storm on move).
     const cs = candlesRef.current;
-    if (!param.time) {
-      setLegend(latestLegend(cs));
-    } else {
-      const idx = cs.findIndex((c) => toSec(c.time) === (param.time as number));
-      if (idx >= 0) setLegend(legendAt(cs, idx));
+    const idx = !param.time ? cs.length - 1 : indexByTimeRef.current.get(param.time as number) ?? -1;
+    if (idx >= 0 && idx !== lastLegendIdxRef.current) {
+      lastLegendIdxRef.current = idx;
+      scheduleLegend(legendFor(idx));
     }
     // live draft endpoint
     const draft = draftRef.current;
@@ -212,6 +253,8 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
     chart.subscribeCrosshairMove((p) => actionsRef.current.move(p));
 
     return () => {
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
       chart.remove();
       chartRef.current = null;
       primitiveRef.current = null;
@@ -249,35 +292,74 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
   }, [symbol]);
 
   // Fetch + render whenever symbol or timeframe changes, then poll to refresh.
+  // First paint (and any window shift) does a full setData; a plain forming-bar
+  // tick only update()s the last bar. fitContent() runs ONLY on the initial load
+  // so the poll never snaps the user's zoom/pan (that was the "jumpy" feel).
   useEffect(() => {
     let cancelled = false;
+    let initial = true;
+
+    function setFullData(candles: Candle[]) {
+      candleRef.current?.setData(
+        dedupeSort(candles.map((c) => ({ time: toSec(c.time), open: c.open, high: c.high, low: c.low, close: c.close }))),
+      );
+      volumeRef.current?.setData(
+        dedupeSort(candles.map((c) => ({ time: toSec(c.time), value: c.volume, color: c.close >= c.open ? "rgba(43,209,126,0.4)" : "rgba(255,92,92,0.4)" }))),
+      );
+      for (const e of EMAS) {
+        const series = emaRefs.current[e.period];
+        if (!series) continue;
+        const vals = emaCacheRef.current[e.period];
+        const line = candles
+          .map((c, i) => ({ time: toSec(c.time), value: vals?.[i] }))
+          .filter((p) => p.value != null) as { time: UTCTimestamp; value: number }[];
+        series.setData(dedupeSort(line));
+        series.applyOptions({ visible: shownEmas[e.period] ?? false });
+      }
+    }
+
+    function updateLastBar(candles: Candle[]) {
+      const i = candles.length - 1;
+      const c = candles[i];
+      const t = toSec(c.time);
+      candleRef.current?.update({ time: t, open: c.open, high: c.high, low: c.low, close: c.close });
+      volumeRef.current?.update({ time: t, value: c.volume, color: c.close >= c.open ? "rgba(43,209,126,0.4)" : "rgba(255,92,92,0.4)" });
+      for (const e of EMAS) {
+        const v = emaCacheRef.current[e.period]?.[i];
+        if (v != null) emaRefs.current[e.period]?.update({ time: t, value: v });
+      }
+    }
 
     async function load() {
       try {
         const data = await getCandlesViaApi(symbol, 200, timeframe);
         if (cancelled || !candleRef.current) return;
-        candlesRef.current = data.candles;
+        const prev = candlesRef.current;
+        const next = data.candles;
+        candlesRef.current = next;
+        rebuildDerived(next);
 
-        const bars = dedupeSort(data.candles.map((c) => ({ time: toSec(c.time), open: c.open, high: c.high, low: c.low, close: c.close })));
-        candleRef.current.setData(bars);
-        volumeRef.current?.setData(
-          dedupeSort(data.candles.map((c) => ({ time: toSec(c.time), value: c.volume, color: c.close >= c.open ? "rgba(43,209,126,0.4)" : "rgba(255,92,92,0.4)" }))),
-        );
+        // A pure forming-bar tick keeps the same window (same length + same first &
+        // last timestamps); anything else (new bar, window slide) gets a full reset.
+        const sameWindow =
+          !initial &&
+          prev.length === next.length &&
+          next.length > 0 &&
+          toSec(prev[0].time) === toSec(next[0].time) &&
+          toSec(prev[prev.length - 1].time) === toSec(next[next.length - 1].time);
 
-        const closes = data.candles.map((c) => c.close);
-        for (const e of EMAS) {
-          const series = emaRefs.current[e.period];
-          if (!series) continue;
-          const vals = ema(closes, e.period);
-          const line = data.candles.map((c, i) => ({ time: toSec(c.time), value: vals[i] })).filter((p) => p.value != null) as { time: UTCTimestamp; value: number }[];
-          series.setData(dedupeSort(line));
-          series.applyOptions({ visible: shownEmas[e.period] ?? false });
+        if (sameWindow) {
+          updateLastBar(next);
+        } else {
+          setFullData(next);
+          if (initial) chartRef.current?.timeScale().fitContent();
         }
 
-        chartRef.current?.timeScale().fitContent();
-        setLegend(latestLegend(data.candles));
+        lastLegendIdxRef.current = -1; // force the idle legend to refresh
+        scheduleLegend(latestLegendFor());
         primitiveRef.current?.requestUpdate();
         setStale(false);
+        initial = false;
       } catch {
         if (!cancelled) setStale(true);
       }
@@ -395,25 +477,9 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
       )}
 
       <div className="relative">
-        <div ref={containerRef} className={`h-[440px] w-full ${tool === "cursor" ? "" : "cursor-crosshair"}`} />
+        <div ref={containerRef} className={`h-[clamp(440px,72vh,860px)] w-full ${tool === "cursor" ? "" : "cursor-crosshair"}`} />
         {stale && <span className="absolute right-2 top-2 rounded-md bg-streak/10 px-2 py-1 text-xs text-streak">live feed unavailable</span>}
       </div>
     </div>
   );
-}
-
-function emasAt(candles: Candle[], idx: number): Record<number, number | undefined> {
-  const closes = candles.map((c) => c.close);
-  const out: Record<number, number | undefined> = {};
-  for (const e of EMAS) out[e.period] = ema(closes, e.period)[idx] ?? undefined;
-  return out;
-}
-
-function legendAt(candles: Candle[], idx: number): Legend {
-  const c = candles[idx];
-  return { open: c.open, high: c.high, low: c.low, close: c.close, volume: c.volume, emas: emasAt(candles, idx) };
-}
-
-function latestLegend(candles: Candle[]): Legend | null {
-  return candles.length ? legendAt(candles, candles.length - 1) : null;
 }

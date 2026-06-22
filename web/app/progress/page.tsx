@@ -1,5 +1,6 @@
 import { getOrderedLessons } from "@/lib/lessons";
 import { moduleById, trackById } from "@/lib/lessons/taxonomy";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { ProgressOverview } from "@/components/ProgressOverview";
 import type { LessonRef } from "@/lib/progress/overview";
 
@@ -23,7 +24,7 @@ export default function ProgressPage() {
   });
 
   return (
-    <main className="mx-auto max-w-2xl px-6 pb-16 pt-10">
+    <PageContainer size="prose" className="pb-16 pt-10">
       <h1 className="text-4xl font-medium tracking-tight">Your progress</h1>
       <p className="mt-3 text-muted">
         Where you stand across the curriculum, your streak, and how ready you are for the exam — with
@@ -35,6 +36,6 @@ export default function ProgressPage() {
       <footer className="mt-16 border-t border-hairline pt-6 text-xs text-faint">
         Educational only · not financial advice.
       </footer>
-    </main>
+    </PageContainer>
   );
 }

@@ -27,7 +27,7 @@ export function NavBar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-hairline bg-canvas/85 backdrop-blur">
-      <nav className="mx-auto flex max-w-5xl items-center gap-1 overflow-x-auto px-4 py-2">
+      <nav className="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto px-4 py-2 sm:px-6 lg:px-8">
         <Link href="/" className="mr-2 flex shrink-0 items-center gap-2 rounded-md py-1.5 pr-1" aria-label="Home">
           <span className="flex h-6 w-6 items-center justify-center rounded-md bg-up text-sm font-medium text-canvas">
             $

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { getHealth, getQuote, type Quote } from "@/lib/marketService";
 import { alpacaConfigured, fetchAlpacaQuote } from "@/lib/stocks/alpaca";
 import { CryptoTicker } from "@/components/CryptoTicker";
@@ -47,7 +48,7 @@ export default async function Home() {
   const demo = await loadDemo();
 
   return (
-    <main className="mx-auto max-w-3xl px-6 pb-16 pt-12">
+    <PageContainer size="prose" className="pb-16 pt-12">
       <h1 className="text-4xl font-medium tracking-tight">
         Learn the markets. <span className="text-muted">Daily.</span>
       </h1>
@@ -136,6 +137,6 @@ export default async function Home() {
       <footer className="mt-16 flex items-center gap-2 border-t border-hairline pt-6 text-xs text-faint">
         Educational only · paper trading only · not financial advice.
       </footer>
-    </main>
+    </PageContainer>
   );
 }

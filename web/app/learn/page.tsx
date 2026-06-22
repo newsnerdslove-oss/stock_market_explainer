@@ -1,4 +1,5 @@
 import { getAllLessons } from "@/lib/lessons";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { hasQuiz } from "@/lib/quiz";
 import { LearnList, type LearnListItem } from "@/components/LearnList";
 
@@ -21,7 +22,7 @@ export default function LearnIndex() {
   }));
 
   return (
-    <main className="mx-auto max-w-3xl px-6 pb-16 pt-10">
+    <PageContainer size="prose" className="pb-16 pt-10">
       <h1 className="text-4xl font-medium tracking-tight">Learn</h1>
 
       <LearnList lessons={lessons} />
@@ -29,6 +30,6 @@ export default function LearnIndex() {
       <footer className="mt-16 border-t border-hairline pt-6 text-xs text-faint">
         Educational only · paper trading only · not financial advice.
       </footer>
-    </main>
+    </PageContainer>
   );
 }
