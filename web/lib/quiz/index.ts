@@ -253,6 +253,20 @@ import { questions as institutionalAndSeniorInvestorProtections } from "@/lib/qu
 import { questions as contractAdjustmentsSplitsAndDividends } from "@/lib/quiz/content/adv-options/contract-adjustments-splits-and-dividends";
 import { questions as whatTechnicalAnalysisIsAndDowTheory } from "@/lib/quiz/content/technical/what-technical-analysis-is-and-dow-theory";
 
+// Depth backlog (batch B)
+import { questions as uncoveredOptionMargin } from "@/lib/quiz/content/adv-options/uncovered-option-margin";
+import { questions as nonMarginableSecuritiesAndSpecialMargin } from "@/lib/quiz/content/margin/non-marginable-securities-and-special-margin";
+import { questions as minimumEquityAndWithdrawingSma } from "@/lib/quiz/content/margin-math/minimum-equity-and-withdrawing-sma";
+import { questions as rollingAnOptionsPosition } from "@/lib/quiz/content/options/rolling-an-options-position";
+import { questions as openingAndClosingAuctions } from "@/lib/quiz/content/market-structure/opening-and-closing-auctions";
+import { questions as muniCreditAnalysisAndSpecialStructures } from "@/lib/quiz/content/muni-debt/muni-credit-analysis-and-special-structures";
+import { questions as totalReturn } from "@/lib/quiz/content/owning-position/total-return";
+import { questions as taxLotsAndWashSales } from "@/lib/quiz/content/owning-position/tax-lots-and-wash-sales";
+import { questions as basicVsDilutedEps } from "@/lib/quiz/content/valuation/basic-vs-diluted-eps";
+import { questions as dollarCostAveraging } from "@/lib/quiz/content/portfolio/dollar-cost-averaging";
+import { questions as whatCountsAsARecommendation } from "@/lib/quiz/content/suitability/what-counts-as-a-recommendation";
+import { questions as cryptoTaxesForInvestors } from "@/lib/quiz/content/crypto-300/crypto-taxes-for-investors";
+
 // Single source of truth for the question bank, keyed by lesson slug. Mirrors
 // lib/lessons/index.ts; later phases swap this for Supabase-backed queries while
 // keeping the same Question shape and helper signatures.
@@ -479,6 +493,19 @@ const byLesson: Record<string, Question[]> = {
   "institutional-and-senior-investor-protections": institutionalAndSeniorInvestorProtections,
   "contract-adjustments-splits-and-dividends": contractAdjustmentsSplitsAndDividends,
   "what-technical-analysis-is-and-dow-theory": whatTechnicalAnalysisIsAndDowTheory,
+  // Depth backlog (batch B)
+  "uncovered-option-margin": uncoveredOptionMargin,
+  "non-marginable-securities-and-special-margin": nonMarginableSecuritiesAndSpecialMargin,
+  "minimum-equity-and-withdrawing-sma": minimumEquityAndWithdrawingSma,
+  "rolling-an-options-position": rollingAnOptionsPosition,
+  "opening-and-closing-auctions": openingAndClosingAuctions,
+  "muni-credit-analysis-and-special-structures": muniCreditAnalysisAndSpecialStructures,
+  "total-return": totalReturn,
+  "tax-lots-and-wash-sales": taxLotsAndWashSales,
+  "basic-vs-diluted-eps": basicVsDilutedEps,
+  "dollar-cost-averaging": dollarCostAveraging,
+  "what-counts-as-a-recommendation": whatCountsAsARecommendation,
+  "crypto-taxes-for-investors": cryptoTaxesForInvestors,
 };
 
 /** Questions for one lesson's quiz, in authored order. Empty if none exist. */
