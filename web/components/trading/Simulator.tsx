@@ -7,6 +7,8 @@ import { DailyChallengeCard } from "@/components/DailyChallenge";
 import { OptionsTrade } from "@/components/trading/OptionsTrade";
 import { OptionPositions } from "@/components/trading/OptionPositions";
 import { PositionsTable } from "@/components/trading/PositionsTable";
+import { PositionDrillDown } from "@/components/trading/PositionDrillDown";
+import { tradesFromOrders } from "@/lib/positions/metrics";
 import { coinbaseProduct, isCryptoSymbol } from "@/lib/crypto/products";
 import { useCryptoPrices } from "@/lib/crypto/useCryptoPrices";
 import { getQuoteViaApi, getSnapshotViaApi, type Snapshot } from "@/lib/marketService";
@@ -32,6 +34,7 @@ export function Simulator() {
 function SimulatorBody() {
   const { portfolio, prices, ready, configured, refresh } = useTrading();
   const [tradeMode, setTradeMode] = useState<"stocks" | "options">("stocks");
+  const [drillSymbol, setDrillSymbol] = useState<string | null>(null);
   // Quote freshness — set on the client (avoids an SSR/hydration mismatch).
   const [refreshedAt, setRefreshedAt] = useState<number | null>(null);
   useEffect(() => setRefreshedAt(Date.now()), []);
@@ -158,9 +161,20 @@ function SimulatorBody() {
         {positions.length === 0 ? (
           <p className="mt-3 text-sm text-muted">No positions yet — place an order below.</p>
         ) : (
-          <PositionsTable positions={positions} marked={marked} isLive={isLive} equity={eq} snapshots={snapshots} />
+          <PositionsTable positions={positions} marked={marked} isLive={isLive} equity={eq} snapshots={snapshots} onSelect={setDrillSymbol} />
         )}
       </section>
+
+      {drillSymbol && portfolio.positions[drillSymbol] && (
+        <PositionDrillDown
+          position={portfolio.positions[drillSymbol]}
+          trades={tradesFromOrders(portfolio.orders)[drillSymbol] ?? []}
+          mark={marked[drillSymbol] ?? portfolio.positions[drillSymbol].avgCost}
+          snapshot={snapshots[drillSymbol]}
+          equity={eq}
+          onClose={() => setDrillSymbol(null)}
+        />
+      )}
 
       <OptionPositions />
 
