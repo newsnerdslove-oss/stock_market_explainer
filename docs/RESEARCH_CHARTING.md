@@ -1,6 +1,10 @@
 # Stock Research & Advanced Charting — Feature Plan (parked)
 
-**Status:** Parked / not started.
+**Status:** Phases 1–5 shipped. (Phase 5 — drawing tools: trend lines, horizontal
+lines, and Fibonacci retracements via a lightweight-charts series primitive,
+persisted per symbol in localStorage, with select/delete + keyboard. See
+`lib/charts/drawings.ts` + `components/charts/drawingsPrimitive.ts`.) Remaining:
+optional Phase 6 (lower RSI/MACD panes, price alerts, compare overlays).
 **Reference:** A Webull-style mobile chart card (SPCX) — candlesticks with **EMA
 overlays** (EMA 5/10/20 lines tracking the price), a **volume** pane, a horizontal
 **current-price tracking line** (201.89 / 202.23 markers), a right-hand price axis,
