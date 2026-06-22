@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { mapTicker, mapCandles, mapCoinbaseSnapshot } from "@/lib/crypto/coinbase";
+import { mapTicker, mapCandles, mapCoinbaseSnapshot, coinbaseGranularity } from "@/lib/crypto/coinbase";
 
 describe("Coinbase mappers", () => {
   it("maps a ticker's string fields to numbers", () => {
@@ -45,5 +45,15 @@ describe("mapCoinbaseSnapshot", () => {
     expect(s.high52).toBe(70000);
     expect(s.low52).toBe(58000);
     expect(s.source).toBe("coinbase");
+  });
+});
+
+describe("coinbaseGranularity", () => {
+  it("maps chart timeframes to Coinbase granularity seconds", () => {
+    expect(coinbaseGranularity("1m")).toBe(60);
+    expect(coinbaseGranularity("5m")).toBe(300);
+    expect(coinbaseGranularity("15m")).toBe(900);
+    expect(coinbaseGranularity("1h")).toBe(3600);
+    expect(coinbaseGranularity("1d")).toBe(86400);
   });
 });

@@ -3,9 +3,15 @@
 // NEXT_PUBLIC), and the routes call these so the browser never sees them. Pure
 // mappers are unit-tested.
 
-import type { Candle, Candles, Quote, Snapshot } from "@/lib/marketService";
+import type { Candle, Candles, Quote, Snapshot, Timeframe } from "@/lib/marketService";
 
 const DATA = "https://data.alpaca.markets/v2";
+
+/** Map a chart timeframe to Alpaca's bar timeframe string. */
+const ALPACA_TF: Record<Timeframe, string> = { "1m": "1Min", "5m": "5Min", "15m": "15Min", "1h": "1Hour", "1d": "1Day" };
+export function alpacaTimeframe(tf: Timeframe): string {
+  return ALPACA_TF[tf];
+}
 
 export function alpacaConfigured(): boolean {
   return Boolean(process.env.ALPACA_API_KEY_ID && process.env.ALPACA_API_SECRET_KEY);
@@ -75,9 +81,19 @@ export async function fetchAlpacaQuote(symbol: string): Promise<Quote> {
   return mapAlpacaQuote(symbol.toUpperCase(), trade, quote);
 }
 
-export async function fetchAlpacaCandles(symbol: string, limit: number): Promise<Candles> {
+// Approx market bars per trading day, to size the lookback window per timeframe.
+const BARS_PER_DAY: Record<Timeframe, number> = { "1m": 390, "5m": 78, "15m": 26, "1h": 7, "1d": 1 };
+
+export async function fetchAlpacaCandles(symbol: string, limit: number, timeframe: Timeframe = "1m"): Promise<Candles> {
   const sym = encodeURIComponent(symbol.toUpperCase());
-  const res = await fetch(`${DATA}/stocks/${sym}/bars?timeframe=1Min&limit=${limit}&feed=iex`, {
+  const tf = alpacaTimeframe(timeframe);
+  // Alpaca returns nothing without a `start`; with `start` + `sort=desc` + `limit`
+  // it returns the most recent `limit` bars. Size the window to hold ≥ limit bars
+  // (×1.5 for weekends) PLUS a 7-day buffer so it still reaches the last session
+  // across a long market closure. mapAlpacaBars re-sorts ascending.
+  const windowDays = Math.ceil((limit / BARS_PER_DAY[timeframe]) * 1.5) + 7;
+  const start = new Date(Date.now() - windowDays * 86_400_000).toISOString().slice(0, 10);
+  const res = await fetch(`${DATA}/stocks/${sym}/bars?timeframe=${tf}&start=${start}&limit=${limit}&sort=desc&feed=iex`, {
     cache: "no-store",
     headers: headers(),
   });

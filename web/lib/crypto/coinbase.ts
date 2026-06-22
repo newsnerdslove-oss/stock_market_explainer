@@ -2,9 +2,15 @@
 // Server-side only (the routes call these); the browser never hits Coinbase
 // directly, avoiding CORS. The pure mappers are unit-tested.
 
-import type { Candle, Candles, Quote, Snapshot } from "@/lib/marketService";
+import type { Candle, Candles, Quote, Snapshot, Timeframe } from "@/lib/marketService";
 
 const REST = "https://api.exchange.coinbase.com";
+
+/** Map a chart timeframe to a Coinbase candle granularity (seconds). */
+const CB_GRANULARITY: Record<Timeframe, number> = { "1m": 60, "5m": 300, "15m": 900, "1h": 3600, "1d": 86_400 };
+export function coinbaseGranularity(tf: Timeframe): number {
+  return CB_GRANULARITY[tf];
+}
 
 interface CoinbaseTicker {
   price: string;
@@ -53,8 +59,8 @@ export async function fetchCoinbaseQuote(symbol: string, product: string): Promi
   return mapTicker(symbol, (await res.json()) as CoinbaseTicker);
 }
 
-export async function fetchCoinbaseCandles(symbol: string, product: string, limit: number): Promise<Candles> {
-  const res = await fetch(`${REST}/products/${product}/candles?granularity=60`, { cache: "no-store", headers: HEADERS });
+export async function fetchCoinbaseCandles(symbol: string, product: string, limit: number, timeframe: Timeframe = "1m"): Promise<Candles> {
+  const res = await fetch(`${REST}/products/${product}/candles?granularity=${coinbaseGranularity(timeframe)}`, { cache: "no-store", headers: HEADERS });
   if (!res.ok) throw new Error(`coinbase ${res.status}`);
   return mapCandles(symbol, (await res.json()) as number[][], limit);
 }

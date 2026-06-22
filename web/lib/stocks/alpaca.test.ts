@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { mapAlpacaQuote, mapAlpacaBars, mapAlpacaSnapshot, alpacaConfigured } from "@/lib/stocks/alpaca";
+import { mapAlpacaQuote, mapAlpacaBars, mapAlpacaSnapshot, alpacaTimeframe, alpacaConfigured } from "@/lib/stocks/alpaca";
 
 describe("alpacaConfigured", () => {
   const k = process.env.ALPACA_API_KEY_ID;
@@ -76,5 +76,15 @@ describe("mapAlpacaSnapshot", () => {
     expect(out.prevClose).toBe(5); // 2026-01-01 is the earlier (2nd-to-last after sort)
     const one = mapAlpacaSnapshot("AAPL", [bar("2026-01-01", 1, 9, 1, 5)]);
     expect(one.prevClose).toBe(5);
+  });
+});
+
+describe("alpacaTimeframe", () => {
+  it("maps chart timeframes to Alpaca bar strings", () => {
+    expect(alpacaTimeframe("1m")).toBe("1Min");
+    expect(alpacaTimeframe("5m")).toBe("5Min");
+    expect(alpacaTimeframe("15m")).toBe("15Min");
+    expect(alpacaTimeframe("1h")).toBe("1Hour");
+    expect(alpacaTimeframe("1d")).toBe("1Day");
   });
 });
