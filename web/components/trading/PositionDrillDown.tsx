@@ -4,7 +4,7 @@
 // time: a summary, an avg-cost trajectory chart (each fill's price vs the running
 // average cost), and the fill timeline with realized P&L on each close. All derived
 // from the Phase-1 engine (replayPosition / positionMetrics) over the symbol's fills.
-// Fills come from recorded orders (capped until persistence lands in Phase 4).
+// Fills come from the persisted order history (localStorage + Supabase orders).
 
 import { positionMetrics, replayPosition, type Trade } from "@/lib/positions/metrics";
 import { companyName } from "@/lib/stocks/names";
@@ -111,7 +111,7 @@ export function PositionDrillDown({
           </table>
         </div>
       )}
-      <p className="mt-2 text-xs text-faint">Lifecycle from recorded fills (average-cost). Full history persists in a later phase.</p>
+      <p className="mt-2 text-xs text-faint">Lifecycle from your full fill history (average-cost), saved on this device and synced when signed in.</p>
     </section>
   );
 }
