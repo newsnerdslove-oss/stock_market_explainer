@@ -44,7 +44,7 @@ export const lesson: Lesson = {
     {
       type: "text",
       body:
-        "**LEAPS** (Long-term Equity AnticiPation Securities) are listed options with expirations roughly **9 months out, up to about 3 years**. They exist on both equities and indexes. The long horizon means **more time value → a higher premium**.",
+        "**LEAPS** (Long-term Equity AnticiPation Securities) are listed options that, upon listing, have terms **greater than 1 year, up to about 3 years (~39 months)**. They exist on both equities and indexes. The long horizon means **more time value → a higher premium**.",
     },
     { type: "heading", text: "Worked example — 1256 60/40" },
     {
@@ -71,7 +71,7 @@ export const lesson: Lesson = {
         { term: "Section 1256 contract", def: "Broad-based cash-settled index options taxed 60/40 and marked-to-market at year-end." },
         { term: "60/40 treatment", def: "60% of the gain/loss is long-term, 40% short-term, regardless of holding period." },
         { term: "SPY vs. SPX tax", def: "SPY options are ordinary equity options (holding-period tax); SPX gets 1256 60/40." },
-        { term: "LEAPS", def: "Long-dated options (~9 months to ~3 years) with large time value and higher premiums." },
+        { term: "LEAPS", def: "Long-dated options (>1 year up to ~3 years / ~39 months at listing) with large time value and higher premiums." },
       ],
     },
     {

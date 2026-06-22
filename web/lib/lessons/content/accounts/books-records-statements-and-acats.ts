@@ -21,7 +21,8 @@ export const lesson: Lesson = {
       items: [
         "**Lifetime of the firm:** partnership/corporate **formation documents**, **stock certificate books**, and **minute books**.",
         "**`6 years`:** **blotters**, **general ledgers**, the **stock record**, and **customer account records** (the clock runs from account closing / last update).",
-        "**`3 years`** (first 2 years easily accessible): **order tickets/memoranda**, **trade confirmations**, **customer complaints**, **trial balances**, **advertising/correspondence**, and **U4/U5**.",
+        "**`4 years`:** **written customer complaints** (`FINRA Rule 4513`, aligned to FINRA's exam cycle).",
+        "**`3 years`** (first 2 years easily accessible): **order tickets/memoranda**, **trade confirmations**, **trial balances**, **advertising/correspondence**, and **U4/U5**.",
       ],
     },
     {
@@ -34,13 +35,13 @@ export const lesson: Lesson = {
     {
       type: "text",
       body:
-        "`FINRA Rule 2231` sets statement frequency: **at least quarterly** to every account with a position or balance, and **monthly** if there was **activity** during the period. Statements must advise customers to **promptly report inaccuracies**.",
+        "`FINRA Rule 2231` sets statement frequency: **at least once every calendar quarter** to every account with a **position, money balance, or activity** during the period. There is **no monthly-on-activity requirement** — FINRA proposed one but did not adopt it. Statements must advise customers to **promptly report inaccuracies**.",
     },
     {
       type: "list",
       items: [
-        "**Quarterly:** the floor — any account with a position or balance.",
-        "**Monthly:** required whenever there was **account activity** during that month.",
+        "**At least quarterly:** the rule — any account with a position, money balance, or activity in the period.",
+        "**No monthly mandate:** account activity does **not** trigger a monthly statement under Rule 2231 (a common myth).",
         "**Always:** a notice to **promptly report** any errors.",
       ],
     },
@@ -69,13 +70,13 @@ export const lesson: Lesson = {
     {
       type: "text",
       body:
-        "An account had **two trades in March**. Under `FINRA Rule 2231` the firm must send a **March (monthly) statement** because there was **activity**. By contrast, a **dormant account** holding only a balance with no trades receives just the **quarterly** statement.",
+        "An account had **two trades in March**; another held only a **cash balance** with no trades. Under `FINRA Rule 2231` **both** receive **at least a quarterly statement** — the activity in the first account does **not** mandate a separate monthly statement. (A firm may *choose* to send monthly statements, but the rule only requires quarterly.)",
     },
     {
       type: "list",
       items: [
-        "**Activity in March:** monthly statement required for that month.",
-        "**No activity:** quarterly statement is sufficient.",
+        "**Both accounts:** a position, money balance, or activity each guarantees the **quarterly** statement.",
+        "**Activity ≠ monthly:** trading in March does not force a March statement under Rule 2231.",
         "**Either way:** the statement must prompt the customer to report inaccuracies.",
       ],
     },
@@ -85,9 +86,10 @@ export const lesson: Lesson = {
         { term: "SEC Rule 17a-3", def: "Specifies which books and records a broker-dealer must CREATE." },
         { term: "SEC Rule 17a-4", def: "Specifies how long records must be RETAINED (lifetime, 6-year, and 3-year buckets)." },
         { term: "6-year records", def: "Blotters, general ledgers, the stock record, and customer account records." },
-        { term: "3-year records", def: "Order tickets, trade confirmations, customer complaints, trial balances, advertising/correspondence, and U4/U5 (first 2 years easily accessible)." },
+        { term: "3-year records", def: "Order tickets, trade confirmations, trial balances, advertising/correspondence, and U4/U5 (first 2 years easily accessible)." },
+        { term: "4-year records", def: "Written customer complaints (FINRA Rule 4513), aligned to FINRA's exam cycle." },
         { term: "Lifetime records", def: "Corporate/partnership formation documents, stock certificate books, and minute books." },
-        { term: "FINRA Rule 2231", def: "Requires account statements at least quarterly, and monthly when there was activity, with a notice to report inaccuracies." },
+        { term: "FINRA Rule 2231", def: "Requires account statements at least once every calendar quarter (no monthly-on-activity mandate), with a notice to report inaccuracies." },
         { term: "Street-name proxy voting", def: "The broker forwards proxies to beneficial owners and may vote uninstructed shares only on routine matters, never contested ones." },
         { term: "ACATS (FINRA Rule 11870)", def: "Account transfer process: 1 business day to validate the TIF, then 3 business days to complete the transfer." },
       ],
