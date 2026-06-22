@@ -9,7 +9,7 @@ import { OptionPositions } from "@/components/trading/OptionPositions";
 import { PositionsTable } from "@/components/trading/PositionsTable";
 import { coinbaseProduct, isCryptoSymbol } from "@/lib/crypto/products";
 import { useCryptoPrices } from "@/lib/crypto/useCryptoPrices";
-import { getQuoteViaApi } from "@/lib/marketService";
+import { getQuoteViaApi, getSnapshotViaApi, type Snapshot } from "@/lib/marketService";
 import { TradingProvider, useTrading } from "@/lib/trading/useTrading";
 import { equity, unrealizedPnL } from "@/lib/trading/ledger";
 import { legUnrealized, CONTRACT_MULTIPLIER } from "@/lib/options/ledger";
@@ -39,6 +39,34 @@ function SimulatorBody() {
     void refresh();
     setRefreshedAt(Date.now());
   };
+
+  // Slow-moving daily stats (prior close + 52-week range) for the positions table.
+  // Fetched whenever the set of held symbols changes — separate from the fast quote
+  // poll, since they only move once a day.
+  const [snapshots, setSnapshots] = useState<Record<string, Snapshot>>({});
+  const heldKey = Object.keys(portfolio.positions).join(",");
+  useEffect(() => {
+    const syms = heldKey.split(",").filter(Boolean);
+    if (!syms.length) return;
+    let cancelled = false;
+    (async () => {
+      const entries = await Promise.all(
+        syms.map(async (s) => {
+          const snap = await getSnapshotViaApi(s).catch(() => null);
+          return snap ? ([s, snap] as const) : null;
+        }),
+      );
+      if (cancelled) return;
+      setSnapshots((prev) => {
+        const next = { ...prev };
+        for (const e of entries) if (e) next[e[0]] = e[1];
+        return next;
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [heldKey]);
 
   // Stream live prices for held crypto over the Coinbase WS and merge them over
   // the REST `prices`, so equity and unrealized P&L tick in real time. (Stocks
@@ -130,7 +158,7 @@ function SimulatorBody() {
         {positions.length === 0 ? (
           <p className="mt-3 text-sm text-muted">No positions yet — place an order below.</p>
         ) : (
-          <PositionsTable positions={positions} marked={marked} isLive={isLive} equity={eq} />
+          <PositionsTable positions={positions} marked={marked} isLive={isLive} equity={eq} snapshots={snapshots} />
         )}
       </section>
 
