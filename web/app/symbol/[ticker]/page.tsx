@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SymbolChart } from "@/components/charts/SymbolChart";
+import { ResearchBar } from "@/components/research/ResearchBar";
 import { getCandles, getQuote, type Candle, type Quote } from "@/lib/marketService";
 
 export async function generateMetadata({ params }: { params: Promise<{ ticker: string }> }) {
@@ -51,16 +52,18 @@ export default async function SymbolPage({ params }: { params: Promise<{ ticker:
         )}
       </div>
       <p className="mt-2 text-sm text-muted">
-        1-minute candles, updating live. <span className="text-faint">Green = close above open, red = below.</span>
+        Candlestick chart with EMAs, volume, and multiple timeframes. <span className="text-faint">Green = close above open, red = below.</span>
       </p>
 
-      <section className="mt-6 rounded-lg border border-strong bg-surface p-3">
+      <ResearchBar symbol={symbol} />
+
+      <section className="mt-4 rounded-lg border border-strong bg-surface p-3">
         <SymbolChart symbol={symbol} initialCandles={initialCandles} />
       </section>
 
       <div className="mt-6">
         <Link
-          href="/simulator"
+          href={`/simulator?symbol=${encodeURIComponent(symbol)}`}
           className="inline-block rounded-md bg-up px-4 py-2 text-sm font-medium text-canvas transition hover:opacity-90"
         >
           Trade {symbol} →
