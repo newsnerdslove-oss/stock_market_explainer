@@ -65,14 +65,14 @@ export const questions: Question[] = [
     tags: ["fn:3", "leaps"],
     prompt: "What best defines **LEAPS** and their key feature?",
     choices: [
-      { id: "a", text: "Long-dated options (~9 months to ~3 years) with large time value and higher premiums" },
+      { id: "a", text: "Long-dated options (>1 year up to ~3 years at listing) with large time value and higher premiums" },
       { id: "b", text: "Weekly options that expire every Friday", feedback: "That describes weeklys — LEAPS are the opposite, long-dated contracts." },
       { id: "c", text: "Cash-settled options on narrow indexes only" },
       { id: "d", text: "Options that can only be exercised at expiration" },
     ],
     correctId: "a",
     explanation:
-      "**LEAPS** are long-dated options (expirations beyond ~9 months, up to ~3 years) — the extra time value makes the premium higher.",
+      "**LEAPS** are long-dated options (terms greater than 1 year at listing, up to ~3 years / ~39 months) — the extra time value makes the premium higher.",
   },
   {
     id: "index-options-leaps.q5",

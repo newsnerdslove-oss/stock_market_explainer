@@ -45,16 +45,16 @@ export const questions: Question[] = [
     difficulty: "medium",
     tags: ["fn:3", "statements", "rule-2231"],
     prompt:
-      "When is a monthly (rather than quarterly) account statement required?",
+      "How often must customer account statements be sent under FINRA Rule 2231?",
     choices: [
-      { id: "a", text: "Only for margin accounts" },
-      { id: "b", text: "Whenever there was account activity during the month" },
-      { id: "c", text: "Only when the customer requests it" },
-      { id: "d", text: "Only for accounts over $1 million" },
+      { id: "a", text: "At least once every calendar quarter" },
+      { id: "b", text: "Monthly whenever there was account activity", feedback: "A common myth — FINRA proposed a monthly-on-activity requirement but did not adopt it. Rule 2231 only mandates quarterly." },
+      { id: "c", text: "Monthly for every account" },
+      { id: "d", text: "Only once a year" },
     ],
-    correctId: "b",
+    correctId: "a",
     explanation:
-      "Under `FINRA Rule 2231`, statements go out **at least quarterly**, and **monthly** whenever there was **activity** during that month.",
+      "`FINRA Rule 2231` requires a statement **at least once every calendar quarter** for any account with a position, money balance, or activity. There is **no** monthly-on-activity mandate.",
   },
   {
     id: "books-records-statements-and-acats.q4",
@@ -63,16 +63,16 @@ export const questions: Question[] = [
     difficulty: "hard",
     tags: ["fn:3", "statements", "scenario"],
     prompt:
-      "An account had two trades in March; a different account had no activity and only a cash balance. What statements are required?",
+      "An account had two trades in March; a different account had no activity and only a cash balance. What statements does FINRA Rule 2231 require?",
     choices: [
-      { id: "a", text: "Both get only quarterly statements" },
-      { id: "b", text: "The traded account gets a March monthly statement; the dormant account gets just the quarterly statement" },
+      { id: "a", text: "Both get at least a quarterly statement" },
+      { id: "b", text: "The traded account gets a March monthly statement; the dormant account gets just the quarterly statement", feedback: "This reflects the monthly-on-activity myth — Rule 2231 has no monthly trigger, so both accounts get at least the quarterly statement." },
       { id: "c", text: "Both get monthly statements regardless of activity" },
       { id: "d", text: "Neither gets a statement until year-end" },
     ],
-    correctId: "b",
+    correctId: "a",
     explanation:
-      "Activity in March triggers a **monthly** March statement for the traded account. The dormant account with only a balance and no activity receives just the **quarterly** statement.",
+      "Under `FINRA Rule 2231` both accounts receive **at least a quarterly** statement — the traded account because of its activity, the other because of its money balance. Activity does **not** trigger a mandatory monthly statement.",
   },
   {
     id: "books-records-statements-and-acats.q5",

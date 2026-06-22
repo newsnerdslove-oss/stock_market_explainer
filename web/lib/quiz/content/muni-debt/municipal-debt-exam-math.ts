@@ -13,7 +13,7 @@ export const questions: Question[] = [
       "A `5%` corporate bond (`$1,000` par) had its last coupon on **Mar 1** and settles **Jun 1** (30/360). How much accrued interest does the buyer pay?",
     choices: [
       { id: "a", text: "$12.50" },
-      { id: "b", text: "$12.64", feedback: "That uses actual days (92); corporates use 30/360, giving exactly 90 days." },
+      { id: "b", text: "$12.78", feedback: "That uses actual days (92 from Mar 1 to Jun 1); corporates use 30/360, giving exactly 90 days → $12.50." },
       { id: "c", text: "$25.00" },
       { id: "d", text: "$4.17" },
     ],
