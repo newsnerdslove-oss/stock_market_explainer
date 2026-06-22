@@ -6,6 +6,12 @@ import type { OptionLeg } from "@/lib/options/ledger";
 
 export const STARTING_CASH = 100_000;
 
+// How many orders we retain as the trade log (in localStorage and loaded from
+// Supabase). The Supabase `orders` table already stores every fill uncapped — this
+// is the working-set cap, kept high so the per-symbol position lifecycle (the
+// drill-down) is effectively complete. The "recent orders" UI shows just the latest.
+export const ORDER_HISTORY_LIMIT = 1000;
+
 export type OrderSide = "buy" | "sell";
 export type OrderType = "market" | "limit";
 export type OrderStatus = "filled" | "pending" | "canceled" | "rejected";

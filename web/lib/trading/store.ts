@@ -2,7 +2,7 @@
 // effort like the progress store. Reuses the Phase 3 anonymous/real session.
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { emptyPortfolio, STARTING_CASH, type Order, type Portfolio, type Position } from "@/lib/trading/schema";
+import { emptyPortfolio, ORDER_HISTORY_LIMIT, STARTING_CASH, type Order, type Portfolio, type Position } from "@/lib/trading/schema";
 
 // ── Local cache ─────────────────────────────────────────────────────────────
 // localStorage is the instant, offline source of truth (like the progress store);
@@ -49,7 +49,7 @@ export async function loadPortfolio(supabase: SupabaseClient, userId: string): P
     const [pf, pos, ord] = await Promise.all([
       supabase.from("portfolios").select("cash,realized").eq("user_id", userId).maybeSingle(),
       supabase.from("positions").select("symbol,qty,avg_cost").eq("user_id", userId),
-      supabase.from("orders").select("id,symbol,side,type,qty,limit_price,status,filled_price,created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(50),
+      supabase.from("orders").select("id,symbol,side,type,qty,limit_price,status,filled_price,created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(ORDER_HISTORY_LIMIT),
     ]);
     if (pf.error || pos.error || ord.error || !pf.data) return null;
     const base = emptyPortfolio();

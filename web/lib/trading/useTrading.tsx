@@ -10,7 +10,7 @@ import { markPremium } from "@/lib/options/sim";
 import type { OptionType } from "@/lib/options/blackScholes";
 import { insertOrder, loadLocalPortfolio, loadPortfolio, savePortfolio, saveLocalPortfolio, updateOrder } from "@/lib/trading/store";
 import { uid as newId } from "@/lib/uid";
-import { emptyPortfolio, type Order, type Portfolio } from "@/lib/trading/schema";
+import { emptyPortfolio, ORDER_HISTORY_LIMIT, type Order, type Portfolio } from "@/lib/trading/schema";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface OptionTradeRequest {
@@ -119,7 +119,7 @@ export function TradingProvider({ children }: { children: ReactNode }) {
       filledPrice: result.filledPrice ?? null,
       createdAt: new Date().toISOString(),
     };
-    const withOrder: Portfolio = { ...next, orders: [order, ...next.orders].slice(0, 50) };
+    const withOrder: Portfolio = { ...next, orders: [order, ...next.orders].slice(0, ORDER_HISTORY_LIMIT) };
     setPortfolio(withOrder);
     saveLocalPortfolio(withOrder); // always persist locally
 
@@ -166,7 +166,7 @@ export function TradingProvider({ children }: { children: ReactNode }) {
       filledPrice: result.premiumPerShare ?? fill,
       createdAt: new Date().toISOString(),
     };
-    const updated: Portfolio = { ...pf, cash: after.cash, realized: after.realized, optionLegs: after.legs, orders: [order, ...pf.orders].slice(0, 50) };
+    const updated: Portfolio = { ...pf, cash: after.cash, realized: after.realized, optionLegs: after.legs, orders: [order, ...pf.orders].slice(0, ORDER_HISTORY_LIMIT) };
     setPortfolio(updated);
     saveLocalPortfolio(updated);
 
