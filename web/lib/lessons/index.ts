@@ -254,6 +254,20 @@ import { lesson as institutionalAndSeniorInvestorProtections } from "@/lib/lesso
 import { lesson as contractAdjustmentsSplitsAndDividends } from "@/lib/lessons/content/adv-options/contract-adjustments-splits-and-dividends";
 import { lesson as whatTechnicalAnalysisIsAndDowTheory } from "@/lib/lessons/content/technical/what-technical-analysis-is-and-dow-theory";
 
+// Depth backlog (batch B)
+import { lesson as uncoveredOptionMargin } from "@/lib/lessons/content/adv-options/uncovered-option-margin";
+import { lesson as nonMarginableSecuritiesAndSpecialMargin } from "@/lib/lessons/content/margin/non-marginable-securities-and-special-margin";
+import { lesson as minimumEquityAndWithdrawingSma } from "@/lib/lessons/content/margin-math/minimum-equity-and-withdrawing-sma";
+import { lesson as rollingAnOptionsPosition } from "@/lib/lessons/content/options/rolling-an-options-position";
+import { lesson as openingAndClosingAuctions } from "@/lib/lessons/content/market-structure/opening-and-closing-auctions";
+import { lesson as muniCreditAnalysisAndSpecialStructures } from "@/lib/lessons/content/muni-debt/muni-credit-analysis-and-special-structures";
+import { lesson as totalReturn } from "@/lib/lessons/content/owning-position/total-return";
+import { lesson as taxLotsAndWashSales } from "@/lib/lessons/content/owning-position/tax-lots-and-wash-sales";
+import { lesson as basicVsDilutedEps } from "@/lib/lessons/content/valuation/basic-vs-diluted-eps";
+import { lesson as dollarCostAveraging } from "@/lib/lessons/content/portfolio/dollar-cost-averaging";
+import { lesson as whatCountsAsARecommendation } from "@/lib/lessons/content/suitability/what-counts-as-a-recommendation";
+import { lesson as cryptoTaxesForInvestors } from "@/lib/lessons/content/crypto-300/crypto-taxes-for-investors";
+
 // The single source of truth for the lesson bank. Display order is computed from
 // the taxonomy (track → module → moduleOrder via getOrderedLessons); this array's
 // order only needs to contain every lesson. Grouped by module for readability.
@@ -481,6 +495,19 @@ export const lessons: Lesson[] = [
   institutionalAndSeniorInvestorProtections,
   contractAdjustmentsSplitsAndDividends,
   whatTechnicalAnalysisIsAndDowTheory,
+  // Depth backlog (batch B)
+  uncoveredOptionMargin,
+  nonMarginableSecuritiesAndSpecialMargin,
+  minimumEquityAndWithdrawingSma,
+  rollingAnOptionsPosition,
+  openingAndClosingAuctions,
+  muniCreditAnalysisAndSpecialStructures,
+  totalReturn,
+  taxLotsAndWashSales,
+  basicVsDilutedEps,
+  dollarCostAveraging,
+  whatCountsAsARecommendation,
+  cryptoTaxesForInvestors,
 ];
 
 export function getAllLessons(): Lesson[] {
