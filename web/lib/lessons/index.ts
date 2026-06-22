@@ -268,6 +268,21 @@ import { lesson as dollarCostAveraging } from "@/lib/lessons/content/portfolio/d
 import { lesson as whatCountsAsARecommendation } from "@/lib/lessons/content/suitability/what-counts-as-a-recommendation";
 import { lesson as cryptoTaxesForInvestors } from "@/lib/lessons/content/crypto-300/crypto-taxes-for-investors";
 
+// Depth backlog (batch C)
+import { lesson as tradingAuthorizationAndPowerOfAttorney } from "@/lib/lessons/content/accounts/trading-authorization-and-power-of-attorney";
+import { lesson as statisticalSignificanceAndSampleSize } from "@/lib/lessons/content/backtesting/statistical-significance-and-sample-size";
+import { lesson as benchmarkingAgainstBuyAndHold } from "@/lib/lessons/content/backtesting/benchmarking-against-buy-and-hold";
+import { lesson as investmentCompanyAdvertisingAndBrokercheck } from "@/lib/lessons/content/communications/investment-company-advertising-and-brokercheck";
+import { lesson as cryptoScamsAndRugPulls } from "@/lib/lessons/content/crypto/crypto-scams-and-rug-pulls";
+import { lesson as layer1VsLayer2AndNetworks } from "@/lib/lessons/content/crypto-200/layer-1-vs-layer-2-and-networks";
+import { lesson as mevSandwichAndExecutionRisk } from "@/lib/lessons/content/crypto-300/mev-sandwich-and-execution-risk";
+import { lesson as fundamentalVsTechnicalAnalysis } from "@/lib/lessons/content/fundamental/fundamental-vs-technical-analysis";
+import { lesson as liquidityAndSolvencyRatios } from "@/lib/lessons/content/fundamental/liquidity-and-solvency-ratios";
+import { lesson as buyStopsAndTrailingStops } from "@/lib/lessons/content/quotes-orders/buy-stops-and-trailing-stops";
+import { lesson as choosingAndMatchingATradingStyle } from "@/lib/lessons/content/styles/choosing-and-matching-a-trading-style";
+import { lesson as taxesAndActiveTrading } from "@/lib/lessons/content/styles/taxes-and-active-trading";
+import { lesson as strategicVsTacticalAllocation } from "@/lib/lessons/content/portfolio/strategic-vs-tactical-allocation";
+
 // The single source of truth for the lesson bank. Display order is computed from
 // the taxonomy (track → module → moduleOrder via getOrderedLessons); this array's
 // order only needs to contain every lesson. Grouped by module for readability.
@@ -508,6 +523,20 @@ export const lessons: Lesson[] = [
   dollarCostAveraging,
   whatCountsAsARecommendation,
   cryptoTaxesForInvestors,
+  // Depth backlog (batch C)
+  tradingAuthorizationAndPowerOfAttorney,
+  statisticalSignificanceAndSampleSize,
+  benchmarkingAgainstBuyAndHold,
+  investmentCompanyAdvertisingAndBrokercheck,
+  cryptoScamsAndRugPulls,
+  layer1VsLayer2AndNetworks,
+  mevSandwichAndExecutionRisk,
+  fundamentalVsTechnicalAnalysis,
+  liquidityAndSolvencyRatios,
+  buyStopsAndTrailingStops,
+  choosingAndMatchingATradingStyle,
+  taxesAndActiveTrading,
+  strategicVsTacticalAllocation,
 ];
 
 export function getAllLessons(): Lesson[] {
