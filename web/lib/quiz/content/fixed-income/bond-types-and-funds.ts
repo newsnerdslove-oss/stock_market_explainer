@@ -63,7 +63,7 @@ export const questions: Question[] = [
     prompt:
       "An investor in the `24%` bracket holds a muni yielding `3.0%` (tax-free). What is its taxable-equivalent yield?",
     choices: [
-      { id: "a", text: "3.72%", feedback: "Multiply by (1 − rate) gives after-tax of a taxable bond, not the muni's TEY." },
+      { id: "a", text: "2.28%", feedback: "That is 3.0% × (1 − 0.24) — the after-tax yield of a taxable bond, not the muni's TEY. TEY divides by (1 − rate)." },
       { id: "b", text: "3.95%" },
       { id: "c", text: "3.00%" },
       { id: "d", text: "12.50%" },
