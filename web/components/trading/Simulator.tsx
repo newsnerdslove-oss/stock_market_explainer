@@ -227,6 +227,11 @@ function OrderTicket({ onPlaced, bare = false }: { onPlaced: () => void; bare?: 
   const [qty, setQty] = useState("10");
   const [limit, setLimit] = useState("");
   const [busy, setBusy] = useState(false);
+  // Pre-fill from ?symbol= (trade-from-chart). Client-only; no Suspense needed.
+  useEffect(() => {
+    const sym = new URLSearchParams(window.location.search).get("symbol");
+    if (sym) setSymbol(sym.toUpperCase());
+  }, []);
   const [msg, setMsg] = useState<{ kind: "ok" | "warn" | "err"; text: string } | null>(null);
   // Last price for the typed symbol, to preview an order's cost before submitting.
   const [lastPrice, setLastPrice] = useState<number | null>(null);
