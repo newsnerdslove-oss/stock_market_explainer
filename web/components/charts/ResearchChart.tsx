@@ -2,8 +2,10 @@
 
 // Research chart (TradingView Lightweight Charts v5): candlesticks + a volume pane +
 // toggleable EMA overlays (computed from the Phase-1 indicators) + a timeframe
-// selector (Phase-2 API) + a crosshair legend. Refetches the series on symbol/
-// timeframe change and refreshes on a poll. Dark theme mirrors the design tokens.
+// selector (Phase-2 API) + a crosshair legend + Phase-5 DRAWING TOOLS (trend lines,
+// horizontal lines, Fibonacci retracements) rendered via a series primitive and
+// persisted per symbol in localStorage. Refetches on symbol/timeframe change and
+// refreshes on a poll. Dark theme mirrors the design tokens.
 
 import { useEffect, useRef, useState } from "react";
 import {
@@ -16,9 +18,20 @@ import {
   type IChartApi,
   type ISeriesApi,
   type UTCTimestamp,
+  type MouseEventParams,
 } from "lightweight-charts";
 import { getCandlesViaApi, TIMEFRAMES, type Candle, type Timeframe } from "@/lib/marketService";
 import { ema } from "@/lib/indicators";
+import {
+  loadDrawings,
+  saveDrawings,
+  newDrawing,
+  POINTS_FOR,
+  TOOL_COLOR,
+  type Drawing,
+  type DrawingType,
+} from "@/lib/charts/drawings";
+import { DrawingsPrimitive, type Draft } from "@/components/charts/drawingsPrimitive";
 
 const UP = "#2BD17E";
 const DOWN = "#FF5C5C";
@@ -33,6 +46,14 @@ const EMAS = [
   { period: 9, color: "#F5C451" },
   { period: 20, color: "#5BA8FF" },
   { period: 50, color: "#9D8CFF" },
+];
+
+type Tool = "cursor" | DrawingType;
+const TOOLS: { id: Tool; label: string; hint?: string }[] = [
+  { id: "cursor", label: "Cursor" },
+  { id: "trend", label: "Trend", hint: "click two points" },
+  { id: "horizontal", label: "H-Line", hint: "click a price" },
+  { id: "fib", label: "Fib", hint: "click two points" },
 ];
 
 const money = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -62,12 +83,100 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
   const emaRefs = useRef<Record<number, ISeriesApi<"Line">>>({});
   const candlesRef = useRef<Candle[]>([]);
 
+  // Drawing state lives in refs (read by the imperative primitive) mirrored into
+  // React state (for the toolbar + list). Refs avoid stale closures in the
+  // once-subscribed chart event handlers.
+  const primitiveRef = useRef<DrawingsPrimitive | null>(null);
+  const drawingsRef = useRef<Drawing[]>([]);
+  const draftRef = useRef<Draft | null>(null);
+  const selectedRef = useRef<string | null>(null);
+  const toolRef = useRef<Tool>("cursor");
+  const actionsRef = useRef<{ click: (p: MouseEventParams) => void; move: (p: MouseEventParams) => void }>({
+    click: () => {},
+    move: () => {},
+  });
+
   const [timeframe, setTimeframe] = useState<Timeframe>("1m");
   const [shownEmas, setShownEmas] = useState<Record<number, boolean>>({ 9: true, 20: true, 50: false });
   const [legend, setLegend] = useState<Legend | null>(null);
   const [stale, setStale] = useState(false);
+  const [tool, setTool] = useState<Tool>("cursor");
+  const [drawings, setDrawings] = useState<Drawing[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  // Create the chart + series once.
+  // Replace the drawing set (ref + state + persistence + redraw) in one place.
+  function applyDrawings(next: Drawing[]) {
+    drawingsRef.current = next;
+    setDrawings(next);
+    saveDrawings(symbol, next);
+    primitiveRef.current?.requestUpdate();
+  }
+
+  // ----- chart event handlers (rebuilt each render, dispatched via actionsRef) -----
+  function pointFromEvent(param: MouseEventParams): { time: number; price: number } | null {
+    if (!param.point || !candleRef.current || !chartRef.current) return null;
+    const price = candleRef.current.coordinateToPrice(param.point.y);
+    if (price == null) return null;
+    const time = (param.time as number | undefined) ?? (chartRef.current.timeScale().coordinateToTime(param.point.x) as number | null);
+    if (time == null) return null;
+    return { time, price };
+  }
+
+  function handleClick(param: MouseEventParams) {
+    const active = toolRef.current;
+    if (active === "cursor") {
+      if (param.point) setSelectedId(primitiveRef.current?.hitId(param.point.x, param.point.y) ?? null);
+      return;
+    }
+    const pt = pointFromEvent(param);
+    if (!pt) return;
+    const draft = draftRef.current ?? { type: active, color: TOOL_COLOR[active], points: [], preview: null };
+    const points = [...draft.points, pt];
+    if (points.length >= POINTS_FOR[active]) {
+      applyDrawings([...drawingsRef.current, newDrawing(active, points)]);
+      draftRef.current = null;
+      setTool("cursor");
+    } else {
+      draftRef.current = { ...draft, points, preview: null };
+      primitiveRef.current?.requestUpdate();
+    }
+  }
+
+  function handleMove(param: MouseEventParams) {
+    // crosshair legend
+    const cs = candlesRef.current;
+    if (!param.time) {
+      setLegend(latestLegend(cs));
+    } else {
+      const idx = cs.findIndex((c) => toSec(c.time) === (param.time as number));
+      if (idx >= 0) setLegend(legendAt(cs, idx));
+    }
+    // live draft endpoint
+    const draft = draftRef.current;
+    if (draft) {
+      const pt = pointFromEvent(param);
+      if (pt) {
+        draftRef.current = { ...draft, preview: pt };
+        primitiveRef.current?.requestUpdate();
+      }
+    }
+  }
+
+  actionsRef.current = { click: handleClick, move: handleMove };
+
+  // Keep simple mirrors in sync for the primitive's getters.
+  useEffect(() => {
+    toolRef.current = tool;
+    if (tool === "cursor") return;
+    // switching to a drawing tool clears any selection
+    setSelectedId(null);
+  }, [tool]);
+  useEffect(() => {
+    selectedRef.current = selectedId;
+    primitiveRef.current?.requestUpdate();
+  }, [selectedId]);
+
+  // Create the chart + series + drawing primitive once.
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -91,24 +200,53 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
       emaRefs.current[e.period] = chart.addSeries(LineSeries, { color: e.color, lineWidth: 1, lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false });
     }
 
-    // Crosshair legend.
-    chart.subscribeCrosshairMove((param) => {
-      const cs = candlesRef.current;
-      if (!param.time) {
-        setLegend(latestLegend(cs));
-        return;
-      }
-      const t = param.time as number;
-      const idx = cs.findIndex((c) => toSec(c.time) === t);
-      if (idx < 0) return;
-      setLegend(legendAt(cs, idx));
-    });
+    const primitive = new DrawingsPrimitive(
+      () => drawingsRef.current,
+      () => draftRef.current,
+      () => selectedRef.current,
+    );
+    candleRef.current.attachPrimitive(primitive);
+    primitiveRef.current = primitive;
+
+    chart.subscribeClick((p) => actionsRef.current.click(p));
+    chart.subscribeCrosshairMove((p) => actionsRef.current.move(p));
 
     return () => {
       chart.remove();
       chartRef.current = null;
+      primitiveRef.current = null;
     };
   }, []);
+
+  // Keyboard: Esc cancels an in-progress draft; Delete removes the selection.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        draftRef.current = null;
+        setTool("cursor");
+        primitiveRef.current?.requestUpdate();
+      } else if ((e.key === "Delete" || e.key === "Backspace") && selectedRef.current) {
+        applyDrawings(drawingsRef.current.filter((d) => d.id !== selectedRef.current));
+        setSelectedId(null);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // applyDrawings closes over `symbol`; re-bind when it changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [symbol]);
+
+  // Load this symbol's saved drawings; reset any in-progress draft/selection.
+  useEffect(() => {
+    const saved = loadDrawings(symbol);
+    drawingsRef.current = saved;
+    draftRef.current = null;
+    selectedRef.current = null;
+    setDrawings(saved);
+    setSelectedId(null);
+    setTool("cursor");
+    primitiveRef.current?.requestUpdate();
+  }, [symbol]);
 
   // Fetch + render whenever symbol or timeframe changes, then poll to refresh.
   useEffect(() => {
@@ -138,6 +276,7 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
 
         chartRef.current?.timeScale().fitContent();
         setLegend(latestLegend(data.candles));
+        primitiveRef.current?.requestUpdate();
         setStale(false);
       } catch {
         if (!cancelled) setStale(true);
@@ -158,6 +297,8 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
   useEffect(() => {
     for (const e of EMAS) emaRefs.current[e.period]?.applyOptions({ visible: shownEmas[e.period] ?? false });
   }, [shownEmas]);
+
+  const activeTool = TOOLS.find((t) => t.id === tool);
 
   return (
     <div>
@@ -185,6 +326,60 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
         </div>
       </div>
 
+      {/* drawing toolbar */}
+      <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
+        <div className="inline-flex rounded-md border border-strong p-0.5">
+          {TOOLS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => {
+                draftRef.current = null;
+                setTool(t.id);
+                primitiveRef.current?.requestUpdate();
+              }}
+              className={`rounded px-2 py-0.5 transition ${t.id === tool ? "bg-learn text-canvas" : "text-muted hover:text-ink"}`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        {activeTool?.hint && tool !== "cursor" && <span className="text-faint">{activeTool.hint} · Esc to cancel</span>}
+        {drawings.length > 0 && (
+          <div className="ml-auto flex flex-wrap items-center gap-1">
+            {drawings.map((d) => (
+              <button
+                key={d.id}
+                type="button"
+                onClick={() => setSelectedId((id) => (id === d.id ? null : d.id))}
+                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 transition ${d.id === selectedId ? "border-ink text-ink" : "border-hairline text-faint hover:text-muted"}`}
+                style={{ borderColor: d.id === selectedId ? d.color : undefined }}
+                title={d.id === selectedId ? "Selected — press Delete to remove" : "Select"}
+              >
+                <span className="inline-block h-2 w-2 rounded-full" style={{ background: d.color }} />
+                {d.type === "horizontal" ? `H ${money(d.points[0].price)}` : d.type === "fib" ? "Fib" : "Trend"}
+                <span
+                  role="button"
+                  tabIndex={-1}
+                  aria-label="Delete drawing"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    applyDrawings(drawingsRef.current.filter((x) => x.id !== d.id));
+                    if (selectedId === d.id) setSelectedId(null);
+                  }}
+                  className="text-faint hover:text-down"
+                >
+                  ✕
+                </span>
+              </button>
+            ))}
+            <button type="button" onClick={() => applyDrawings([])} className="rounded-full border border-hairline px-2 py-0.5 text-faint transition hover:text-down">
+              Clear
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* legend */}
       {legend && (
         <div className="mb-1 flex flex-wrap gap-x-3 gap-y-0.5 font-mono text-[11px] text-muted">
@@ -200,7 +395,7 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
       )}
 
       <div className="relative">
-        <div ref={containerRef} className="h-[440px] w-full" />
+        <div ref={containerRef} className={`h-[440px] w-full ${tool === "cursor" ? "" : "cursor-crosshair"}`} />
         {stale && <span className="absolute right-2 top-2 rounded-md bg-streak/10 px-2 py-1 text-xs text-streak">live feed unavailable</span>}
       </div>
     </div>
