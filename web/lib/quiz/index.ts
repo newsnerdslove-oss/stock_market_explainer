@@ -267,6 +267,21 @@ import { questions as dollarCostAveraging } from "@/lib/quiz/content/portfolio/d
 import { questions as whatCountsAsARecommendation } from "@/lib/quiz/content/suitability/what-counts-as-a-recommendation";
 import { questions as cryptoTaxesForInvestors } from "@/lib/quiz/content/crypto-300/crypto-taxes-for-investors";
 
+// Depth backlog (batch C)
+import { questions as tradingAuthorizationAndPowerOfAttorney } from "@/lib/quiz/content/accounts/trading-authorization-and-power-of-attorney";
+import { questions as statisticalSignificanceAndSampleSize } from "@/lib/quiz/content/backtesting/statistical-significance-and-sample-size";
+import { questions as benchmarkingAgainstBuyAndHold } from "@/lib/quiz/content/backtesting/benchmarking-against-buy-and-hold";
+import { questions as investmentCompanyAdvertisingAndBrokercheck } from "@/lib/quiz/content/communications/investment-company-advertising-and-brokercheck";
+import { questions as cryptoScamsAndRugPulls } from "@/lib/quiz/content/crypto/crypto-scams-and-rug-pulls";
+import { questions as layer1VsLayer2AndNetworks } from "@/lib/quiz/content/crypto-200/layer-1-vs-layer-2-and-networks";
+import { questions as mevSandwichAndExecutionRisk } from "@/lib/quiz/content/crypto-300/mev-sandwich-and-execution-risk";
+import { questions as fundamentalVsTechnicalAnalysis } from "@/lib/quiz/content/fundamental/fundamental-vs-technical-analysis";
+import { questions as liquidityAndSolvencyRatios } from "@/lib/quiz/content/fundamental/liquidity-and-solvency-ratios";
+import { questions as buyStopsAndTrailingStops } from "@/lib/quiz/content/quotes-orders/buy-stops-and-trailing-stops";
+import { questions as choosingAndMatchingATradingStyle } from "@/lib/quiz/content/styles/choosing-and-matching-a-trading-style";
+import { questions as taxesAndActiveTrading } from "@/lib/quiz/content/styles/taxes-and-active-trading";
+import { questions as strategicVsTacticalAllocation } from "@/lib/quiz/content/portfolio/strategic-vs-tactical-allocation";
+
 // Single source of truth for the question bank, keyed by lesson slug. Mirrors
 // lib/lessons/index.ts; later phases swap this for Supabase-backed queries while
 // keeping the same Question shape and helper signatures.
@@ -506,6 +521,20 @@ const byLesson: Record<string, Question[]> = {
   "dollar-cost-averaging": dollarCostAveraging,
   "what-counts-as-a-recommendation": whatCountsAsARecommendation,
   "crypto-taxes-for-investors": cryptoTaxesForInvestors,
+  // Depth backlog (batch C)
+  "trading-authorization-and-power-of-attorney": tradingAuthorizationAndPowerOfAttorney,
+  "statistical-significance-and-sample-size": statisticalSignificanceAndSampleSize,
+  "benchmarking-against-buy-and-hold": benchmarkingAgainstBuyAndHold,
+  "investment-company-advertising-and-brokercheck": investmentCompanyAdvertisingAndBrokercheck,
+  "crypto-scams-and-rug-pulls": cryptoScamsAndRugPulls,
+  "layer-1-vs-layer-2-and-networks": layer1VsLayer2AndNetworks,
+  "mev-sandwich-and-execution-risk": mevSandwichAndExecutionRisk,
+  "fundamental-vs-technical-analysis": fundamentalVsTechnicalAnalysis,
+  "liquidity-and-solvency-ratios": liquidityAndSolvencyRatios,
+  "buy-stops-and-trailing-stops": buyStopsAndTrailingStops,
+  "choosing-and-matching-a-trading-style": choosingAndMatchingATradingStyle,
+  "taxes-and-active-trading": taxesAndActiveTrading,
+  "strategic-vs-tactical-allocation": strategicVsTacticalAllocation,
 };
 
 /** Questions for one lesson's quiz, in authored order. Empty if none exist. */
