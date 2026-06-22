@@ -140,6 +140,8 @@ import { lesson as interestRateRiskAndDuration } from "@/lib/lessons/content/fix
 import { lesson as creditRiskAndRatings } from "@/lib/lessons/content/fixed-income/credit-risk-and-ratings";
 import { lesson as theYieldCurve } from "@/lib/lessons/content/fixed-income/the-yield-curve";
 import { lesson as bondTypesAndFunds } from "@/lib/lessons/content/fixed-income/bond-types-and-funds";
+import { lesson as accruedInterestAndHowBondsTrade } from "@/lib/lessons/content/fixed-income/accrued-interest-and-how-bonds-trade";
+import { lesson as agencyAndMortgageBackedSecurities } from "@/lib/lessons/content/fixed-income/agency-and-mortgage-backed-securities";
 
 // 300-level: Portfolio construction.
 import { lesson as assetAllocation } from "@/lib/lessons/content/portfolio/asset-allocation";
@@ -349,6 +351,8 @@ export const lessons: Lesson[] = [
   creditRiskAndRatings,
   theYieldCurve,
   bondTypesAndFunds,
+  accruedInterestAndHowBondsTrade,
+  agencyAndMortgageBackedSecurities,
   // Portfolio construction (300)
   assetAllocation,
   diversificationAndCorrelation,

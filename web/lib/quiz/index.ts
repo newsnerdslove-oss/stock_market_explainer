@@ -139,6 +139,8 @@ import { questions as interestRateRiskAndDuration } from "@/lib/quiz/content/fix
 import { questions as creditRiskAndRatings } from "@/lib/quiz/content/fixed-income/credit-risk-and-ratings";
 import { questions as theYieldCurve } from "@/lib/quiz/content/fixed-income/the-yield-curve";
 import { questions as bondTypesAndFunds } from "@/lib/quiz/content/fixed-income/bond-types-and-funds";
+import { questions as accruedInterestAndHowBondsTrade } from "@/lib/quiz/content/fixed-income/accrued-interest-and-how-bonds-trade";
+import { questions as agencyAndMortgageBackedSecurities } from "@/lib/quiz/content/fixed-income/agency-and-mortgage-backed-securities";
 
 // 300-level: Portfolio construction.
 import { questions as assetAllocation } from "@/lib/quiz/content/portfolio/asset-allocation";
@@ -348,6 +350,8 @@ const byLesson: Record<string, Question[]> = {
   "credit-risk-and-ratings": creditRiskAndRatings,
   "the-yield-curve": theYieldCurve,
   "bond-types-and-funds": bondTypesAndFunds,
+  "accrued-interest-and-how-bonds-trade": accruedInterestAndHowBondsTrade,
+  "agency-and-mortgage-backed-securities": agencyAndMortgageBackedSecurities,
   // Portfolio construction (300)
   "asset-allocation": assetAllocation,
   "diversification-and-correlation": diversificationAndCorrelation,
