@@ -50,6 +50,7 @@ import { lesson as crypto247Markets } from "@/lib/lessons/content/crypto/crypto-
 import { lesson as cryptoVolatility } from "@/lib/lessons/content/crypto/crypto-volatility";
 import { lesson as custodyAndKeys } from "@/lib/lessons/content/crypto/custody-and-keys";
 import { lesson as howACryptoTransactionWorks } from "@/lib/lessons/content/crypto/how-a-crypto-transaction-works";
+import { lesson as blockchainConsensusPowVsPos } from "@/lib/lessons/content/crypto/blockchain-consensus-pow-vs-pos";
 
 // 200-level: Technical analysis.
 import { lesson as movingAverages } from "@/lib/lessons/content/technical/moving-averages-sma-vs-ema";
@@ -240,6 +241,19 @@ import { lesson as realizedVsUnrealizedGain } from "@/lib/lessons/content/owning
 import { lesson as orderDurationAndQualifiers } from "@/lib/lessons/content/quotes-orders/order-duration-and-qualifiers";
 import { lesson as typesOfInvestmentRisk } from "@/lib/lessons/content/risk/types-of-investment-risk";
 
+// Depth backlog (batch A)
+import { lesson as corporateBondStructureAndSeniority } from "@/lib/lessons/content/fixed-income/corporate-bond-structure-and-seniority";
+import { lesson as tipsAndStrippedTreasuries } from "@/lib/lessons/content/fixed-income/tips-and-stripped-treasuries";
+import { lesson as rightsAndWarrants } from "@/lib/lessons/content/derivatives/rights-and-warrants";
+import { lesson as forwardsVsFutures } from "@/lib/lessons/content/derivatives/forwards-vs-futures";
+import { lesson as municipalFundSecurities } from "@/lib/lessons/content/muni-debt/municipal-fund-securities";
+import { lesson as regShoAndTheShortSalePriceTest } from "@/lib/lessons/content/market-structure/reg-sho-and-the-short-sale-price-test";
+import { lesson as newIssuesUnderwritingAndSecuritiesActExemptions } from "@/lib/lessons/content/regulation/new-issues-underwriting-and-securities-act-exemptions";
+import { lesson as finraDisciplinaryProcessAndComplaints } from "@/lib/lessons/content/regulation/finra-disciplinary-process-and-complaints";
+import { lesson as institutionalAndSeniorInvestorProtections } from "@/lib/lessons/content/suitability/institutional-and-senior-investor-protections";
+import { lesson as contractAdjustmentsSplitsAndDividends } from "@/lib/lessons/content/adv-options/contract-adjustments-splits-and-dividends";
+import { lesson as whatTechnicalAnalysisIsAndDowTheory } from "@/lib/lessons/content/technical/what-technical-analysis-is-and-dow-theory";
+
 // The single source of truth for the lesson bank. Display order is computed from
 // the taxonomy (track → module → moduleOrder via getOrderedLessons); this array's
 // order only needs to contain every lesson. Grouped by module for readability.
@@ -286,6 +300,7 @@ export const lessons: Lesson[] = [
   cryptoVolatility,
   custodyAndKeys,
   howACryptoTransactionWorks,
+  blockchainConsensusPowVsPos,
   // Technical analysis (200)
   movingAverages,
   rsi,
@@ -454,6 +469,18 @@ export const lessons: Lesson[] = [
   realizedVsUnrealizedGain,
   orderDurationAndQualifiers,
   typesOfInvestmentRisk,
+  // Depth backlog (batch A)
+  corporateBondStructureAndSeniority,
+  tipsAndStrippedTreasuries,
+  rightsAndWarrants,
+  forwardsVsFutures,
+  municipalFundSecurities,
+  regShoAndTheShortSalePriceTest,
+  newIssuesUnderwritingAndSecuritiesActExemptions,
+  finraDisciplinaryProcessAndComplaints,
+  institutionalAndSeniorInvestorProtections,
+  contractAdjustmentsSplitsAndDividends,
+  whatTechnicalAnalysisIsAndDowTheory,
 ];
 
 export function getAllLessons(): Lesson[] {

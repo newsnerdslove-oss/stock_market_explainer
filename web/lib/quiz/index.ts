@@ -49,6 +49,7 @@ import { questions as crypto247Markets } from "@/lib/quiz/content/crypto/crypto-
 import { questions as cryptoVolatility } from "@/lib/quiz/content/crypto/crypto-volatility";
 import { questions as custodyAndKeys } from "@/lib/quiz/content/crypto/custody-and-keys";
 import { questions as howACryptoTransactionWorks } from "@/lib/quiz/content/crypto/how-a-crypto-transaction-works";
+import { questions as blockchainConsensusPowVsPos } from "@/lib/quiz/content/crypto/blockchain-consensus-pow-vs-pos";
 
 // 200-level: Technical analysis.
 import { questions as movingAverages } from "@/lib/quiz/content/technical/moving-averages-sma-vs-ema";
@@ -239,6 +240,19 @@ import { questions as realizedVsUnrealizedGain } from "@/lib/quiz/content/owning
 import { questions as orderDurationAndQualifiers } from "@/lib/quiz/content/quotes-orders/order-duration-and-qualifiers";
 import { questions as typesOfInvestmentRisk } from "@/lib/quiz/content/risk/types-of-investment-risk";
 
+// Depth backlog (batch A)
+import { questions as corporateBondStructureAndSeniority } from "@/lib/quiz/content/fixed-income/corporate-bond-structure-and-seniority";
+import { questions as tipsAndStrippedTreasuries } from "@/lib/quiz/content/fixed-income/tips-and-stripped-treasuries";
+import { questions as rightsAndWarrants } from "@/lib/quiz/content/derivatives/rights-and-warrants";
+import { questions as forwardsVsFutures } from "@/lib/quiz/content/derivatives/forwards-vs-futures";
+import { questions as municipalFundSecurities } from "@/lib/quiz/content/muni-debt/municipal-fund-securities";
+import { questions as regShoAndTheShortSalePriceTest } from "@/lib/quiz/content/market-structure/reg-sho-and-the-short-sale-price-test";
+import { questions as newIssuesUnderwritingAndSecuritiesActExemptions } from "@/lib/quiz/content/regulation/new-issues-underwriting-and-securities-act-exemptions";
+import { questions as finraDisciplinaryProcessAndComplaints } from "@/lib/quiz/content/regulation/finra-disciplinary-process-and-complaints";
+import { questions as institutionalAndSeniorInvestorProtections } from "@/lib/quiz/content/suitability/institutional-and-senior-investor-protections";
+import { questions as contractAdjustmentsSplitsAndDividends } from "@/lib/quiz/content/adv-options/contract-adjustments-splits-and-dividends";
+import { questions as whatTechnicalAnalysisIsAndDowTheory } from "@/lib/quiz/content/technical/what-technical-analysis-is-and-dow-theory";
+
 // Single source of truth for the question bank, keyed by lesson slug. Mirrors
 // lib/lessons/index.ts; later phases swap this for Supabase-backed queries while
 // keeping the same Question shape and helper signatures.
@@ -285,6 +299,7 @@ const byLesson: Record<string, Question[]> = {
   "crypto-volatility": cryptoVolatility,
   "custody-and-keys": custodyAndKeys,
   "how-a-crypto-transaction-works": howACryptoTransactionWorks,
+  "blockchain-consensus-pow-vs-pos": blockchainConsensusPowVsPos,
   // Technical analysis (200)
   "moving-averages-sma-vs-ema": movingAverages,
   "rsi-relative-strength-index": rsi,
@@ -452,6 +467,18 @@ const byLesson: Record<string, Question[]> = {
   "realized-vs-unrealized-gain": realizedVsUnrealizedGain,
   "order-duration-and-qualifiers": orderDurationAndQualifiers,
   "types-of-investment-risk": typesOfInvestmentRisk,
+  // Depth backlog (batch A)
+  "corporate-bond-structure-and-seniority": corporateBondStructureAndSeniority,
+  "tips-and-stripped-treasuries": tipsAndStrippedTreasuries,
+  "rights-and-warrants": rightsAndWarrants,
+  "forwards-vs-futures": forwardsVsFutures,
+  "municipal-fund-securities": municipalFundSecurities,
+  "reg-sho-and-the-short-sale-price-test": regShoAndTheShortSalePriceTest,
+  "new-issues-underwriting-and-securities-act-exemptions": newIssuesUnderwritingAndSecuritiesActExemptions,
+  "finra-disciplinary-process-and-complaints": finraDisciplinaryProcessAndComplaints,
+  "institutional-and-senior-investor-protections": institutionalAndSeniorInvestorProtections,
+  "contract-adjustments-splits-and-dividends": contractAdjustmentsSplitsAndDividends,
+  "what-technical-analysis-is-and-dow-theory": whatTechnicalAnalysisIsAndDowTheory,
 };
 
 /** Questions for one lesson's quiz, in authored order. Empty if none exist. */
