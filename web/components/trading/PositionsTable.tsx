@@ -38,12 +38,14 @@ export function PositionsTable({
   isLive,
   equity,
   snapshots,
+  onSelect,
 }: {
   positions: Position[];
   marked: Record<string, number>;
   isLive: (symbol: string) => boolean;
   equity: number;
   snapshots: Record<string, Snapshot>;
+  onSelect?: (symbol: string) => void;
 }) {
   return (
     <div className="mt-3 overflow-x-auto">
@@ -75,7 +77,14 @@ export function PositionsTable({
             return (
               <tr key={p.symbol} className="border-t border-hairline align-top">
                 <td className="py-1.5">
-                  <div className="font-sans text-ink">{p.symbol}</div>
+                  <button
+                    type="button"
+                    onClick={() => onSelect?.(p.symbol)}
+                    className="text-left font-sans text-ink transition hover:text-learn"
+                    title="View position history"
+                  >
+                    {p.symbol} <span className="text-[10px] text-faint">▸</span>
+                  </button>
                   {name && <div className="font-sans text-[11px] text-faint">{name}</div>}
                 </td>
                 <td className="py-1.5 text-right text-muted">{fmtQty(p.qty)}</td>
