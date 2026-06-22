@@ -55,7 +55,7 @@ export const lesson: Lesson = {
     {
       type: "text",
       body:
-        "Test \"buy the 30 largest US stocks, rebalance yearly\" over `2000-2024` using **today's** list of survivors and the equity curve looks fantastic. But Enron (delisted `2001`) and Lehman Brothers (gone `2008`) never appear in your data — the very names that blew up are missing. The result **overstates** returns and **understates** risk. Re-run it on a survivorship-bias-free database that includes the dead tickers and the result is far less rosy.",
+        "Test \"buy the 30 largest US stocks, rebalance yearly\" over `2000-2024` using **today's** list of survivors and the equity curve looks fantastic. But Enron (bankrupt `2001`) and Lehman Brothers (gone `2008`) never appear in your data — the very names that blew up are missing. The result **overstates** returns and **understates** risk. Re-run it on a survivorship-bias-free database that includes the dead tickers and the result is far less rosy.",
     },
     {
       type: "text",
