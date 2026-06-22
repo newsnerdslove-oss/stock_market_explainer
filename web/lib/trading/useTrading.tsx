@@ -9,6 +9,7 @@ import { evaluateOptionOrder, settleExpirations, type OptionAction, type OptionR
 import { markPremium } from "@/lib/options/sim";
 import type { OptionType } from "@/lib/options/blackScholes";
 import { insertOrder, loadLocalPortfolio, loadPortfolio, savePortfolio, saveLocalPortfolio, updateOrder } from "@/lib/trading/store";
+import { uid as newId } from "@/lib/uid";
 import { emptyPortfolio, type Order, type Portfolio } from "@/lib/trading/schema";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -108,7 +109,7 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     if (result.status === "rejected") return result;
 
     const order: Order = {
-      id: crypto.randomUUID(),
+      id: newId(),
       symbol: req.symbol,
       side: req.side,
       type: req.type,
@@ -155,7 +156,7 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     // Record an order-history row (reusing the stock Order shape, with a contract label).
     const label = `${req.underlying} ${req.strike}${req.type === "call" ? "C" : "P"} ${req.expiry}`;
     const order: Order = {
-      id: crypto.randomUUID(),
+      id: newId(),
       symbol: label,
       side: req.action.startsWith("buy") ? "buy" : "sell",
       type: "market",
