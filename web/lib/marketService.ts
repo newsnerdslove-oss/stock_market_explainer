@@ -2,6 +2,13 @@
 const BASE =
   process.env.NEXT_PUBLIC_MARKET_SERVICE_URL ?? "http://localhost:8000";
 
+/** Chart timeframes the candle API accepts. */
+export const TIMEFRAMES = ["1m", "5m", "15m", "1h", "1d"] as const;
+export type Timeframe = (typeof TIMEFRAMES)[number];
+export function isTimeframe(s: string | null): s is Timeframe {
+  return s != null && (TIMEFRAMES as readonly string[]).includes(s);
+}
+
 export type Quote = {
   symbol: string;
   price: number;
@@ -56,9 +63,9 @@ export async function getCandles(symbol: string, limit = 60): Promise<Candles> {
  * Same-origin candle fetch for client components (browser → Next route → market-
  * service), avoiding cross-origin CORS to the Python service.
  */
-export async function getCandlesViaApi(symbol: string, limit = 60): Promise<Candles> {
+export async function getCandlesViaApi(symbol: string, limit = 60, timeframe: Timeframe = "1m"): Promise<Candles> {
   const res = await fetch(
-    `/api/candles/${encodeURIComponent(symbol)}?limit=${limit}`,
+    `/api/candles/${encodeURIComponent(symbol)}?limit=${limit}&tf=${timeframe}`,
     { cache: "no-store" },
   );
   if (!res.ok) throw new Error(`candles ${res.status}`);
