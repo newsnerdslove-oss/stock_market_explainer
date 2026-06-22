@@ -6,6 +6,7 @@ import { useToast } from "@/components/Toast";
 import { DailyChallengeCard } from "@/components/DailyChallenge";
 import { OptionsTrade } from "@/components/trading/OptionsTrade";
 import { OptionPositions } from "@/components/trading/OptionPositions";
+import { PositionsTable } from "@/components/trading/PositionsTable";
 import { coinbaseProduct, isCryptoSymbol } from "@/lib/crypto/products";
 import { useCryptoPrices } from "@/lib/crypto/useCryptoPrices";
 import { getQuoteViaApi } from "@/lib/marketService";
@@ -129,35 +130,7 @@ function SimulatorBody() {
         {positions.length === 0 ? (
           <p className="mt-3 text-sm text-muted">No positions yet — place an order below.</p>
         ) : (
-          <table className="mt-3 w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs text-faint">
-                <th className="pb-1 font-normal">Symbol</th>
-                <th className="pb-1 text-right font-normal">Qty</th>
-                <th className="pb-1 text-right font-normal">Avg cost</th>
-                <th className="pb-1 text-right font-normal">Last</th>
-                <th className="pb-1 text-right font-normal">Unrealized</th>
-              </tr>
-            </thead>
-            <tbody className="font-mono">
-              {positions.map((p) => {
-                const last = marked[p.symbol] ?? p.avgCost;
-                const u = unrealizedPnL(p.avgCost, last, p.qty);
-                return (
-                  <tr key={p.symbol} className="border-t border-hairline">
-                    <td className="py-1.5 font-sans text-ink">{p.symbol}</td>
-                    <td className="py-1.5 text-right text-muted">{fmtQty(p.qty)}</td>
-                    <td className="py-1.5 text-right text-muted">{money(p.avgCost)}</td>
-                    <td className="py-1.5 text-right text-muted">
-                      {isLive(p.symbol) && <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-up align-middle" title="Live" aria-hidden />}
-                      {money(last)}
-                    </td>
-                    <td className={`py-1.5 text-right ${pnlColor(u)}`}>{signed(u)}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <PositionsTable positions={positions} marked={marked} isLive={isLive} equity={eq} />
         )}
       </section>
 
