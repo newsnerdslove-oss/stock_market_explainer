@@ -21,6 +21,7 @@ import {
   type IChartApi,
   type ISeriesApi,
   type SeriesType,
+  type IPriceLine,
   type UTCTimestamp,
   type MouseEventParams,
 } from "lightweight-charts";
@@ -36,7 +37,10 @@ import {
   type Drawing,
   type DrawingType,
 } from "@/lib/charts/drawings";
+import { loadAlerts, saveAlerts, newAlert, crossed, type Alert } from "@/lib/charts/alerts";
 import { DrawingsPrimitive, type Draft } from "@/components/charts/drawingsPrimitive";
+import { AddTicker } from "@/components/home/AddTicker";
+import { useToast } from "@/components/Toast";
 
 const UP = "#2BD17E";
 const DOWN = "#FF5C5C";
@@ -89,13 +93,18 @@ const INDICATORS: { id: IndId; label: string; color: string }[] = [
   { id: "macd", label: "MACD", color: MACD_LINE },
 ];
 
-type Tool = "cursor" | DrawingType;
+type Tool = "cursor" | DrawingType | "alert";
 const TOOLS: { id: Tool; label: string; hint?: string }[] = [
   { id: "cursor", label: "Cursor" },
   { id: "trend", label: "Trend", hint: "click two points" },
   { id: "horizontal", label: "H-Line", hint: "click a price" },
   { id: "fib", label: "Fib", hint: "click two points" },
+  { id: "alert", label: "Alert", hint: "click a price level" },
 ];
+
+const ALERT_COLOR = "#FFB020";
+const ALERT_FAINT = "rgba(138,148,166,0.7)";
+const COMPARE_COLOR = "#E879F9";
 
 const money = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -174,6 +183,14 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
   const vwapCacheRef = useRef<(number | null)[]>([]);
   const haCacheRef = useRef<HACandle[]>([]);
   const indexByTimeRef = useRef<Map<number, number>>(new Map());
+
+  // Price alerts (refs for the once-subscribed handlers + poll loop) and compare overlay.
+  const toast = useToast();
+  const alertsRef = useRef<Alert[]>([]);
+  const alertLinesRef = useRef<Record<string, IPriceLine[]>>({});
+  const prevPriceRef = useRef<number | null>(null);
+  const compareRef = useRef<ISeriesApi<"Line"> | null>(null);
+  const cmpCandlesRef = useRef<Candle[]>([]);
   const lastLegendIdxRef = useRef<number>(-1);
   const pendingLegendRef = useRef<Legend | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -196,6 +213,9 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
   const [shownInd, setShownInd] = useState<Record<IndId, boolean>>({ rsi: false, macd: false });
   const [shownOver, setShownOver] = useState<Record<OverId, boolean>>({ bb: false, vwap: false });
   const [priceType, setPriceType] = useState<PriceType>(loadPriceType);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [compareSym, setCompareSym] = useState<string | null>(null);
+  const [compareChange, setCompareChange] = useState<number | null>(null);
   const [legend, setLegend] = useState<Legend | null>(null);
   const [stale, setStale] = useState(false);
   const [tool, setTool] = useState<Tool>("cursor");
@@ -208,6 +228,63 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
     setDrawings(next);
     saveDrawings(symbol, next);
     primitiveRef.current?.requestUpdate();
+  }
+
+  // ----- price alerts -----
+  // Alert lines live on every price-series variant so they show under any chart type.
+  function allPriceSeries(): ISeriesApi<SeriesType>[] {
+    return [candleRef.current, barRef.current, lineRef.current, areaRef.current, haRef.current].filter(Boolean) as ISeriesApi<SeriesType>[];
+  }
+
+  function addAlertLine(a: Alert) {
+    alertLinesRef.current[a.id] = allPriceSeries().map((s) =>
+      s.createPriceLine({
+        price: a.price,
+        color: a.triggered ? ALERT_FAINT : ALERT_COLOR,
+        lineWidth: 1,
+        lineStyle: LineStyle.Dashed,
+        axisLabelVisible: true,
+        title: `${a.triggered ? "✓" : "🔔"} ${money(a.price)}`,
+      }),
+    );
+  }
+
+  function removeAlertLines(id: string) {
+    const series = allPriceSeries();
+    alertLinesRef.current[id]?.forEach((ln, i) => series[i]?.removePriceLine(ln));
+    delete alertLinesRef.current[id];
+  }
+
+  function applyAlerts(next: Alert[]) {
+    alertsRef.current = next;
+    setAlerts(next);
+    saveAlerts(symbol, next);
+  }
+
+  function addAlert(price: number) {
+    const arr = candlesRef.current;
+    const curr = arr.length ? arr[arr.length - 1].close : price;
+    const a = newAlert(price, curr, Date.now());
+    applyAlerts([...alertsRef.current, a]);
+    addAlertLine(a);
+  }
+
+  function removeAlert(id: string) {
+    applyAlerts(alertsRef.current.filter((x) => x.id !== id));
+    removeAlertLines(id);
+  }
+
+  // ----- compare overlay (percent-rebased to the main series' first close) -----
+  function rebaseCompare() {
+    const cmp = cmpCandlesRef.current;
+    const main = candlesRef.current;
+    if (!compareRef.current || cmp.length === 0 || main.length === 0) return;
+    const mainFirst = main[0].close;
+    const cmpFirst = cmp[0].close;
+    if (!cmpFirst) return;
+    compareRef.current.setData(dedupeSort(cmp.map((c) => ({ time: toSec(c.time), value: mainFirst * (c.close / cmpFirst) }))));
+    const last = cmp[cmp.length - 1]?.close ?? cmpFirst;
+    setCompareChange((last / cmpFirst - 1) * 100);
   }
 
   // ----- derived legend helpers (read precomputed caches; no per-move recompute) -----
@@ -353,6 +430,12 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
       if (param.point) setSelectedId(primitiveRef.current?.hitId(param.point.x, param.point.y) ?? null);
       return;
     }
+    if (active === "alert") {
+      const p = pointFromEvent(param);
+      if (p) addAlert(p.price);
+      setTool("cursor");
+      return;
+    }
     const pt = pointFromEvent(param);
     if (!pt) return;
     const draft = draftRef.current ?? { type: active, color: TOOL_COLOR[active], points: [], preview: null };
@@ -488,6 +571,18 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
     primitiveRef.current?.requestUpdate();
   }, [symbol]);
 
+  // Load this symbol's saved alerts and (re)draw their price lines.
+  useEffect(() => {
+    for (const id of Object.keys(alertLinesRef.current)) removeAlertLines(id);
+    const saved = loadAlerts(symbol);
+    alertsRef.current = saved;
+    setAlerts(saved);
+    prevPriceRef.current = null;
+    saved.forEach(addAlertLine);
+    // helpers read refs; safe to omit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [symbol]);
+
   // Fetch + render whenever symbol or timeframe changes, then poll to refresh.
   // First paint (and any window shift) does a full setData; a plain forming-bar
   // tick only update()s the last bar. fitContent() runs ONLY on the initial load
@@ -552,6 +647,28 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
           if (initial) chartRef.current?.timeScale().fitContent();
         }
 
+        // Price-alert crossings: fire once when the latest close moves through a level.
+        const curr = next.length ? next[next.length - 1].close : null;
+        if (curr != null) {
+          const prev = prevPriceRef.current;
+          if (prev != null) {
+            const fired = crossed(alertsRef.current, prev, curr);
+            if (fired.length) {
+              const ids = new Set(fired.map((a) => a.id));
+              applyAlerts(alertsRef.current.map((a) => (ids.has(a.id) ? { ...a, triggered: true } : a)));
+              for (const a of fired) {
+                toast(`${symbol} crossed ${money(a.price)} ${a.above ? "▲" : "▼"}`, "info");
+                removeAlertLines(a.id);
+                const u = alertsRef.current.find((x) => x.id === a.id);
+                if (u) addAlertLine(u);
+              }
+            }
+          }
+          prevPriceRef.current = curr;
+        }
+        // Keep the compare overlay rebased to the latest main window.
+        rebaseCompare();
+
         lastLegendIdxRef.current = -1; // force the idle legend to refresh
         scheduleLegend(latestLegendFor());
         primitiveRef.current?.requestUpdate();
@@ -594,6 +711,38 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
     haRef.current?.applyOptions({ visible: priceType === "heikin" });
     if (typeof window !== "undefined") window.localStorage.setItem(PRICE_KEY, priceType);
   }, [priceType]);
+
+  // Fetch + overlay the compare symbol (percent-rebased); refetch on timeframe change.
+  useEffect(() => {
+    let cancelled = false;
+    if (!compareSym) {
+      if (compareRef.current && chartRef.current) {
+        chartRef.current.removeSeries(compareRef.current);
+        compareRef.current = null;
+      }
+      cmpCandlesRef.current = [];
+      setCompareChange(null);
+      return;
+    }
+    (async () => {
+      try {
+        const data = await getCandlesViaApi(compareSym, 200, timeframe);
+        if (cancelled) return;
+        cmpCandlesRef.current = data.candles;
+        if (!compareRef.current && chartRef.current) {
+          compareRef.current = chartRef.current.addSeries(LineSeries, { color: COMPARE_COLOR, lineWidth: 2, lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false });
+        }
+        rebaseCompare();
+      } catch {
+        if (!cancelled) setCompareChange(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // rebaseCompare reads refs; safe to omit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [compareSym, timeframe]);
 
   // Create/remove the RSI & MACD panes on toggle (lazy — empty panes auto-collapse).
   useEffect(() => {
@@ -747,6 +896,40 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
             <button type="button" onClick={() => applyDrawings([])} className="rounded-full border border-hairline px-2 py-0.5 text-faint transition hover:text-down">
               Clear
             </button>
+          </div>
+        )}
+      </div>
+
+      {/* alerts + compare */}
+      <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
+        {compareSym ? (
+          <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5" style={{ borderColor: COMPARE_COLOR, color: COMPARE_COLOR }}>
+            vs {compareSym}
+            {compareChange != null && (
+              <span>{compareChange >= 0 ? "+" : ""}{compareChange.toFixed(2)}%</span>
+            )}
+            <span role="button" tabIndex={-1} aria-label="Remove comparison" onClick={() => setCompareSym(null)} className="cursor-pointer hover:text-down">
+              ✕
+            </span>
+          </span>
+        ) : (
+          <AddTicker onAdd={(v) => setCompareSym(v.trim().toUpperCase())} placeholder="Compare…" />
+        )}
+        {alerts.length > 0 && (
+          <div className="ml-auto flex flex-wrap items-center gap-1">
+            <span className="text-faint">Alerts:</span>
+            {alerts.map((a) => (
+              <button
+                key={a.id}
+                type="button"
+                onClick={() => removeAlert(a.id)}
+                title="Remove alert"
+                className="inline-flex items-center gap-1 rounded-full border border-hairline px-2 py-0.5 transition hover:text-down"
+                style={{ color: a.triggered ? ALERT_FAINT : ALERT_COLOR }}
+              >
+                {a.triggered ? "✓" : "🔔"} {money(a.price)} <span className="text-faint">✕</span>
+              </button>
+            ))}
           </div>
         )}
       </div>
