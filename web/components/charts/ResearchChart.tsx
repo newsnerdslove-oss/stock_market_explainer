@@ -11,6 +11,8 @@ import { useEffect, useRef, useState } from "react";
 import {
   createChart,
   CandlestickSeries,
+  BarSeries,
+  AreaSeries,
   HistogramSeries,
   LineSeries,
   ColorType,
@@ -18,11 +20,13 @@ import {
   LineStyle,
   type IChartApi,
   type ISeriesApi,
+  type SeriesType,
   type UTCTimestamp,
   type MouseEventParams,
 } from "lightweight-charts";
 import { getCandlesViaApi, TIMEFRAMES, type Candle, type Timeframe } from "@/lib/marketService";
 import { ema, rsi, macd, bollinger, vwap } from "@/lib/indicators";
+import { heikinAshi, type HACandle } from "@/lib/charts/heikinAshi";
 import {
   loadDrawings,
   saveDrawings,
@@ -53,6 +57,23 @@ const HIST_DOWN = "rgba(255,92,92,0.5)";
 const BB_BAND = "rgba(138,148,166,0.55)";
 const BB_MID = "rgba(138,148,166,0.9)";
 const VWAP_COLOR = "#FF9500";
+
+// Price-series type (candles is the default; switching toggles visibility).
+const PRICE_LINE = "#9FB3C8";
+type PriceType = "candles" | "bars" | "line" | "area" | "heikin";
+const PRICE_TYPES: { id: PriceType; label: string }[] = [
+  { id: "candles", label: "Candles" },
+  { id: "bars", label: "Bars" },
+  { id: "line", label: "Line" },
+  { id: "area", label: "Area" },
+  { id: "heikin", label: "HA" },
+];
+const PRICE_KEY = "chart:type";
+function loadPriceType(): PriceType {
+  if (typeof window === "undefined") return "candles";
+  const v = window.localStorage.getItem(PRICE_KEY);
+  return PRICE_TYPES.some((t) => t.id === v) ? (v as PriceType) : "candles";
+}
 
 // EMA overlays: period → colour.
 const EMAS = [
@@ -123,6 +144,11 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candleRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
+  // Alternate price-series types (created up front; only the active one is visible).
+  const barRef = useRef<ISeriesApi<"Bar"> | null>(null);
+  const lineRef = useRef<ISeriesApi<"Line"> | null>(null);
+  const areaRef = useRef<ISeriesApi<"Area"> | null>(null);
+  const haRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
   const volumeRef = useRef<ISeriesApi<"Histogram"> | null>(null);
   const emaRefs = useRef<Record<number, ISeriesApi<"Line">>>({});
   const candlesRef = useRef<Candle[]>([]);
@@ -146,6 +172,7 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
   const macdCacheRef = useRef<MacdCache | null>(null);
   const bbCacheRef = useRef<BbCache | null>(null);
   const vwapCacheRef = useRef<(number | null)[]>([]);
+  const haCacheRef = useRef<HACandle[]>([]);
   const indexByTimeRef = useRef<Map<number, number>>(new Map());
   const lastLegendIdxRef = useRef<number>(-1);
   const pendingLegendRef = useRef<Legend | null>(null);
@@ -168,6 +195,7 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
   const [shownEmas, setShownEmas] = useState<Record<number, boolean>>({ 9: true, 20: true, 50: false });
   const [shownInd, setShownInd] = useState<Record<IndId, boolean>>({ rsi: false, macd: false });
   const [shownOver, setShownOver] = useState<Record<OverId, boolean>>({ bb: false, vwap: false });
+  const [priceType, setPriceType] = useState<PriceType>(loadPriceType);
   const [legend, setLegend] = useState<Legend | null>(null);
   const [stale, setStale] = useState(false);
   const [tool, setTool] = useState<Tool>("cursor");
@@ -192,6 +220,7 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
     macdCacheRef.current = macd(closes);
     bbCacheRef.current = bollinger(closes, 20, 2);
     vwapCacheRef.current = vwap(candles.map((c) => ({ high: c.high, low: c.low, close: c.close, volume: c.volume })));
+    haCacheRef.current = heikinAshi(candles);
     const map = new Map<number, number>();
     candles.forEach((c, i) => map.set(toSec(c.time) as number, i));
     indexByTimeRef.current = map;
@@ -268,6 +297,29 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
       if (m.histogram[i] != null)
         macdHistRef.current?.update({ time: t, value: m.histogram[i] as number, color: (m.histogram[i] as number) >= 0 ? HIST_UP : HIST_DOWN });
     }
+  }
+
+  // All price-series variants are populated; only the active one is visible, so a
+  // type switch is an instant visibility toggle (no series recreation / reattach).
+  function setPriceData(candles: Candle[]) {
+    const ohlc = dedupeSort(candles.map((c) => ({ time: toSec(c.time), open: c.open, high: c.high, low: c.low, close: c.close })));
+    const line = dedupeSort(candles.map((c) => ({ time: toSec(c.time), value: c.close })));
+    candleRef.current?.setData(ohlc);
+    barRef.current?.setData(ohlc);
+    lineRef.current?.setData(line);
+    areaRef.current?.setData(line);
+    haRef.current?.setData(dedupeSort(haCacheRef.current.map((h) => ({ time: toSec(h.time), open: h.open, high: h.high, low: h.low, close: h.close }))));
+  }
+
+  function updatePriceLast(candles: Candle[], i: number, t: UTCTimestamp) {
+    const c = candles[i];
+    const bar = { time: t, open: c.open, high: c.high, low: c.low, close: c.close };
+    candleRef.current?.update(bar);
+    barRef.current?.update(bar);
+    lineRef.current?.update({ time: t, value: c.close });
+    areaRef.current?.update({ time: t, value: c.close });
+    const h = haCacheRef.current[i];
+    if (h) haRef.current?.update({ time: t, open: h.open, high: h.high, low: h.low, close: h.close });
   }
 
   function latestLegendFor(): Legend | null {
@@ -364,7 +416,13 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
     });
     chartRef.current = chart;
 
-    candleRef.current = chart.addSeries(CandlestickSeries, { upColor: UP, downColor: DOWN, borderVisible: false, wickUpColor: UP, wickDownColor: DOWN });
+    // All price-series variants live on the default scale (created before overlays so
+    // overlays/EMAs render on top); only the active type is visible.
+    candleRef.current = chart.addSeries(CandlestickSeries, { upColor: UP, downColor: DOWN, borderVisible: false, wickUpColor: UP, wickDownColor: DOWN, visible: priceType === "candles" });
+    barRef.current = chart.addSeries(BarSeries, { upColor: UP, downColor: DOWN, visible: priceType === "bars" });
+    lineRef.current = chart.addSeries(LineSeries, { color: PRICE_LINE, lineWidth: 2, visible: priceType === "line" });
+    areaRef.current = chart.addSeries(AreaSeries, { lineColor: PRICE_LINE, topColor: "rgba(159,179,200,0.35)", bottomColor: "rgba(159,179,200,0.02)", lineWidth: 2, visible: priceType === "area" });
+    haRef.current = chart.addSeries(CandlestickSeries, { upColor: UP, downColor: DOWN, borderVisible: false, wickUpColor: UP, wickDownColor: DOWN, visible: priceType === "heikin" });
 
     volumeRef.current = chart.addSeries(HistogramSeries, { priceScaleId: "volume", priceFormat: { type: "volume" }, lastValueVisible: false, priceLineVisible: false });
     chart.priceScale("volume").applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
@@ -439,9 +497,7 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
     let initial = true;
 
     function setFullData(candles: Candle[]) {
-      candleRef.current?.setData(
-        dedupeSort(candles.map((c) => ({ time: toSec(c.time), open: c.open, high: c.high, low: c.low, close: c.close }))),
-      );
+      setPriceData(candles);
       volumeRef.current?.setData(
         dedupeSort(candles.map((c) => ({ time: toSec(c.time), value: c.volume, color: c.close >= c.open ? "rgba(43,209,126,0.4)" : "rgba(255,92,92,0.4)" }))),
       );
@@ -462,7 +518,7 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
       const i = candles.length - 1;
       const c = candles[i];
       const t = toSec(c.time);
-      candleRef.current?.update({ time: t, open: c.open, high: c.high, low: c.low, close: c.close });
+      updatePriceLast(candles, i, t);
       volumeRef.current?.update({ time: t, value: c.volume, color: c.close >= c.open ? "rgba(43,209,126,0.4)" : "rgba(255,92,92,0.4)" });
       for (const e of EMAS) {
         const v = emaCacheRef.current[e.period]?.[i];
@@ -529,6 +585,16 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
     vwapRef.current?.applyOptions({ visible: shownOver.vwap });
   }, [shownOver]);
 
+  // Switch the active price-series type (visibility toggle) and persist the choice.
+  useEffect(() => {
+    candleRef.current?.applyOptions({ visible: priceType === "candles" });
+    barRef.current?.applyOptions({ visible: priceType === "bars" });
+    lineRef.current?.applyOptions({ visible: priceType === "line" });
+    areaRef.current?.applyOptions({ visible: priceType === "area" });
+    haRef.current?.applyOptions({ visible: priceType === "heikin" });
+    if (typeof window !== "undefined") window.localStorage.setItem(PRICE_KEY, priceType);
+  }, [priceType]);
+
   // Create/remove the RSI & MACD panes on toggle (lazy — empty panes auto-collapse).
   useEffect(() => {
     const chart = chartRef.current;
@@ -577,12 +643,21 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
     <div>
       {/* controls */}
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <div className="inline-flex rounded-md border border-strong p-0.5 text-xs">
-          {TIMEFRAMES.map((tf) => (
-            <button key={tf} type="button" onClick={() => setTimeframe(tf)} className={`rounded px-2 py-0.5 transition ${tf === timeframe ? "bg-learn text-canvas" : "text-muted hover:text-ink"}`}>
-              {tf}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="inline-flex rounded-md border border-strong p-0.5 text-xs">
+            {TIMEFRAMES.map((tf) => (
+              <button key={tf} type="button" onClick={() => setTimeframe(tf)} className={`rounded px-2 py-0.5 transition ${tf === timeframe ? "bg-learn text-canvas" : "text-muted hover:text-ink"}`}>
+                {tf}
+              </button>
+            ))}
+          </div>
+          <div className="inline-flex rounded-md border border-strong p-0.5 text-xs">
+            {PRICE_TYPES.map((pt) => (
+              <button key={pt.id} type="button" onClick={() => setPriceType(pt.id)} className={`rounded px-2 py-0.5 transition ${pt.id === priceType ? "bg-learn text-canvas" : "text-muted hover:text-ink"}`}>
+                {pt.label}
+              </button>
+            ))}
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-1.5 text-xs">
           {EMAS.map((e) => (
