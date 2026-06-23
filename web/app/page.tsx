@@ -1,31 +1,8 @@
 import Link from "next/link";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { SymbolSearch } from "@/components/research/SymbolSearch";
-import { getHealth, getQuote, type Quote } from "@/lib/marketService";
-import { alpacaConfigured, fetchAlpacaQuote } from "@/lib/stocks/alpaca";
 import { CryptoTicker } from "@/components/CryptoTicker";
-
-const DEMO_SYMBOLS = ["AAPL", "MSFT", "TSLA"];
-
-async function loadDemo(): Promise<{ provider: string; quotes: Quote[] } | null> {
-  // Prefer Alpaca's real-time IEX feed when configured; fall back to the mock
-  // market-service if it errors or isn't set up.
-  if (alpacaConfigured()) {
-    try {
-      const quotes = await Promise.all(DEMO_SYMBOLS.map(fetchAlpacaQuote));
-      return { provider: "alpaca-iex", quotes };
-    } catch {
-      /* fall through to the market-service */
-    }
-  }
-  try {
-    const health = await getHealth();
-    const quotes = await Promise.all(DEMO_SYMBOLS.map(getQuote));
-    return { provider: health.provider, quotes };
-  } catch {
-    return null; // market-service not running yet
-  }
-}
+import { HomeStocks } from "@/components/home/HomeStocks";
 
 const pillars = [
   {
@@ -45,9 +22,7 @@ const pillars = [
   },
 ];
 
-export default async function Home() {
-  const demo = await loadDemo();
-
+export default function Home() {
   return (
     <PageContainer size="wide" className="pb-16 pt-12">
       <h1 className="text-4xl font-medium tracking-tight">
@@ -96,53 +71,7 @@ export default async function Home() {
 
       <CryptoTicker />
 
-      <section className="mt-12">
-        <div className="flex items-center gap-2">
-          <h2 className="text-sm font-medium text-muted">Stocks</h2>
-          {demo?.provider === "alpaca-iex" ? (
-            <span className="rounded-full border border-up/40 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-up">
-              IEX · live
-            </span>
-          ) : (
-            <span className="rounded-full border border-streak/40 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-streak">
-              Delayed
-            </span>
-          )}
-        </div>
-        {demo ? (
-          <div className="mt-3">
-            <p className="text-xs text-muted">
-              Connected · provider:{" "}
-              <span className="font-mono text-up">{demo.provider}</span>
-              {demo.provider === "mock" && " — add Alpaca keys for live data"}
-            </p>
-            <div className="mt-3 overflow-hidden rounded-lg border border-strong bg-surface">
-              {demo.quotes.map((q, i) => (
-                <div
-                  key={q.symbol}
-                  className={`flex items-center justify-between px-4 py-3 ${
-                    i > 0 ? "border-t border-hairline" : ""
-                  }`}
-                >
-                  <span className="font-mono text-sm">{q.symbol}</span>
-                  <div className="flex items-center gap-6 font-mono text-sm">
-                    <span>${q.price.toFixed(2)}</span>
-                    <span className="text-faint">
-                      ${q.bid.toFixed(2)} / ${q.ask.toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <p className="mt-3 rounded-md border border-streak/40 bg-streak/10 p-4 text-sm text-streak">
-            Market service not reachable. Start it with{" "}
-            <code className="font-mono">uvicorn app.main:app --port 8000</code> in{" "}
-            <code className="font-mono">market-service/</code>, then reload.
-          </p>
-        )}
-      </section>
+      <HomeStocks />
 
       <footer className="mt-16 flex items-center gap-2 border-t border-hairline pt-6 text-xs text-faint">
         Educational only · paper trading only · not financial advice.
