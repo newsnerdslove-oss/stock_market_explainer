@@ -15,13 +15,14 @@ import {
   LineSeries,
   ColorType,
   CrosshairMode,
+  LineStyle,
   type IChartApi,
   type ISeriesApi,
   type UTCTimestamp,
   type MouseEventParams,
 } from "lightweight-charts";
 import { getCandlesViaApi, TIMEFRAMES, type Candle, type Timeframe } from "@/lib/marketService";
-import { ema } from "@/lib/indicators";
+import { ema, rsi, macd } from "@/lib/indicators";
 import {
   loadDrawings,
   saveDrawings,
@@ -41,11 +42,25 @@ const BORDER = "#232A36";
 const TEXT = "#8A94A6";
 const POLL_MS = 10_000;
 
+// Indicator-pane colours.
+const RSI_COLOR = "#00D9FF";
+const MACD_LINE = "#5BA8FF";
+const MACD_SIGNAL = "#F5C451";
+const HIST_UP = "rgba(43,209,126,0.5)";
+const HIST_DOWN = "rgba(255,92,92,0.5)";
+
 // EMA overlays: period → colour.
 const EMAS = [
   { period: 9, color: "#F5C451" },
   { period: 20, color: "#5BA8FF" },
   { period: 50, color: "#9D8CFF" },
+];
+
+// Lower-pane indicators (toggleable, default off).
+type IndId = "rsi" | "macd";
+const INDICATORS: { id: IndId; label: string; color: string }[] = [
+  { id: "rsi", label: "RSI", color: RSI_COLOR },
+  { id: "macd", label: "MACD", color: MACD_LINE },
 ];
 
 type Tool = "cursor" | DrawingType;
@@ -65,6 +80,15 @@ interface Legend {
   close: number;
   volume: number;
   emas: Record<number, number | undefined>;
+  rsi?: number;
+  macd?: number;
+  macdSignal?: number;
+}
+
+interface MacdCache {
+  macd: (number | null)[];
+  signal: (number | null)[];
+  histogram: (number | null)[];
 }
 
 const toSec = (iso: string) => Math.floor(Date.parse(iso) / 1000) as UTCTimestamp;
@@ -83,9 +107,17 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
   const emaRefs = useRef<Record<number, ISeriesApi<"Line">>>({});
   const candlesRef = useRef<Candle[]>([]);
 
+  // Lower-pane indicator series (created lazily on toggle; null when hidden).
+  const rsiRef = useRef<ISeriesApi<"Line"> | null>(null);
+  const macdLineRef = useRef<ISeriesApi<"Line"> | null>(null);
+  const macdSignalRef = useRef<ISeriesApi<"Line"> | null>(null);
+  const macdHistRef = useRef<ISeriesApi<"Histogram"> | null>(null);
+
   // Derived caches rebuilt on each load so the crosshair legend is O(1) and never
   // recomputes indicators on mouse-move (the old per-move recompute was the lag).
   const emaCacheRef = useRef<Record<number, (number | null)[]>>({});
+  const rsiCacheRef = useRef<(number | null)[]>([]);
+  const macdCacheRef = useRef<MacdCache | null>(null);
   const indexByTimeRef = useRef<Map<number, number>>(new Map());
   const lastLegendIdxRef = useRef<number>(-1);
   const pendingLegendRef = useRef<Legend | null>(null);
@@ -106,6 +138,7 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
 
   const [timeframe, setTimeframe] = useState<Timeframe>("1m");
   const [shownEmas, setShownEmas] = useState<Record<number, boolean>>({ 9: true, 20: true, 50: false });
+  const [shownInd, setShownInd] = useState<Record<IndId, boolean>>({ rsi: false, macd: false });
   const [legend, setLegend] = useState<Legend | null>(null);
   const [stale, setStale] = useState(false);
   const [tool, setTool] = useState<Tool>("cursor");
@@ -126,6 +159,8 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
     const cache: Record<number, (number | null)[]> = {};
     for (const e of EMAS) cache[e.period] = ema(closes, e.period);
     emaCacheRef.current = cache;
+    rsiCacheRef.current = rsi(closes, 14);
+    macdCacheRef.current = macd(closes);
     const map = new Map<number, number>();
     candles.forEach((c, i) => map.set(toSec(c.time) as number, i));
     indexByTimeRef.current = map;
@@ -135,7 +170,57 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
     const c = candlesRef.current[idx];
     const emas: Record<number, number | undefined> = {};
     for (const e of EMAS) emas[e.period] = emaCacheRef.current[e.period]?.[idx] ?? undefined;
-    return { open: c.open, high: c.high, low: c.low, close: c.close, volume: c.volume, emas };
+    const m = macdCacheRef.current;
+    return {
+      open: c.open,
+      high: c.high,
+      low: c.low,
+      close: c.close,
+      volume: c.volume,
+      emas,
+      rsi: rsiCacheRef.current[idx] ?? undefined,
+      macd: m?.macd[idx] ?? undefined,
+      macdSignal: m?.signal[idx] ?? undefined,
+    };
+  }
+
+  // Feed/refresh whichever lower-pane indicator series currently exist.
+  function indicatorLine(candles: Candle[], arr: (number | null)[] | undefined) {
+    return dedupeSort(
+      candles
+        .map((c, i) => ({ time: toSec(c.time), value: arr?.[i] }))
+        .filter((p) => p.value != null) as { time: UTCTimestamp; value: number }[],
+    );
+  }
+
+  function setIndicatorData(candles: Candle[]) {
+    rsiRef.current?.setData(indicatorLine(candles, rsiCacheRef.current));
+    const m = macdCacheRef.current;
+    macdLineRef.current?.setData(indicatorLine(candles, m?.macd));
+    macdSignalRef.current?.setData(indicatorLine(candles, m?.signal));
+    macdHistRef.current?.setData(
+      dedupeSort(
+        candles
+          .map((c, i) => ({
+            time: toSec(c.time),
+            value: m?.histogram[i],
+            color: (m?.histogram[i] ?? 0) >= 0 ? HIST_UP : HIST_DOWN,
+          }))
+          .filter((p) => p.value != null) as { time: UTCTimestamp; value: number; color: string }[],
+      ),
+    );
+  }
+
+  function updateIndicatorLast(i: number, t: UTCTimestamp) {
+    const r = rsiCacheRef.current[i];
+    if (r != null) rsiRef.current?.update({ time: t, value: r });
+    const m = macdCacheRef.current;
+    if (m) {
+      if (m.macd[i] != null) macdLineRef.current?.update({ time: t, value: m.macd[i] as number });
+      if (m.signal[i] != null) macdSignalRef.current?.update({ time: t, value: m.signal[i] as number });
+      if (m.histogram[i] != null)
+        macdHistRef.current?.update({ time: t, value: m.histogram[i] as number, color: (m.histogram[i] as number) >= 0 ? HIST_UP : HIST_DOWN });
+    }
   }
 
   function latestLegendFor(): Legend | null {
@@ -316,6 +401,7 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
         series.setData(dedupeSort(line));
         series.applyOptions({ visible: shownEmas[e.period] ?? false });
       }
+      setIndicatorData(candles);
     }
 
     function updateLastBar(candles: Candle[]) {
@@ -328,6 +414,7 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
         const v = emaCacheRef.current[e.period]?.[i];
         if (v != null) emaRefs.current[e.period]?.update({ time: t, value: v });
       }
+      updateIndicatorLast(i, t);
     }
 
     async function load() {
@@ -380,6 +467,48 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
     for (const e of EMAS) emaRefs.current[e.period]?.applyOptions({ visible: shownEmas[e.period] ?? false });
   }, [shownEmas]);
 
+  // Create/remove the RSI & MACD panes on toggle (lazy — empty panes auto-collapse).
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+
+    if (shownInd.rsi && !rsiRef.current) {
+      const s = chart.addSeries(
+        LineSeries,
+        { color: RSI_COLOR, lineWidth: 1, lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false },
+        chart.panes().length,
+      );
+      s.createPriceLine({ price: 70, color: BORDER, lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: "70" });
+      s.createPriceLine({ price: 30, color: BORDER, lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: "30" });
+      s.getPane().setStretchFactor(1);
+      rsiRef.current = s;
+    } else if (!shownInd.rsi && rsiRef.current) {
+      chart.removeSeries(rsiRef.current);
+      rsiRef.current = null;
+    }
+
+    if (shownInd.macd && !macdLineRef.current) {
+      const pane = chart.panes().length;
+      macdHistRef.current = chart.addSeries(HistogramSeries, { priceLineVisible: false, lastValueVisible: false }, pane);
+      macdLineRef.current = chart.addSeries(LineSeries, { color: MACD_LINE, lineWidth: 1, lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false }, pane);
+      macdSignalRef.current = chart.addSeries(LineSeries, { color: MACD_SIGNAL, lineWidth: 1, lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false }, pane);
+      macdLineRef.current.getPane().setStretchFactor(1);
+    } else if (!shownInd.macd && macdLineRef.current) {
+      if (macdLineRef.current) chart.removeSeries(macdLineRef.current);
+      if (macdSignalRef.current) chart.removeSeries(macdSignalRef.current);
+      if (macdHistRef.current) chart.removeSeries(macdHistRef.current);
+      macdLineRef.current = null;
+      macdSignalRef.current = null;
+      macdHistRef.current = null;
+    }
+
+    // Feed any newly-created series and keep the price pane dominant.
+    setIndicatorData(candlesRef.current);
+    chart.panes()[0]?.setStretchFactor(3);
+    // setIndicatorData reads refs; safe to omit from deps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shownInd]);
+
   const activeTool = TOOLS.find((t) => t.id === tool);
 
   return (
@@ -393,7 +522,7 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
             </button>
           ))}
         </div>
-        <div className="flex flex-wrap gap-1.5 text-xs">
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
           {EMAS.map((e) => (
             <button
               key={e.period}
@@ -403,6 +532,18 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
               style={shownEmas[e.period] ? { color: e.color, borderColor: e.color } : undefined}
             >
               EMA {e.period}
+            </button>
+          ))}
+          <span className="mx-0.5 h-3 w-px bg-hairline" aria-hidden />
+          {INDICATORS.map((ind) => (
+            <button
+              key={ind.id}
+              type="button"
+              onClick={() => setShownInd((s) => ({ ...s, [ind.id]: !s[ind.id] }))}
+              className={`rounded-full border px-2 py-0.5 transition ${shownInd[ind.id] ? "border-strong text-ink" : "border-hairline text-faint"}`}
+              style={shownInd[ind.id] ? { color: ind.color, borderColor: ind.color } : undefined}
+            >
+              {ind.label}
             </button>
           ))}
         </div>
@@ -473,6 +614,15 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
           {EMAS.filter((e) => shownEmas[e.period] && legend.emas[e.period] != null).map((e) => (
             <span key={e.period} style={{ color: e.color }}>EMA{e.period} {money(legend.emas[e.period] as number)}</span>
           ))}
+          {shownInd.rsi && legend.rsi != null && (
+            <span style={{ color: RSI_COLOR }}>RSI {legend.rsi.toFixed(1)}</span>
+          )}
+          {shownInd.macd && legend.macd != null && (
+            <span>
+              <span style={{ color: MACD_LINE }}>MACD {legend.macd.toFixed(2)}</span>
+              {legend.macdSignal != null && <span style={{ color: MACD_SIGNAL }}> · sig {legend.macdSignal.toFixed(2)}</span>}
+            </span>
+          )}
         </div>
       )}
 

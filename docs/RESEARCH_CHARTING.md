@@ -92,7 +92,8 @@ technical-analysis curriculum (the 200-level `markets-technical` module).
 5. **Drawing tools + persistence (advanced/risky)** — trend & horizontal lines via
    lightweight-charts primitives or a custom overlay; persist per user/symbol.
    Optional auto support/resistance.
-6. **Optional** — lower RSI/MACD panes, price alerts, compare overlays.
+6. **Indicator depth (in progress)** — ✅ lower RSI/MACD panes (own v5 panes, toggleable);
+   next: Bollinger/VWAP overlays, more chart types, price alerts + compare overlays.
 
 ## Scope decisions to make when we pick this up
 1. **Indicator set for v1** — EMAs + volume + VWAP first (matches the screenshot),
