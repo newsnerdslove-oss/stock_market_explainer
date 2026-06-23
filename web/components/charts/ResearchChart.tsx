@@ -22,7 +22,7 @@ import {
   type MouseEventParams,
 } from "lightweight-charts";
 import { getCandlesViaApi, TIMEFRAMES, type Candle, type Timeframe } from "@/lib/marketService";
-import { ema, rsi, macd } from "@/lib/indicators";
+import { ema, rsi, macd, bollinger, vwap } from "@/lib/indicators";
 import {
   loadDrawings,
   saveDrawings,
@@ -48,6 +48,11 @@ const MACD_LINE = "#5BA8FF";
 const MACD_SIGNAL = "#F5C451";
 const HIST_UP = "rgba(43,209,126,0.5)";
 const HIST_DOWN = "rgba(255,92,92,0.5)";
+
+// Price-pane overlays (Bollinger Bands + VWAP).
+const BB_BAND = "rgba(138,148,166,0.55)";
+const BB_MID = "rgba(138,148,166,0.9)";
+const VWAP_COLOR = "#FF9500";
 
 // EMA overlays: period → colour.
 const EMAS = [
@@ -83,6 +88,8 @@ interface Legend {
   rsi?: number;
   macd?: number;
   macdSignal?: number;
+  bbMid?: number;
+  vwap?: number;
 }
 
 interface MacdCache {
@@ -90,6 +97,19 @@ interface MacdCache {
   signal: (number | null)[];
   histogram: (number | null)[];
 }
+
+interface BbCache {
+  upper: (number | null)[];
+  middle: (number | null)[];
+  lower: (number | null)[];
+}
+
+// Price-pane overlay toggles.
+type OverId = "bb" | "vwap";
+const OVERLAYS: { id: OverId; label: string; color: string }[] = [
+  { id: "bb", label: "BB", color: BB_MID },
+  { id: "vwap", label: "VWAP", color: VWAP_COLOR },
+];
 
 const toSec = (iso: string) => Math.floor(Date.parse(iso) / 1000) as UTCTimestamp;
 
@@ -113,11 +133,19 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
   const macdSignalRef = useRef<ISeriesApi<"Line"> | null>(null);
   const macdHistRef = useRef<ISeriesApi<"Histogram"> | null>(null);
 
+  // Price-pane overlay series (created once at chart init; toggled via `visible`).
+  const bbUpperRef = useRef<ISeriesApi<"Line"> | null>(null);
+  const bbMidRef = useRef<ISeriesApi<"Line"> | null>(null);
+  const bbLowerRef = useRef<ISeriesApi<"Line"> | null>(null);
+  const vwapRef = useRef<ISeriesApi<"Line"> | null>(null);
+
   // Derived caches rebuilt on each load so the crosshair legend is O(1) and never
   // recomputes indicators on mouse-move (the old per-move recompute was the lag).
   const emaCacheRef = useRef<Record<number, (number | null)[]>>({});
   const rsiCacheRef = useRef<(number | null)[]>([]);
   const macdCacheRef = useRef<MacdCache | null>(null);
+  const bbCacheRef = useRef<BbCache | null>(null);
+  const vwapCacheRef = useRef<(number | null)[]>([]);
   const indexByTimeRef = useRef<Map<number, number>>(new Map());
   const lastLegendIdxRef = useRef<number>(-1);
   const pendingLegendRef = useRef<Legend | null>(null);
@@ -139,6 +167,7 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
   const [timeframe, setTimeframe] = useState<Timeframe>("1m");
   const [shownEmas, setShownEmas] = useState<Record<number, boolean>>({ 9: true, 20: true, 50: false });
   const [shownInd, setShownInd] = useState<Record<IndId, boolean>>({ rsi: false, macd: false });
+  const [shownOver, setShownOver] = useState<Record<OverId, boolean>>({ bb: false, vwap: false });
   const [legend, setLegend] = useState<Legend | null>(null);
   const [stale, setStale] = useState(false);
   const [tool, setTool] = useState<Tool>("cursor");
@@ -161,6 +190,8 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
     emaCacheRef.current = cache;
     rsiCacheRef.current = rsi(closes, 14);
     macdCacheRef.current = macd(closes);
+    bbCacheRef.current = bollinger(closes, 20, 2);
+    vwapCacheRef.current = vwap(candles.map((c) => ({ high: c.high, low: c.low, close: c.close, volume: c.volume })));
     const map = new Map<number, number>();
     candles.forEach((c, i) => map.set(toSec(c.time) as number, i));
     indexByTimeRef.current = map;
@@ -181,6 +212,8 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
       rsi: rsiCacheRef.current[idx] ?? undefined,
       macd: m?.macd[idx] ?? undefined,
       macdSignal: m?.signal[idx] ?? undefined,
+      bbMid: bbCacheRef.current?.middle[idx] ?? undefined,
+      vwap: vwapCacheRef.current[idx] ?? undefined,
     };
   }
 
@@ -194,6 +227,12 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
   }
 
   function setIndicatorData(candles: Candle[]) {
+    // price-pane overlays (always present; visibility toggled separately)
+    bbUpperRef.current?.setData(indicatorLine(candles, bbCacheRef.current?.upper));
+    bbMidRef.current?.setData(indicatorLine(candles, bbCacheRef.current?.middle));
+    bbLowerRef.current?.setData(indicatorLine(candles, bbCacheRef.current?.lower));
+    vwapRef.current?.setData(indicatorLine(candles, vwapCacheRef.current));
+    // lower-pane indicators (present only when enabled)
     rsiRef.current?.setData(indicatorLine(candles, rsiCacheRef.current));
     const m = macdCacheRef.current;
     macdLineRef.current?.setData(indicatorLine(candles, m?.macd));
@@ -212,6 +251,14 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
   }
 
   function updateIndicatorLast(i: number, t: UTCTimestamp) {
+    const bb = bbCacheRef.current;
+    if (bb) {
+      if (bb.upper[i] != null) bbUpperRef.current?.update({ time: t, value: bb.upper[i] as number });
+      if (bb.middle[i] != null) bbMidRef.current?.update({ time: t, value: bb.middle[i] as number });
+      if (bb.lower[i] != null) bbLowerRef.current?.update({ time: t, value: bb.lower[i] as number });
+    }
+    const vw = vwapCacheRef.current[i];
+    if (vw != null) vwapRef.current?.update({ time: t, value: vw });
     const r = rsiCacheRef.current[i];
     if (r != null) rsiRef.current?.update({ time: t, value: r });
     const m = macdCacheRef.current;
@@ -325,6 +372,13 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
     for (const e of EMAS) {
       emaRefs.current[e.period] = chart.addSeries(LineSeries, { color: e.color, lineWidth: 1, lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false });
     }
+
+    // Price-pane overlays (hidden until toggled): Bollinger upper/lower/middle + VWAP.
+    const overlayOpts = { lineWidth: 1 as const, lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false, visible: false };
+    bbUpperRef.current = chart.addSeries(LineSeries, { ...overlayOpts, color: BB_BAND });
+    bbLowerRef.current = chart.addSeries(LineSeries, { ...overlayOpts, color: BB_BAND });
+    bbMidRef.current = chart.addSeries(LineSeries, { ...overlayOpts, color: BB_MID, lineStyle: LineStyle.Dashed });
+    vwapRef.current = chart.addSeries(LineSeries, { ...overlayOpts, color: VWAP_COLOR });
 
     const primitive = new DrawingsPrimitive(
       () => drawingsRef.current,
@@ -467,6 +521,14 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
     for (const e of EMAS) emaRefs.current[e.period]?.applyOptions({ visible: shownEmas[e.period] ?? false });
   }, [shownEmas]);
 
+  // Toggle Bollinger / VWAP overlay visibility without refetching.
+  useEffect(() => {
+    bbUpperRef.current?.applyOptions({ visible: shownOver.bb });
+    bbMidRef.current?.applyOptions({ visible: shownOver.bb });
+    bbLowerRef.current?.applyOptions({ visible: shownOver.bb });
+    vwapRef.current?.applyOptions({ visible: shownOver.vwap });
+  }, [shownOver]);
+
   // Create/remove the RSI & MACD panes on toggle (lazy — empty panes auto-collapse).
   useEffect(() => {
     const chart = chartRef.current;
@@ -532,6 +594,17 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
               style={shownEmas[e.period] ? { color: e.color, borderColor: e.color } : undefined}
             >
               EMA {e.period}
+            </button>
+          ))}
+          {OVERLAYS.map((o) => (
+            <button
+              key={o.id}
+              type="button"
+              onClick={() => setShownOver((s) => ({ ...s, [o.id]: !s[o.id] }))}
+              className={`rounded-full border px-2 py-0.5 transition ${shownOver[o.id] ? "border-strong text-ink" : "border-hairline text-faint"}`}
+              style={shownOver[o.id] ? { color: o.color, borderColor: o.color } : undefined}
+            >
+              {o.label}
             </button>
           ))}
           <span className="mx-0.5 h-3 w-px bg-hairline" aria-hidden />
@@ -614,6 +687,12 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
           {EMAS.filter((e) => shownEmas[e.period] && legend.emas[e.period] != null).map((e) => (
             <span key={e.period} style={{ color: e.color }}>EMA{e.period} {money(legend.emas[e.period] as number)}</span>
           ))}
+          {shownOver.bb && legend.bbMid != null && (
+            <span style={{ color: BB_MID }}>BB {money(legend.bbMid)}</span>
+          )}
+          {shownOver.vwap && legend.vwap != null && (
+            <span style={{ color: VWAP_COLOR }}>VWAP {money(legend.vwap)}</span>
+          )}
           {shownInd.rsi && legend.rsi != null && (
             <span style={{ color: RSI_COLOR }}>RSI {legend.rsi.toFixed(1)}</span>
           )}
