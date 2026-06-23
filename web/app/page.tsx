@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { SymbolSearch } from "@/components/research/SymbolSearch";
 import { getHealth, getQuote, type Quote } from "@/lib/marketService";
 import { alpacaConfigured, fetchAlpacaQuote } from "@/lib/stocks/alpaca";
 import { CryptoTicker } from "@/components/CryptoTicker";
@@ -71,6 +72,15 @@ export default async function Home() {
           Daily review →
         </Link>
       </div>
+
+      <section className="mt-8 rounded-lg border border-strong bg-surface p-4">
+        <h2 className="text-sm font-medium text-ink">Look up a chart</h2>
+        <p className="mt-1 text-xs text-muted">
+          Enter a ticker to open its live candlestick chart — e.g. <span className="font-mono">AAPL</span>,{" "}
+          <span className="font-mono">TSLA</span>, <span className="font-mono">BTC</span>.
+        </p>
+        <SymbolSearch className="mt-3" inputClassName="w-full max-w-xs" buttonLabel="View chart →" />
+      </section>
 
       <section className="mt-12 grid gap-4 sm:grid-cols-3">
         {pillars.map((p) => (
