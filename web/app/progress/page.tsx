@@ -24,7 +24,7 @@ export default function ProgressPage() {
   });
 
   return (
-    <PageContainer size="prose" className="pb-16 pt-10">
+    <PageContainer size="wide" className="pb-16 pt-10">
       <h1 className="text-4xl font-medium tracking-tight">Your progress</h1>
       <p className="mt-3 text-muted">
         Where you stand across the curriculum, your streak, and how ready you are for the exam — with

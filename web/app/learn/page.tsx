@@ -22,7 +22,7 @@ export default function LearnIndex() {
   }));
 
   return (
-    <PageContainer size="prose" className="pb-16 pt-10">
+    <PageContainer size="wide" className="pb-16 pt-10">
       <h1 className="text-4xl font-medium tracking-tight">Learn</h1>
 
       <LearnList lessons={lessons} />

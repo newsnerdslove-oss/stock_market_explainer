@@ -13,7 +13,7 @@ export default function StudyPage() {
   const examLessons = examLessonFunctions();
 
   return (
-    <PageContainer size="prose" className="pb-16 pt-10">
+    <PageContainer size="wide" className="pb-16 pt-10">
       <h1 className="text-4xl font-medium tracking-tight">Study plan</h1>
       <p className="mt-3 text-muted">
         Your next steps, in order — built from your exam history and lesson progress to close the gaps
