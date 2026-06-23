@@ -11,6 +11,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getQuoteViaApi, getCandlesViaApi, type Candle, type Quote } from "@/lib/marketService";
 import { useTracked, normalizeStock } from "@/lib/home/tracked";
+import { SPANS, SPAN_HISTORY, lookbackFor, statFor, type SpanId } from "@/lib/home/spans";
 import { COMPANY_NAMES } from "@/lib/stocks/names";
 import { AddTicker } from "@/components/home/AddTicker";
 
@@ -18,21 +19,10 @@ const KEY = "sme.home.stocks.v1";
 const DEFAULTS = ["AAPL", "MSFT", "TSLA"];
 const POLL_MS = 15_000;
 const BARS_MS = 5 * 60 * 1000; // daily bars barely move — refresh slowly
-const HISTORY = 260; // ~1 trading year of daily bars
 
 const SUGGESTIONS = Object.keys(COMPANY_NAMES)
   .filter((s) => !s.includes("-USD"))
   .map((value) => ({ value, label: COMPANY_NAMES[value] }));
-
-// Lookback in trading days for each span (approximate calendar windows).
-const SPANS = [
-  { id: "1D", lookback: 1 },
-  { id: "1W", lookback: 5 },
-  { id: "1M", lookback: 21 },
-  { id: "3M", lookback: 63 },
-  { id: "1Y", lookback: 252 },
-] as const;
-type SpanId = (typeof SPANS)[number]["id"];
 
 const money = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const num = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -44,35 +34,11 @@ function liveSource(source: string): boolean {
 
 async function loadBars(sym: string): Promise<Candle[]> {
   try {
-    const { candles } = await getCandlesViaApi(sym, HISTORY, "1d");
+    const { candles } = await getCandlesViaApi(sym, SPAN_HISTORY, "1d");
     return candles ?? [];
   } catch {
     return [];
   }
-}
-
-interface SpanStat {
-  change: number;
-  pct: number;
-  high: number;
-  low: number;
-}
-
-// Change vs the close `lookback` trading days ago, and the high/low over that
-// window (clamped to the live price so the range stays honest between refreshes).
-function statFor(candles: Candle[] | undefined, price: number, lookback: number): SpanStat | null {
-  if (!candles || candles.length < 2) return null;
-  const refIdx = Math.max(0, candles.length - 1 - lookback);
-  const refClose = candles[refIdx].close;
-  if (!refClose) return null;
-  let high = price;
-  let low = price;
-  for (const c of candles.slice(refIdx + 1)) {
-    high = Math.max(high, c.high);
-    low = Math.min(low, c.low);
-  }
-  const change = price - refClose;
-  return { change, pct: (change / refClose) * 100, high, low };
 }
 
 export function HomeStocks() {
@@ -82,7 +48,7 @@ export function HomeStocks() {
   const [span, setSpan] = useState<SpanId>("1D");
   const [reachable, setReachable] = useState<boolean | null>(null);
 
-  const lookback = SPANS.find((s) => s.id === span)?.lookback ?? 1;
+  const lookback = lookbackFor(span);
 
   useEffect(() => {
     let cancelled = false;
