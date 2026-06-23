@@ -3,11 +3,13 @@
 // Home-page stock strip: a user-editable list of tickers with client-fetched
 // quotes (polled), an add box, and per-row remove + chart link. Replaces the old
 // server-rendered demo list so symbols can be added/removed at runtime. The
-// tracked list is persisted in localStorage (see lib/home/tracked).
+// tracked list is persisted in localStorage (see lib/home/tracked). A span
+// selector (1D…1Y) sets the window for the change% + high/low columns; one year
+// of daily bars is fetched per symbol and every span is derived client-side.
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getQuoteViaApi, getCandlesViaApi, type Quote } from "@/lib/marketService";
+import { getQuoteViaApi, getCandlesViaApi, type Candle, type Quote } from "@/lib/marketService";
 import { useTracked, normalizeStock } from "@/lib/home/tracked";
 import { COMPANY_NAMES } from "@/lib/stocks/names";
 import { AddTicker } from "@/components/home/AddTicker";
@@ -15,10 +17,22 @@ import { AddTicker } from "@/components/home/AddTicker";
 const KEY = "sme.home.stocks.v1";
 const DEFAULTS = ["AAPL", "MSFT", "TSLA"];
 const POLL_MS = 15_000;
+const BARS_MS = 5 * 60 * 1000; // daily bars barely move — refresh slowly
+const HISTORY = 260; // ~1 trading year of daily bars
 
 const SUGGESTIONS = Object.keys(COMPANY_NAMES)
   .filter((s) => !s.includes("-USD"))
   .map((value) => ({ value, label: COMPANY_NAMES[value] }));
+
+// Lookback in trading days for each span (approximate calendar windows).
+const SPANS = [
+  { id: "1D", lookback: 1 },
+  { id: "1W", lookback: 5 },
+  { id: "1M", lookback: 21 },
+  { id: "3M", lookback: 63 },
+  { id: "1Y", lookback: 252 },
+] as const;
+type SpanId = (typeof SPANS)[number]["id"];
 
 const money = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const num = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -28,33 +42,47 @@ function liveSource(source: string): boolean {
   return s.includes("iex") || s.includes("alpaca");
 }
 
-// Daily stats for the change% + day-range columns. Two daily bars give us the
-// prior close (for today's change) and today's high/low. Slow-moving, so it polls
-// far less often than the price quote.
-interface DailyStat {
-  prevClose: number;
+async function loadBars(sym: string): Promise<Candle[]> {
+  try {
+    const { candles } = await getCandlesViaApi(sym, HISTORY, "1d");
+    return candles ?? [];
+  } catch {
+    return [];
+  }
+}
+
+interface SpanStat {
+  change: number;
+  pct: number;
   high: number;
   low: number;
 }
-const DAILY_MS = 5 * 60 * 1000;
 
-async function loadDaily(sym: string): Promise<DailyStat | null> {
-  try {
-    const { candles } = await getCandlesViaApi(sym, 2, "1d");
-    if (!candles.length) return null;
-    const today = candles[candles.length - 1];
-    const prev = candles.length >= 2 ? candles[candles.length - 2] : today;
-    return { prevClose: prev.close, high: today.high, low: today.low };
-  } catch {
-    return null;
+// Change vs the close `lookback` trading days ago, and the high/low over that
+// window (clamped to the live price so the range stays honest between refreshes).
+function statFor(candles: Candle[] | undefined, price: number, lookback: number): SpanStat | null {
+  if (!candles || candles.length < 2) return null;
+  const refIdx = Math.max(0, candles.length - 1 - lookback);
+  const refClose = candles[refIdx].close;
+  if (!refClose) return null;
+  let high = price;
+  let low = price;
+  for (const c of candles.slice(refIdx + 1)) {
+    high = Math.max(high, c.high);
+    low = Math.min(low, c.low);
   }
+  const change = price - refClose;
+  return { change, pct: (change / refClose) * 100, high, low };
 }
 
 export function HomeStocks() {
   const { list, add, remove } = useTracked(KEY, DEFAULTS, normalizeStock);
   const [quotes, setQuotes] = useState<Record<string, Quote | null>>({});
-  const [daily, setDaily] = useState<Record<string, DailyStat | null>>({});
+  const [bars, setBars] = useState<Record<string, Candle[]>>({});
+  const [span, setSpan] = useState<SpanId>("1D");
   const [reachable, setReachable] = useState<boolean | null>(null);
+
+  const lookback = SPANS.find((s) => s.id === span)?.lookback ?? 1;
 
   useEffect(() => {
     let cancelled = false;
@@ -86,22 +114,22 @@ export function HomeStocks() {
     };
   }, [list]);
 
-  // Daily stats (prior close + day high/low) on a slow cadence — they barely move.
+  // One year of daily bars per symbol, on a slow cadence; every span derives from these.
   useEffect(() => {
     let cancelled = false;
 
     async function refresh() {
-      const entries = await Promise.all(list.map(async (s) => [s, await loadDaily(s)] as const));
+      const entries = await Promise.all(list.map(async (s) => [s, await loadBars(s)] as const));
       if (cancelled) return;
-      setDaily(() => {
-        const next: Record<string, DailyStat | null> = {};
-        for (const [s, d] of entries) next[s] = d;
+      setBars(() => {
+        const next: Record<string, Candle[]> = {};
+        for (const [s, c] of entries) next[s] = c;
         return next;
       });
     }
 
     void refresh();
-    const id = setInterval(() => void refresh(), DAILY_MS);
+    const id = setInterval(() => void refresh(), BARS_MS);
     return () => {
       cancelled = true;
       clearInterval(id);
@@ -124,7 +152,20 @@ export function HomeStocks() {
             {live ? "IEX · live" : "Delayed"}
           </span>
         )}
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          <div className="inline-flex rounded-md border border-strong p-0.5 text-[11px]" role="group" aria-label="Change window">
+            {SPANS.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setSpan(s.id)}
+                aria-pressed={s.id === span}
+                className={`rounded px-1.5 py-0.5 transition ${s.id === span ? "bg-learn text-canvas" : "text-muted hover:text-ink"}`}
+              >
+                {s.id}
+              </button>
+            ))}
+          </div>
           <AddTicker onAdd={add} placeholder="Add stock" suggestions={SUGGESTIONS} />
         </div>
       </div>
@@ -145,6 +186,7 @@ export function HomeStocks() {
         <div className="mt-3 overflow-hidden rounded-lg border border-strong bg-surface">
           {list.map((sym, i) => {
             const q = quotes[sym];
+            const stat = q ? statFor(bars[sym], q.price, lookback) : null;
             return (
               <div
                 key={sym}
@@ -157,26 +199,20 @@ export function HomeStocks() {
                   {q ? (
                     <>
                       <span className="text-ink">{money(q.price)}</span>
-                      {(() => {
-                        const d = daily[sym];
-                        if (!d || !d.prevClose) return <span className="hidden text-faint sm:inline">—</span>;
-                        const change = q.price - d.prevClose;
-                        const pct = (change / d.prevClose) * 100;
-                        const up = change >= 0;
-                        const sign = up ? "+" : "";
-                        const high = Math.max(d.high, q.price);
-                        const low = Math.min(d.low, q.price);
-                        return (
-                          <>
-                            <span className={`w-32 text-right ${up ? "text-up" : "text-down"}`}>
-                              {sign}{num(change)} ({sign}{num(pct)}%)
-                            </span>
-                            <span className="hidden text-faint sm:inline">
-                              H {num(high)} · L {num(low)}
-                            </span>
-                          </>
-                        );
-                      })()}
+                      {stat ? (
+                        <>
+                          <span className={`w-32 text-right ${stat.change >= 0 ? "text-up" : "text-down"}`}>
+                            {stat.change >= 0 ? "+" : ""}
+                            {num(stat.change)} ({stat.change >= 0 ? "+" : ""}
+                            {num(stat.pct)}%)
+                          </span>
+                          <span className="hidden text-faint sm:inline">
+                            <span className="text-[10px] uppercase tracking-wide">{span}</span> H {num(stat.high)} · L {num(stat.low)}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="hidden text-faint sm:inline">—</span>
+                      )}
                     </>
                   ) : (
                     <span className="text-faint">{reachable === null ? "…" : "—"}</span>
