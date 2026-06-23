@@ -47,7 +47,7 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
   const track = trackById[mod.trackId];
 
   return (
-    <PageContainer size="prose" className="py-16">
+    <PageContainer size="wide" className="py-16">
       <Link href="/learn" className="text-sm text-muted transition hover:text-ink">
         ← All lessons
       </Link>

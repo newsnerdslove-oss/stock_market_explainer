@@ -48,7 +48,7 @@ export default async function Home() {
   const demo = await loadDemo();
 
   return (
-    <PageContainer size="prose" className="pb-16 pt-12">
+    <PageContainer size="wide" className="pb-16 pt-12">
       <h1 className="text-4xl font-medium tracking-tight">
         Learn the markets. <span className="text-muted">Daily.</span>
       </h1>
