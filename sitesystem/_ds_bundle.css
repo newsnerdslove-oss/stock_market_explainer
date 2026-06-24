@@ -1,0 +1,121 @@
+/* Design-sync token stylesheet input: Tailwind component + utility layers (NO
+   synced design system) plus the app's design tokens. Built to .ds-sync-tokens.css
+   and shipped as cfg.cssEntry. Build-only; gitignored. */
+
+.grid {
+  display: grid;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.max-w-lg {
+  max-width: 32rem;
+}
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.rounded-md {
+  border-radius: 8px;
+}
+
+.border {
+  border-width: 1px;
+}
+
+.border-strong {
+  border-color: rgb(var(--border-strong) / 1);
+}
+
+.bg-canvas {
+  background-color: rgb(var(--bg-canvas) / 1);
+}
+
+.bg-surface {
+  background-color: rgb(var(--bg-surface) / 1);
+}
+
+.fill-down {
+  fill: rgb(var(--down) / 1);
+}
+
+.fill-learn\/10 {
+  fill: rgb(var(--learn) / 0.1);
+}
+
+.fill-up {
+  fill: rgb(var(--up) / 1);
+}
+
+.fill-up\/10 {
+  fill: rgb(var(--up) / 0.1);
+}
+
+.stroke-down {
+  stroke: rgb(var(--down) / 1);
+}
+
+.stroke-hairline {
+  stroke: rgb(var(--border-hairline) / 1);
+}
+
+.stroke-learn {
+  stroke: rgb(var(--learn) / 1);
+}
+
+.stroke-up {
+  stroke: rgb(var(--up) / 1);
+}
+
+.p-3 {
+  padding: 0.75rem;
+}
+
+.font-mono {
+  font-family: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
+}
+
+.font-sans {
+  font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+.text-ink {
+  color: rgb(var(--text-primary) / 1);
+}
+
+.text-up {
+  color: rgb(var(--up) / 1);
+}
+:root {
+  color-scheme: dark;
+  --bg-canvas: 11 14 20;
+  --bg-surface: 20 25 34;
+  --bg-surface-2: 27 33 44;
+  --border-hairline: 30 37 48; /* @kind color */
+  --border-strong: 35 42 54; /* @kind color */
+  --text-primary: 232 237 244;
+  --text-secondary: 138 148 166;
+  --text-tertiary: 90 99 118;
+  --up: 43 209 126; /* @kind color */
+  --down: 255 92 92; /* @kind color */
+  --learn: 139 124 246; /* @kind color */
+  --streak: 245 166 35; /* @kind color */
+}
+
+.light {
+  color-scheme: light;
+  --bg-canvas: 244 246 250;
+  --bg-surface: 255 255 255;
+  --bg-surface-2: 234 238 244;
+  --border-hairline: 226 231 238; /* @kind color */
+  --border-strong: 207 214 224; /* @kind color */
+  --text-primary: 16 21 31;
+  --text-secondary: 88 96 114;
+  --text-tertiary: 107 116 132;
+  --up: 11 122 68; /* @kind color */
+  --down: 201 42 42; /* @kind color */
+  --learn: 91 71 196; /* @kind color */
+  --streak: 180 83 9; /* @kind color */
+}

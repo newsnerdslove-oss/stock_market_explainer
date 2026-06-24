@@ -1,0 +1,34 @@
+{
+  "shape": "storybook",
+  "styleSha": "ef40a7074fe5838b8920ae2ef09c238dcaa1b97e95e2b834183c1c697cd00e7f",
+  "renderHashes": {
+    "CandleAnatomy": "bee9b9e580453bd8",
+    "EquityCurve": "aa6d256b0950960d",
+    "PatternChart": "1b6fd4d607ae9e8c",
+    "PayoffDiagram": "4d94dba3d3d9562a"
+  },
+  "sourceKeys": {
+    "CandleAnatomy": "677f94deea17bcf4",
+    "EquityCurve": "d0a2df3e63b85a47",
+    "PatternChart": "4776125bb7ceede2",
+    "PayoffDiagram": "0e7f04a6b419a5f4"
+  },
+  "keyRecipe": 7,
+  "scriptsSha": "4f18184337ca4008",
+  "sourceHashes": {
+    "components/charts/CandleAnatomy/CandleAnatomy.jsx": "a38d2872fd41",
+    "components/charts/CandleAnatomy/CandleAnatomy.d.ts": "cb574a43cf41",
+    "components/charts/CandleAnatomy/CandleAnatomy.prompt.md": "33b386171ee3",
+    "components/charts/EquityCurve/EquityCurve.jsx": "964f87283e16",
+    "components/charts/EquityCurve/EquityCurve.d.ts": "193bdbcee3c9",
+    "components/charts/EquityCurve/EquityCurve.prompt.md": "da4a4b41d380",
+    "components/charts/PatternChart/PatternChart.jsx": "e1025b7ad557",
+    "components/charts/PatternChart/PatternChart.d.ts": "7d57fdc8e515",
+    "components/charts/PatternChart/PatternChart.prompt.md": "d77fcd35873d",
+    "components/charts/PayoffDiagram/PayoffDiagram.jsx": "9715e0e682e0",
+    "components/charts/PayoffDiagram/PayoffDiagram.d.ts": "68c141a58aca",
+    "components/charts/PayoffDiagram/PayoffDiagram.prompt.md": "8e2599e4ca71"
+  },
+  "auxSha": "d9c9cec0f35dc23b",
+  "bundleSha12": "e20bd980ced1"
+}

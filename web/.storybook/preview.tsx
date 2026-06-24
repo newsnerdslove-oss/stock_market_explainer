@@ -7,8 +7,14 @@ import "../app/globals.css";
 import { initialize, mswLoader } from "msw-storybook-addon";
 import { handlers } from "./msw-handlers";
 
-// Start the MSW worker so components' /api/* fetches resolve to fixtures.
-initialize({ onUnhandledRequest: "bypass" });
+// Start the MSW worker so components' /api/* fetches resolve to fixtures. Guarded
+// because design-sync bundles this module as a preview decorator where MSW's worker
+// is a stub (no real Service Worker) — the init throw must not break the decorator.
+try {
+  initialize({ onUnhandledRequest: "bypass" });
+} catch {
+  /* no Service Worker (e.g. design-sync preview bundle) — fine */
+}
 
 // Every story renders on the app's dark canvas, in the sans font stack, with room
 // to breathe — matching how these components appear in the product.

@@ -1,0 +1,25 @@
+{
+  "pkg": "stock-market-explainer-web",
+  "globalName": "StocksDS",
+  "projectId": "7b243136-e09a-41b8-9ea5-1fd5917974b4",
+  "shape": "storybook",
+  "storybookStatic": ".design-sync/sb-reference",
+  "storybookConfigDir": "web/.storybook",
+  "tsconfig": "tsconfig.json",
+  "cssEntry": ".ds-sync-tokens.css",
+  "readmeHeader": ".design-sync/conventions.md",
+  "componentSrcMap": {
+    "CandleAnatomy": "components/charts/CandleAnatomy.tsx",
+    "EquityCurve": "components/charts/EquityCurve.tsx",
+    "PayoffDiagram": "components/charts/PayoffDiagram.tsx",
+    "PatternChart": "components/charts/PatternChart.tsx"
+  },
+  "titleMap": {
+    "Example/Button": null,
+    "Example/Header": null,
+    "Example/Page": null,
+    "Components/Toast": null,
+    "Chrome/NavBar": null,
+    "Home/HomeStocks": null
+  }
+}

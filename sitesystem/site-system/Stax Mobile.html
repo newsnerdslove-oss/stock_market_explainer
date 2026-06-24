@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stax — Mobile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  html, body { margin: 0; padding: 0; }
+  body { background: #E9E4DC; -webkit-font-smoothing: antialiased; font-family: 'Plus Jakarta Sans', sans-serif; }
+  * { box-sizing: border-box; }
+  #app { min-height: 100vh; }
+  svg.lucide { stroke-width: 2; }
+  #app svg[viewBox] { display: block; max-width: 100%; height: auto; }
+  .rail { display: flex; gap: 48px; padding: 56px 56px 80px; overflow-x: auto; align-items: flex-start; }
+  .frame-label { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #6B655E; font-weight: 600; margin-bottom: 16px; letter-spacing: .02em; }
+  .frame-label b { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 17px; color: #2A2620; font-weight: 800; display: block; margin-bottom: 2px; }
+  .intro { padding: 40px 56px 0; max-width: 760px; }
+  .intro h1 { font-size: 26px; font-weight: 800; letter-spacing: -.02em; margin: 0 0 6px; color: #2A2620; }
+  .intro p { font-size: 15px; color: #6B655E; margin: 0; font-weight: 500; line-height: 1.5; }
+</style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="../_ds_bundle.js"></script>
+  <script src="trade_store.js"></script>
+
+  <script type="text/babel" src="shared.jsx"></script>
+  <script type="text/babel" src="aKit.jsx"></script>
+  <script type="text/babel" src="s_lesson.jsx"></script>
+  <script type="text/babel" src="s_chart.jsx"></script>
+  <script type="text/babel" src="ios-frame.jsx"></script>
+  <script type="text/babel" src="m_screens.jsx"></script>
+
+  <script type="text/babel" data-presets="react">
+    function App() {
+      if (window.applyTheme) window.applyTheme('light');
+      React.useEffect(() => {
+        const draw = () => window.lucide && window.lucide.createIcons();
+        draw(); const ts = [80, 300, 700].map(ms => setTimeout(draw, ms));
+        return () => ts.forEach(clearTimeout);
+      }, []);
+      const frames = [
+        ['Today', 'Daily hub', window.MToday],
+        ['Lesson player', 'Inline check', window.MLesson],
+        ['Invest', 'Paper portfolio', window.MInvest],
+        ['Stock', 'Chart + trade', window.MStock],
+      ];
+      return (
+        <React.Fragment>
+          <div className="intro">
+            <h1>Stax — Mobile</h1>
+            <p>Phone-adapted versions of the core loop: the daily hub, the lesson player, the paper portfolio, and a stock detail with the interactive chart. Bottom-tab navigation; same kit, tokens, and trade store as the desktop screens.</p>
+          </div>
+          <div className="rail">
+            {frames.map(([title, sub, Comp], i) => (
+              <div key={i}>
+                <div className="frame-label" data-drags-parent="1"><b>{title}</b>{sub}</div>
+                <IOSDevice>{Comp ? <Comp /> : null}</IOSDevice>
+              </div>
+            ))}
+          </div>
+        </React.Fragment>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('app')).render(<App />);
+  </script>
+</body>
+</html>

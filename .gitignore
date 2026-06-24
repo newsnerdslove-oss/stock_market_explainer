@@ -40,3 +40,16 @@ bench/results/
 
 *storybook.log
 storybook-static
+
+# design-sync
+.design-sync/sb-reference/
+.design-sync/learnings/
+.design-sync/.cache/
+.design-sync/node_modules
+.ds-sync/
+ds-bundle/
+web/.ds-sync-entry.tsx
+web/index.d.ts
+web/.ds-sync-tokens.css
+web/.ds-sync-tokens-input.css
+web/.ds-sync-tailwind.config.ts
