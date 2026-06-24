@@ -85,12 +85,15 @@ class DrawingsRenderer implements IPrimitivePaneRenderer {
         const top = Math.min(a.y, b.y);
         const bottom = Math.max(a.y, b.y);
         const w = Math.max(0, width - left); // extend right to the pane edge
-        ctx.globalAlpha = s.auto ? 0.1 : 0.16;
-        ctx.fillRect(left, top, w, bottom - top);
+        const h = Math.max(2, bottom - top); // keep a thin band legible
+        ctx.globalAlpha = s.auto ? 0.18 : 0.22;
+        ctx.fillRect(left, top, w, h);
         ctx.globalAlpha = 1;
-        ctx.lineWidth = s.selected ? 2 : 1;
-        if (s.auto || s.draft) ctx.setLineDash([4, 3]);
-        ctx.strokeRect(left + 0.5, top + 0.5, Math.max(0, w - 1), bottom - top);
+        ctx.lineWidth = s.selected ? 2.2 : 1.5;
+        if (s.auto || s.draft) ctx.setLineDash([5, 3]);
+        // Solid top & bottom edges read as a band even when the fill is subtle.
+        this.hline(ctx, left, width, top);
+        this.hline(ctx, left, width, top + h);
       }
     } else if (s.type === "horizontal") {
       const y = s.pts[0]?.y;

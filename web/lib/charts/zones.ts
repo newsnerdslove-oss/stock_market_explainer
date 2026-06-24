@@ -31,13 +31,16 @@ export interface ZoneOpts {
 const toSec = (iso: string) => Math.floor(Date.parse(iso) / 1000);
 
 export function detectZones(candles: Candle[], opts: ZoneOpts = {}): DetectedZone[] {
-  const { impulseMult = 1.6, bodyFrac = 0.5, baseMax = 3, maxZones = 8 } = opts;
+  const { impulseMult = 1.4, bodyFrac = 0.45, baseMax = 4, maxZones = 12 } = opts;
   const n = candles.length;
   if (n < 5) return [];
 
   const ranges = candles.map((c) => c.high - c.low);
   const avg = ranges.reduce((a, b) => a + b, 0) / n;
   if (avg <= 0) return [];
+  // Thin base candles (e.g. on 1m) make razor-thin bands; floor the thickness to
+  // half an average candle so the zone is legible without distorting the level.
+  const minThick = 0.5 * avg;
 
   const found: DetectedZone[] = [];
   for (let i = 1; i < n; i++) {
@@ -62,6 +65,11 @@ export function detectZones(candles: Candle[], opts: ZoneOpts = {}): DetectedZon
     for (let j = baseStart; j <= baseEnd; j++) {
       hi = Math.max(hi, candles[j].high);
       lo = Math.min(lo, candles[j].low);
+    }
+    if (hi - lo < minThick) {
+      const mid = (hi + lo) / 2;
+      hi = mid + minThick / 2;
+      lo = mid - minThick / 2;
     }
 
     const kind: ZoneKind = c.close > c.open ? "demand" : "supply";
