@@ -6,7 +6,8 @@
 
 import { uid } from "@/lib/uid";
 
-export type DrawingType = "trend" | "horizontal" | "fib";
+export type DrawingType = "trend" | "horizontal" | "fib" | "zone";
+export type ZoneKind = "supply" | "demand";
 
 /** A point in chart space: a UTC timestamp (seconds) and a price. */
 export interface Point {
@@ -17,22 +18,29 @@ export interface Point {
 export interface Drawing {
   id: string;
   type: DrawingType;
-  /** horizontal: 1 point; trend & fib: 2 points (anchor → end). */
+  /** horizontal: 1 point; trend/fib/zone: 2 points (anchor → end / two corners). */
   points: Point[];
   color: string;
+  /** supply vs demand, for `zone` drawings only. */
+  kind?: ZoneKind;
 }
+
+/** Supply/demand zone colours (green = demand/support, red = supply/resistance). */
+export const ZONE_DEMAND = "#2BD17E";
+export const ZONE_SUPPLY = "#FF5C5C";
 
 /** Standard Fibonacci retracement ratios. */
 export const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1] as const;
 
 /** How many clicks each tool needs before the drawing is complete. */
-export const POINTS_FOR: Record<DrawingType, number> = { horizontal: 1, trend: 2, fib: 2 };
+export const POINTS_FOR: Record<DrawingType, number> = { horizontal: 1, trend: 2, fib: 2, zone: 2 };
 
 /** Default colour per tool, themed to the chart palette. */
 export const TOOL_COLOR: Record<DrawingType, string> = {
   trend: "#5BA8FF",
   horizontal: "#F5C451",
   fib: "#9D8CFF",
+  zone: ZONE_DEMAND,
 };
 
 /**
@@ -48,6 +56,11 @@ export function newDrawing(type: DrawingType, points: Point[]): Drawing {
   return { id: uid(), type, points, color: TOOL_COLOR[type] };
 }
 
+/** A supply/demand zone (a two-corner box). */
+export function newZone(kind: ZoneKind, points: Point[]): Drawing {
+  return { id: uid(), type: "zone", points, color: kind === "demand" ? ZONE_DEMAND : ZONE_SUPPLY, kind };
+}
+
 const storageKey = (symbol: string) => `chart:drawings:${symbol.toUpperCase()}`;
 
 export function isDrawing(d: unknown): d is Drawing {
@@ -55,8 +68,9 @@ export function isDrawing(d: unknown): d is Drawing {
   const x = d as Drawing;
   return (
     typeof x.id === "string" &&
-    (x.type === "trend" || x.type === "horizontal" || x.type === "fib") &&
+    (x.type === "trend" || x.type === "horizontal" || x.type === "fib" || x.type === "zone") &&
     typeof x.color === "string" &&
+    (x.type !== "zone" || x.kind === "supply" || x.kind === "demand") &&
     Array.isArray(x.points) &&
     x.points.length === POINTS_FOR[x.type] &&
     x.points.every((p) => p && typeof p.time === "number" && typeof p.price === "number")

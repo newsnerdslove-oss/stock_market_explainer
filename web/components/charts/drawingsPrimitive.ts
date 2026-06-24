@@ -38,7 +38,9 @@ interface Seg {
   color: string;
   draft: boolean;
   selected: boolean;
-  /** screen-space endpoints (1 for horizontal, 2 for trend/fib) */
+  /** auto-detected (read-only): rendered dashed/lighter, not selectable. */
+  auto: boolean;
+  /** screen-space endpoints (1 for horizontal, 2 for trend/fib/zone corners) */
   pts: { x: number | null; y: number }[];
   fib: FibLine[] | null;
   priceLabel: string | null;
@@ -76,7 +78,21 @@ class DrawingsRenderer implements IPrimitivePaneRenderer {
     ctx.lineWidth = s.selected ? 2.5 : 1.5;
     if (s.draft) ctx.setLineDash([4, 3]);
 
-    if (s.type === "horizontal") {
+    if (s.type === "zone") {
+      const [a, b] = s.pts;
+      if (a && b) {
+        const left = Math.max(0, Math.min(a.x ?? 0, b.x ?? 0));
+        const top = Math.min(a.y, b.y);
+        const bottom = Math.max(a.y, b.y);
+        const w = Math.max(0, width - left); // extend right to the pane edge
+        ctx.globalAlpha = s.auto ? 0.1 : 0.16;
+        ctx.fillRect(left, top, w, bottom - top);
+        ctx.globalAlpha = 1;
+        ctx.lineWidth = s.selected ? 2 : 1;
+        if (s.auto || s.draft) ctx.setLineDash([4, 3]);
+        ctx.strokeRect(left + 0.5, top + 0.5, Math.max(0, w - 1), bottom - top);
+      }
+    } else if (s.type === "horizontal") {
       const y = s.pts[0]?.y;
       if (y != null) {
         this.hline(ctx, 0, width, y);
@@ -171,6 +187,7 @@ export class DrawingsPrimitive implements ISeriesPrimitive<Time> {
     private readonly getDrawings: () => Drawing[],
     private readonly getDraft: () => Draft | null,
     private readonly getSelected: () => string | null,
+    private readonly getAutoZones: () => Drawing[] = () => [],
   ) {}
 
   attached(p: SeriesAttachedParameter<Time>): void {
@@ -210,6 +227,12 @@ export class DrawingsPrimitive implements ISeriesPrimitive<Time> {
     const selected = this.getSelected();
     const out: Seg[] = [];
 
+    // Auto-detected zones first so manual/drawn items render on top of them.
+    for (const z of this.getAutoZones()) {
+      const seg = this.toSeg(z.type, z.points, z.color, false, false, null, true);
+      if (seg) out.push(seg);
+    }
+
     for (const d of this.getDrawings()) {
       const seg = this.toSeg(d.type, d.points, d.color, false, d.id === selected, d.id);
       if (seg) out.push(seg);
@@ -231,6 +254,7 @@ export class DrawingsPrimitive implements ISeriesPrimitive<Time> {
     draft: boolean,
     selected: boolean,
     id: string | null,
+    auto = false,
   ): Seg | null {
     if (points.length === 0) return null;
     const screen = points.map((p) => {
@@ -238,10 +262,17 @@ export class DrawingsPrimitive implements ISeriesPrimitive<Time> {
       return { x: s.x, y: s.y };
     });
 
+    if (type === "zone") {
+      const a = screen[0];
+      const b = screen[1];
+      if (!a || !b || a.y == null || b.y == null) return null;
+      return { id, type, color, draft, selected, auto, pts: [{ x: a.x, y: a.y }, { x: b.x, y: b.y }], fib: null, priceLabel: null };
+    }
+
     if (type === "horizontal") {
       const y = screen[0].y;
       if (y == null) return null;
-      return { id, type, color, draft, selected, pts: [{ x: null, y }], fib: null, priceLabel: money(points[0].price) };
+      return { id, type, color, draft, selected, auto, pts: [{ x: null, y }], fib: null, priceLabel: money(points[0].price) };
     }
 
     // trend & fib need both endpoints' y (x may be off-screen / null)
@@ -261,7 +292,7 @@ export class DrawingsPrimitive implements ISeriesPrimitive<Time> {
         .filter((x): x is FibLine => x !== null);
     }
 
-    return { id, type, color, draft, selected, pts, fib, priceLabel: null };
+    return { id, type, color, draft, selected, auto, pts, fib, priceLabel: null };
   }
 
   /** Nearest drawing id within `threshold` px of (x, y), or null. */
@@ -273,7 +304,15 @@ export class DrawingsPrimitive implements ISeriesPrimitive<Time> {
     };
     for (const s of this.segments()) {
       if (s.id == null) continue;
-      if (s.type === "horizontal") {
+      if (s.type === "zone") {
+        const [a, b] = s.pts;
+        if (a && b) {
+          const left = Math.max(0, Math.min(a.x ?? 0, b.x ?? 0));
+          const top = Math.min(a.y, b.y);
+          const bottom = Math.max(a.y, b.y);
+          if (x >= left && y >= top && y <= bottom) consider(s.id, 0);
+        }
+      } else if (s.type === "horizontal") {
         consider(s.id, Math.abs(y - s.pts[0].y));
       } else if (s.type === "trend") {
         const [a, b] = s.pts;
