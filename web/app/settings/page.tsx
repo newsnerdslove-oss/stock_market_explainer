@@ -12,6 +12,7 @@ import { Badge } from "@/components/kit/Badge";
 import { Avatar } from "@/components/kit/Avatar";
 import { Pill } from "@/components/kit/Pill";
 import { useThemeState } from "@/lib/theme";
+import { useIsMobile } from "@/lib/useIsMobile";
 
 type Pane = "account" | "notifications" | "plan" | "appearance" | "security";
 type NotifKey = "daily" | "streak" | "price" | "club" | "product";
@@ -40,6 +41,7 @@ export default function SettingsPage() {
   const [notif, setNotif] = useState<Record<NotifKey, boolean>>({ daily: true, streak: true, price: true, club: false, product: false });
   const [remindAt, setRemindAt] = useState("18:00");
   const [theme, setTheme] = useThemeState();
+  const mobile = useIsMobile();
 
   return (
     <StaxShell maxWidth={980}>
@@ -47,8 +49,8 @@ export default function SettingsPage() {
         <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-.02em", margin: 0 }}>Settings</h1>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: 28, alignItems: "start" }}>
-        <div style={{ position: "sticky", top: 22, display: "flex", flexDirection: "column", gap: 4 }}>
+      <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr" : "220px 1fr", gap: mobile ? 16 : 28, alignItems: "start" }}>
+        <div style={{ position: mobile ? "static" : "sticky", top: 22, display: "flex", flexDirection: mobile ? "row" : "column", gap: 4, overflowX: mobile ? "auto" : "visible" }}>
           {NAV.map(([id, label, ic]) => (
             <div
               key={id}
@@ -62,6 +64,8 @@ export default function SettingsPage() {
                 cursor: "pointer",
                 fontWeight: 700,
                 fontSize: 14.5,
+                flexShrink: 0,
+                whiteSpace: "nowrap",
                 background: pane === id ? A.primarySoft : "transparent",
                 color: pane === id ? A.primaryDeep : A.muted,
               }}
@@ -129,7 +133,7 @@ export default function SettingsPage() {
 
           {pane === "plan" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr" : "1fr 1fr", gap: 16 }}>
                 <Card pad={22} style={{ border: `1.5px solid ${A.border}` }}>
                   <div style={{ fontWeight: 800, fontSize: 17 }}>Free</div>
                   <div style={{ fontSize: 13, color: A.muted, fontWeight: 600, margin: "4px 0 14px" }}>Your current plan</div>
