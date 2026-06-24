@@ -37,3 +37,6 @@ coverage/
 # Deploy — real inventory may hold a username; keep only the .example
 deploy/ansible/inventory.ini
 bench/results/
+
+*storybook.log
+storybook-static
