@@ -16,6 +16,8 @@ const TAB_ROUTE: Record<string, string> = {
   catalog: "/",
   profile: "/settings",
   marketing: "/",
+  search: "/search",
+  notifications: "/notifications",
 };
 const ROUTE_TAB: [string, string][] = [
   ["/today", "daily"],

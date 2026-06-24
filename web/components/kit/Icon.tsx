@@ -7,6 +7,7 @@ import { icons, type LucideProps } from "lucide-react";
 const ALIASES: Record<string, string> = {
   "line-chart": "chart-line",
   "candlestick-chart": "chart-candlestick",
+  "bar-chart-3": "chart-bar-big",
   github: "git-branch", // lucide removed the brand mark
 };
 

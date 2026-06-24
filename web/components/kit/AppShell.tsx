@@ -86,6 +86,12 @@ export function AppShell({
               {xp} XP
             </Pill>
           )}
+          <div onClick={() => go("search")} title="Search" style={{ width: 40, height: 40, borderRadius: 12, border: `1px solid ${A.border}`, cursor: "pointer", display: "grid", placeItems: "center", color: A.muted, background: A.card }}>
+            <Icon name="search" size={19} />
+          </div>
+          <div onClick={() => go("notifications")} title="Notifications" style={{ width: 40, height: 40, borderRadius: 12, border: `1px solid ${A.border}`, cursor: "pointer", display: "grid", placeItems: "center", color: A.muted, background: A.card }}>
+            <Icon name="bell" size={19} />
+          </div>
           {setTheme && (
             <div
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
