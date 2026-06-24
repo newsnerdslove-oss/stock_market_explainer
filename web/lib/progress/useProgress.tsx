@@ -25,6 +25,8 @@ interface ProgressContextValue {
   recordExam: (attempt: ExamAttempt) => void;
   /** Record a tutor question that was asked (stored newest-first, capped). */
   recordTutorQuery: (query: TutorQuery) => void;
+  /** Grant XP under an idempotency key (e.g. "qotd:2026-06-24") — a repeated key is a no-op. */
+  awardXp: (key: string, amount: number) => void;
   /** Count today as a training day for the streak, without marking the daily review done. */
   markActiveToday: () => void;
   /** Mark today's daily review session complete (advances the streak AND the review). */
@@ -191,6 +193,19 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const awardXp = useCallback((key: string, amount: number) => {
+    if (!hydratedRef.current) return;
+    setProgress((prev) => {
+      if (prev.xpClaims[key]) return prev; // already granted under this key — no double-count
+      return {
+        ...prev,
+        xp: prev.xp + amount,
+        xpClaims: { ...prev.xpClaims, [key]: true },
+        updatedAt: new Date().toISOString(),
+      };
+    });
+  }, []);
+
   const markActiveToday = useCallback(() => {
     if (!hydratedRef.current) return;
     setProgress((prev) => {
@@ -226,6 +241,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         recordReview,
         recordExam,
         recordTutorQuery,
+        awardXp,
         markActiveToday,
         completeDailySession,
       }}
