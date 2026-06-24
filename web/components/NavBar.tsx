@@ -14,6 +14,10 @@ const DESTINATIONS = [
   { href: "/simulator", label: "Simulator" },
 ];
 
+// Routes redesigned in the Stax kit carry their own AppShell nav — suppress this
+// (legacy) bar there so the two don't stack. Grows as more screens convert.
+const STAX_ROUTES = ["/settings"];
+
 /**
  * Persistent top navigation across the six destinations, with the brand mark and
  * a compact streak counter. Sticky, with a translucent canvas backdrop. On
@@ -24,6 +28,8 @@ export function NavBar() {
   const pathname = usePathname();
   const { progress, hydrated } = useProgress();
   const streak = hydrated ? progress.streak.current : 0;
+
+  if (STAX_ROUTES.some((r) => pathname === r || pathname.startsWith(`${r}/`))) return null;
 
   return (
     <header className="sticky top-0 z-40 border-b border-hairline bg-canvas/85 backdrop-blur">

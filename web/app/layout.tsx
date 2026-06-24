@@ -58,7 +58,7 @@ export const viewport: Viewport = {
 
 // Applies the saved (or system-preferred) theme before first paint, so there's
 // no flash of the wrong theme. Inline + synchronous at the top of <body>.
-const THEME_INIT = `(function(){try{var t=localStorage.getItem('theme');if(!t){t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}if(t==='light'){document.documentElement.classList.add('light');}}catch(e){}})();`;
+const THEME_INIT = `(function(){try{var t=localStorage.getItem('theme');if(!t){t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}var el=document.documentElement;el.classList.toggle('light',t==='light');el.classList.toggle('dark',t==='dark');}catch(e){}})();`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
