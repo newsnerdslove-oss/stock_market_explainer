@@ -21,8 +21,12 @@ const ROUTE_TAB: [string, string][] = [
   ["/today", "daily"],
   ["/learn", "dashboard"],
   ["/exam", "quiz"],
+  ["/study", "quiz"],
+  ["/progress", "quiz"],
+  ["/review", "quiz"],
   ["/simulator", "trade"],
-  ["/settings", "dashboard"],
+  ["/symbol", "trade"],
+  ["/", "catalog"],
 ];
 
 /**
