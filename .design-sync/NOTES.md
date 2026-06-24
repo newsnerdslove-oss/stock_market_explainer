@@ -1,9 +1,25 @@
 # design-sync notes — Stock Market Explainer DS
 
-Scope: the 4 standalone SVG chart components (`CandleAnatomy`, `EquityCurve`,
-`PayoffDiagram`, `PatternChart`) + the Tailwind token layer. NavBar/HomeStocks/Toast
-are intentionally excluded — Next-router/data-coupled and provider-not-component, so
-they don't bundle as portable single design-system exports (they live in Storybook).
+Scope: 18 components — the 4 standalone SVG chart components (`CandleAnatomy`,
+`EquityCurve`, `PayoffDiagram`, `PatternChart`) + the 14 **Stax UI kit** components
+(`Icon, Ring, Bar, Avatar, WeekDots, Btn, Pill, Badge, Card, SectionTitle, LessonCard,
+Field, Toggle, AppShell` — `components/kit/*`, group `kit`) + the token layer.
+NavBar/HomeStocks/Toast and the live charts (ResearchChart/LiveCandleChart) are
+intentionally excluded (Next/data-coupled or live-canvas — they live in Storybook only;
+`titleMap` nulls them).
+
+## Stax kit (added Wave 1)
+- Kit components are self-contained (inline styles reading `var(--stax-*)` + lucide-
+  react) → they bundle cleanly. The "Warm Campus" tokens ship in the synced CSS: the
+  `--stax-*` :root(light)/.dark blocks were added to `.ds-sync-tokens-input.css`, and
+  the post-process now ALSO tags every hex-valued `--stax-*` with `/* @kind color */`
+  (regex `--stax-[a-z-]+:\s*#…`) on top of the channel-based chart tokens. Expect
+  `@kind color` count ≈ 54 now (was 12).
+- `cfg.overrides.AppShell = {cardMode:"column"}` — the full-width shell overflows a grid
+  card otherwise ([GRID_OVERFLOW]).
+- **[FONT_MISSING] follow-up:** Plus Jakarta Sans (`--stax-font`) isn't shipped as a
+  webfont, so the DS pane substitutes system sans. To ship it, add the woff2 + @font-face
+  via `cfg.extraFonts` (next/font self-hosts the files under `web/.next`). Non-blocking.
 
 ## This repo is a Next.js app, not a packaged library — two build shims make it work
 - `web/.ds-sync-entry.tsx` — the synth bundle entry (re-exports the 4 components),

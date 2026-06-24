@@ -12,7 +12,24 @@
     "CandleAnatomy": "components/charts/CandleAnatomy.tsx",
     "EquityCurve": "components/charts/EquityCurve.tsx",
     "PayoffDiagram": "components/charts/PayoffDiagram.tsx",
-    "PatternChart": "components/charts/PatternChart.tsx"
+    "PatternChart": "components/charts/PatternChart.tsx",
+    "Icon": "components/kit/Icon.tsx",
+    "Ring": "components/kit/Ring.tsx",
+    "Bar": "components/kit/Bar.tsx",
+    "Avatar": "components/kit/Avatar.tsx",
+    "WeekDots": "components/kit/WeekDots.tsx",
+    "Btn": "components/kit/Btn.tsx",
+    "Pill": "components/kit/Pill.tsx",
+    "Badge": "components/kit/Badge.tsx",
+    "Card": "components/kit/Card.tsx",
+    "SectionTitle": "components/kit/SectionTitle.tsx",
+    "LessonCard": "components/kit/LessonCard.tsx",
+    "Field": "components/kit/Field.tsx",
+    "Toggle": "components/kit/Toggle.tsx",
+    "AppShell": "components/kit/AppShell.tsx"
+  },
+  "overrides": {
+    "AppShell": { "cardMode": "column" }
   },
   "titleMap": {
     "Example/Button": null,
@@ -20,6 +37,8 @@
     "Example/Page": null,
     "Components/Toast": null,
     "Chrome/NavBar": null,
-    "Home/HomeStocks": null
+    "Home/HomeStocks": null,
+    "Charts/ResearchChart": null,
+    "Charts/LiveCandleChart": null
   }
 }
