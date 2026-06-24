@@ -16,6 +16,7 @@ import { isCorrectPick } from "@/lib/charts/generate";
 import { chartOfDayFor, qotdFor } from "@/lib/daily/content";
 import { useProgress } from "@/lib/progress/useProgress";
 import { useThemeState } from "@/lib/theme";
+import { useIsMobile } from "@/lib/useIsMobile";
 
 const LAUNCHERS: { icon: string; t: string; s: string; tint: [string, string]; to: string }[] = [
   { icon: "candlestick-chart", t: "Candlestick patterns", s: "Learn to read the candles", tint: [A.primarySoft, A.primary], to: "/learn" },
@@ -27,6 +28,7 @@ const LAUNCHERS: { icon: string; t: string; s: string; tint: [string, string]; t
 export default function TodayPage() {
   const router = useRouter();
   const [theme] = useThemeState();
+  const mobile = useIsMobile();
   const { progress, hydrated, awardXp, markActiveToday } = useProgress();
 
   const dateKey = useMemo(() => new Date().toISOString().slice(0, 10), []); // UTC day — same for everyone
@@ -82,7 +84,7 @@ export default function TodayPage() {
       </div>
 
       {/* chart of the day */}
-      <div style={{ background: `linear-gradient(120deg, ${A.primaryDeep}, ${A.primary})`, borderRadius: 26, padding: 26, color: "#fff", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 26, alignItems: "center", boxShadow: A.shadowLg, marginBottom: 22 }}>
+      <div style={{ background: `linear-gradient(120deg, ${A.primaryDeep}, ${A.primary})`, borderRadius: 26, padding: mobile ? 20 : 26, color: "#fff", display: "grid", gridTemplateColumns: mobile ? "1fr" : "1fr 1fr", gap: mobile ? 18 : 26, alignItems: "center", boxShadow: A.shadowLg, marginBottom: 22 }}>
         <div>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 7, background: "rgba(255,255,255,.18)", padding: "5px 12px", borderRadius: 999, fontSize: 12.5, fontWeight: 800, marginBottom: 14 }}>
             <Icon name="sparkles" size={15} /> CHART OF THE DAY
@@ -103,7 +105,7 @@ export default function TodayPage() {
       </div>
 
       {/* QOTD + daily goal */}
-      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 18, marginBottom: 26 }}>
+      <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr" : "1.4fr 1fr", gap: 18, marginBottom: 26 }}>
         <Card>
           <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 12 }}>
             <Icon name="help-circle" size={18} color={A.primary} />
@@ -152,7 +154,7 @@ export default function TodayPage() {
 
       {/* what to test today */}
       <SectionTitle>What do you want to test today?</SectionTitle>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 16 }}>
         {LAUNCHERS.map((t) => (
           <Card key={t.t} pad={20} onClick={() => router.push(t.to)} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div style={{ width: 48, height: 48, borderRadius: 14, background: t.tint[0], color: t.tint[1], display: "grid", placeItems: "center" }}>

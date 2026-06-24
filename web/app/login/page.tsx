@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Provider } from "@supabase/supabase-js";
 import { createClient, supabaseConfigured } from "@/lib/supabase/client";
 import { useThemeState } from "@/lib/theme";
+import { useIsMobile } from "@/lib/useIsMobile";
 import { A } from "@/components/kit/theme";
 import { Icon } from "@/components/kit/Icon";
 import { Field } from "@/components/kit/Field";
@@ -42,6 +43,7 @@ const PROVIDERS: { id: Provider; label: string; mark: ReactNode }[] = [
 export default function LoginPage() {
   const router = useRouter();
   const [theme, setTheme] = useThemeState();
+  const mobile = useIsMobile();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
@@ -86,9 +88,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: A.page, color: A.ink, fontFamily: A.font, display: "grid", gridTemplateColumns: "1.05fr 1fr" }}>
-      {/* left — brand panel */}
-      <div style={{ background: `linear-gradient(150deg, ${A.primaryDeep}, ${A.primary})`, color: "#fff", padding: "46px 52px", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
+    <div style={{ minHeight: "100vh", background: A.page, color: A.ink, fontFamily: A.font, display: "grid", gridTemplateColumns: mobile ? "1fr" : "1.05fr 1fr" }}>
+      {/* left — brand panel (hidden on phones) */}
+      <div style={{ background: `linear-gradient(150deg, ${A.primaryDeep}, ${A.primary})`, color: "#fff", padding: "46px 52px", display: mobile ? "none" : "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
         <div onClick={() => router.push("/")} style={{ display: "flex", alignItems: "center", gap: 11, cursor: "pointer", position: "relative", zIndex: 1 }}>
           <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(255,255,255,.18)", display: "grid", placeItems: "center", fontWeight: 800, fontSize: 21 }}>S</div>
           <span style={{ fontWeight: 800, fontSize: 21, letterSpacing: "-.02em" }}>Stax</span>
