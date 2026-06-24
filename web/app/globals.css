@@ -44,6 +44,66 @@ body {
   color: rgb(var(--text-primary));
 }
 
+/* ───────────────────────────────────────────────────────────────────────────
+   Stax "Warm Campus" design tokens (the UI kit's palette, ported from
+   templates/stax-ui/stax-kit.jsx). Light-default; `.dark` flips them. Used by
+   web/components/kit/* via var(--stax-*). Distinct from the trading tokens above
+   so the kit can roll out screen-by-screen without disturbing existing pages.
+   ─────────────────────────────────────────────────────────────────────────── */
+:root {
+  --stax-font: var(--font-jakarta), "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --stax-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --stax-radius: 22px;
+  --stax-page: #fbf7f0;
+  --stax-card: #ffffff;
+  --stax-ink: #232026;
+  --stax-muted: #837c88;
+  --stax-faint: #aba4b0;
+  --stax-primary: #2e7be6;
+  --stax-primary-deep: #1f5dc0;
+  --stax-primary-soft: #e7f1fd;
+  --stax-green: #1fa968;
+  --stax-green-soft: #e5f5ee;
+  --stax-amber: #f5a623;
+  --stax-amber-soft: #fdf0dc;
+  --stax-amber-ink: #b9791a;
+  --stax-red: #f0594c;
+  --stax-red-soft: #fce9e7;
+  --stax-blue: #3b82f6;
+  --stax-blue-soft: #e7f0fe;
+  --stax-border: #efe7da;
+  --stax-border-soft: #f4eee3;
+  --stax-sunk: #f2eee7;
+  --stax-bar-track: #f1ece3;
+  --stax-shadow: 0 6px 22px rgba(80, 60, 30, 0.07);
+  --stax-shadow-lg: 0 16px 44px rgba(80, 60, 30, 0.12);
+}
+.dark {
+  --stax-page: #13151a;
+  --stax-card: #1c1f26;
+  --stax-ink: #f4f2ee;
+  --stax-muted: #9ca0a8;
+  --stax-faint: #6b707a;
+  --stax-primary: #5b9bf0;
+  --stax-primary-deep: #9ac2f7;
+  --stax-primary-soft: #1e2a3d;
+  --stax-green: #34c27d;
+  --stax-green-soft: #14302a;
+  --stax-amber: #f5b53d;
+  --stax-amber-soft: #322811;
+  --stax-amber-ink: #f5b53d;
+  --stax-red: #f47065;
+  --stax-red-soft: #37201e;
+  --stax-blue: #5b9bf0;
+  --stax-blue-soft: #1e2a3d;
+  --stax-border: #2b3039;
+  --stax-border-soft: #232730;
+  --stax-sunk: #23262e;
+  --stax-bar-track: #2a2e37;
+  --stax-shadow: 0 6px 22px rgba(0, 0, 0, 0.4);
+  --stax-shadow-lg: 0 16px 44px rgba(0, 0, 0, 0.55);
+}
+
 /* All numeric data aligns on tabular figures (design principle #2). */
 .tabular,
 .font-mono {
