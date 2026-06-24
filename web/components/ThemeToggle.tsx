@@ -1,29 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-type Theme = "dark" | "light";
+import { applyTheme, type Theme } from "@/lib/theme";
 
 /**
  * Light/dark toggle. The initial class is set before paint by the inline script
- * in app/layout.tsx; this reads the resulting state on mount, then flips the
- * `.light` class on <html> and persists the choice to localStorage.
+ * in app/layout.tsx; this reads the resulting state on mount, then flips the theme
+ * via applyTheme (which drives both the `.light` and `.dark` token systems) and
+ * persists the choice to localStorage.
  */
 export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme | null>(null);
 
   useEffect(() => {
-    setTheme(document.documentElement.classList.contains("light") ? "light" : "dark");
+    setTheme(document.documentElement.classList.contains("dark") ? "dark" : "light");
   }, []);
 
   function toggle() {
     const next: Theme = theme === "light" ? "dark" : "light";
-    document.documentElement.classList.toggle("light", next === "light");
-    try {
-      localStorage.setItem("theme", next);
-    } catch {
-      /* private mode — keep the in-memory toggle only */
-    }
+    applyTheme(next);
     setTheme(next);
   }
 
