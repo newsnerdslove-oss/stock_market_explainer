@@ -16,7 +16,7 @@ const DESTINATIONS = [
 
 // Routes redesigned in the Stax kit carry their own AppShell nav — suppress this
 // (legacy) bar there so the two don't stack. Grows as more screens convert.
-const STAX_ROUTES = ["/settings", "/notifications", "/search"];
+const STAX_ROUTES = ["/settings", "/notifications", "/search", "/login"];
 
 /**
  * Persistent top navigation across the six destinations, with the brand mark and
