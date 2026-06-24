@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { getAllQuestions } from "@/lib/quiz";
-import { PageContainer } from "@/components/layout/PageContainer";
 import { DailyToday } from "@/components/DailyToday";
 import { DailyChallengeTeaser } from "@/components/DailyChallenge";
 import { AuthControls } from "@/components/AuthControls";
@@ -16,13 +15,15 @@ export default function ReviewPage() {
   const allQuestions = getAllQuestions();
 
   return (
-    <PageContainer size="wide" className="pb-16 pt-10">
-      <h1 className="text-4xl font-medium tracking-tight">Daily review</h1>
-      <p className="mt-3 text-muted">
+    <div className="mx-auto max-w-3xl">
+      <h1 className="text-3xl font-extrabold tracking-tight text-ink">Daily review</h1>
+      <p className="mt-2 font-semibold text-muted">
         A few minutes of review keeps what you&apos;ve learned from fading — and keeps your streak alive.
       </p>
 
-      <DailyToday allQuestions={allQuestions} />
+      <div className="mt-8">
+        <DailyToday allQuestions={allQuestions} />
+      </div>
 
       <DailyChallengeTeaser />
 
@@ -42,6 +43,6 @@ export default function ReviewPage() {
       <footer className="mt-16 border-t border-hairline pt-6 text-xs text-faint">
         Educational only · paper trading only · not financial advice.
       </footer>
-    </PageContainer>
+    </div>
   );
 }
