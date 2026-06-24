@@ -28,7 +28,7 @@ palette. **Polished** = re-skinned with kit components to match the prototype (P
 | `/search` | ✅ | ✅ | ✅ | s_search | |
 | `/login` | n/a (full-screen) | ✅ | ✅ | s_auth | |
 | `/` (home) | ✅ | ✅ | ⬜ | s_marketing | still uses PageContainer + old cards |
-| `/learn` | ✅ | ✅ | ⬜ | s_catalog | |
+| `/learn` | ✅ | ✅ | ✅ | s_catalog | warm unit-cards |
 | `/learn/[slug]` | ✅ | ✅ | ⬜ | s_lesson | lesson + 4 interactive widgets |
 | `/exam` | ✅ | ✅ | ⬜ | s_quiz | state machine |
 | `/study` | ✅ | ✅ | ⬜ | — | |
