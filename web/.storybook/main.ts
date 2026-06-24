@@ -6,10 +6,11 @@ const config: StorybookConfig = {
     "../stories/**/*.stories.@(js|jsx|mjs|ts|tsx)",
     "../components/**/*.stories.@(ts|tsx)",
   ],
-  // Kept minimal for now: docs + a11y. The Vitest/browser-test, Chromatic, and MCP
-  // addons that `storybook init` added are left installed but unwired so they don't
-  // touch the app's existing `vitest` suite.
-  addons: ["@storybook/addon-docs", "@storybook/addon-a11y"],
+  // docs + a11y, plus the MCP server addon (exposes Storybook to AI agents at
+  // /mcp while `storybook dev` runs). The Vitest/browser-test and Chromatic addons
+  // that `storybook init` added stay unwired so they don't touch the app's existing
+  // `vitest` 2.1 suite (addon-vitest needs Vitest 3+).
+  addons: ["@storybook/addon-docs", "@storybook/addon-a11y", "@storybook/addon-mcp"],
   framework: "@storybook/nextjs-vite",
 };
 export default config;
