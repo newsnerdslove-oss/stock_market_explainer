@@ -18,9 +18,11 @@ import { useThemeState } from "@/lib/theme";
 import { useIsMobile } from "@/lib/useIsMobile";
 
 const LAUNCHERS: { icon: string; t: string; s: string; tint: [string, string]; to: string }[] = [
-  { icon: "candlestick-chart", t: "Candlestick patterns", s: "Learn to read the candles", tint: [A.primarySoft, A.primary], to: "/learn" },
+  { icon: "graduation-cap", t: "Lessons", s: "Learn to read the markets", tint: [A.primarySoft, A.primary], to: "/learn" },
   { icon: "repeat", t: "Daily review", s: "Spaced repetition · keep it fresh", tint: [A.greenSoft, A.green], to: "/review" },
   { icon: "timer", t: "Practice exam", s: "Test under pressure", tint: [A.blueSoft, A.blue], to: "/exam" },
+  { icon: "compass", t: "Study plan", s: "Your weak spots, ranked", tint: [A.primarySoft, A.primaryDeep], to: "/study" },
+  { icon: "bar-chart-3", t: "Your progress", s: "Track mastery & streak", tint: [A.greenSoft, A.green], to: "/progress" },
   { icon: "line-chart", t: "Trade the simulator", s: "Put it to work, risk-free", tint: [A.amberSoft, A.amberInk], to: "/simulator" },
 ];
 
@@ -152,8 +154,8 @@ export default function TodayPage() {
       </div>
 
       {/* what to test today */}
-      <SectionTitle>What do you want to test today?</SectionTitle>
-      <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 16 }}>
+      <SectionTitle>Jump back in</SectionTitle>
+      <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr 1fr" : "repeat(3, 1fr)", gap: 16 }}>
         {LAUNCHERS.map((t) => (
           <Card key={t.t} pad={20} onClick={() => router.push(t.to)} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div style={{ width: 48, height: 48, borderRadius: 14, background: t.tint[0], color: t.tint[1], display: "grid", placeItems: "center" }}>
