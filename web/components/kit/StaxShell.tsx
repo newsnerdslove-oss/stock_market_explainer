@@ -31,7 +31,7 @@ const ROUTE_TAB: [string, string][] = [
  * theme toggle to the shared theme state, and pulls the live streak from progress.
  * The shell for every Stax-redesigned screen.
  */
-export function StaxShell({ children, maxWidth, xp = 0 }: { children?: ReactNode; maxWidth?: number; xp?: number }) {
+export function StaxShell({ children, maxWidth, xp }: { children?: ReactNode; maxWidth?: number; xp?: number }) {
   const router = useRouter();
   const pathname = usePathname();
   const [theme, setTheme] = useThemeState();
@@ -39,9 +39,10 @@ export function StaxShell({ children, maxWidth, xp = 0 }: { children?: ReactNode
 
   const tab = ROUTE_TAB.find(([p]) => pathname === p || pathname.startsWith(`${p}/`))?.[1] ?? "daily";
   const streak = hydrated ? progress.streak.current : 0;
+  const xpValue = xp ?? (hydrated ? progress.xp : 0);
 
   return (
-    <AppShell tab={tab} go={(id) => router.push(TAB_ROUTE[id] ?? "/")} theme={theme} setTheme={setTheme} streak={streak} xp={xp} maxWidth={maxWidth}>
+    <AppShell tab={tab} go={(id) => router.push(TAB_ROUTE[id] ?? "/")} theme={theme} setTheme={setTheme} streak={streak} xp={xpValue} maxWidth={maxWidth}>
       {children}
     </AppShell>
   );

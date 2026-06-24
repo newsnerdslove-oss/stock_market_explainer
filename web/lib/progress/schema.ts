@@ -7,7 +7,7 @@
 // not a redesign. v2 (Phase 2b) adds `review` (Leitner spaced repetition),
 // `streak`, and `tz`; this file is the one place that knows the shape.
 
-export const CURRENT_VERSION = 4;
+export const CURRENT_VERSION = 5;
 
 /** Most recent exam attempts kept per user (newest first). Older ones are dropped. */
 export const MAX_EXAM_HISTORY = 50;
@@ -107,6 +107,10 @@ export interface Progress {
   /** Tutor questions asked, newest first (capped at MAX_TUTOR_LOG). */
   tutorLog: TutorQuery[];
   streak: StreakState;
+  /** Lifetime XP earned across daily challenges, QOTD, and lessons. */
+  xp: number;
+  /** Idempotency keys for XP already granted (e.g. "qotd:2026-06-24"), so a refresh can't double-count. */
+  xpClaims: Record<string, true>;
   /** IANA time zone, so "today" is computed on the learner's local calendar day. */
   tz: string;
   /** Local date of the last completed daily review session, or null. */
@@ -128,6 +132,8 @@ export function defaultProgress(): Progress {
     exams: [],
     tutorLog: [],
     streak: defaultStreak(),
+    xp: 0,
+    xpClaims: {},
     tz: "",
     lastSession: null,
     updatedAt: "1970-01-01T00:00:00.000Z",
@@ -179,6 +185,8 @@ export function migrate(raw: unknown): Progress {
     exams: exams(s.exams),
     tutorLog: tutorLog(s.tutorLog),
     streak: obj(s.streak, base.streak),
+    xp: typeof s.xp === "number" ? s.xp : 0,
+    xpClaims: obj(s.xpClaims, base.xpClaims),
     tz: str(s.tz, base.tz),
     lastSession: strOrNull(s.lastSession),
     updatedAt: str(s.updatedAt, base.updatedAt),
