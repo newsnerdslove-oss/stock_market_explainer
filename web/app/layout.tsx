@@ -1,10 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { ViewTransition } from "react";
 import { Inter, JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { ProgressProvider } from "@/lib/progress/useProgress";
 import { ToastProvider } from "@/components/Toast";
-import { NavBar } from "@/components/NavBar";
+import { AppChrome } from "@/components/kit/AppChrome";
 
 // The two brand faces, self-hosted by next/font and exposed as CSS variables
 // that tailwind.config.ts points `font-sans` / `font-mono` at. Inter for UI &
@@ -58,7 +57,7 @@ export const viewport: Viewport = {
 
 // Applies the saved (or system-preferred) theme before first paint, so there's
 // no flash of the wrong theme. Inline + synchronous at the top of <body>.
-const THEME_INIT = `(function(){try{var t=localStorage.getItem('theme');if(!t){t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}var el=document.documentElement;el.classList.toggle('light',t==='light');el.classList.toggle('dark',t==='dark');}catch(e){}})();`;
+const THEME_INIT = `(function(){try{var t=localStorage.getItem('theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}if(t==='dark'){document.documentElement.classList.add('dark');}}catch(e){}})();`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -67,9 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
         <ProgressProvider>
           <ToastProvider>
-            <NavBar />
-            {/* Crossfade page content on navigation; NavBar stays put. */}
-            <ViewTransition>{children}</ViewTransition>
+            <AppChrome>{children}</AppChrome>
           </ToastProvider>
         </ProgressProvider>
       </body>

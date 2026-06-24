@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { StaxShell } from "@/components/kit/StaxShell";
 import { A } from "@/components/kit/theme";
 import { Icon } from "@/components/kit/Icon";
 import { Card } from "@/components/kit/Card";
@@ -65,7 +64,7 @@ export default function NotificationsPage() {
   };
 
   return (
-    <StaxShell maxWidth={760}>
+    <div style={{ maxWidth: 760, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-.02em", margin: 0 }}>Notifications</h1>
@@ -135,6 +134,6 @@ export default function NotificationsPage() {
         })}
         {shown.length === 0 && <div style={{ padding: 40, textAlign: "center", color: A.faint, fontWeight: 600 }}>Nothing here yet.</div>}
       </Card>
-    </StaxShell>
+    </div>
   );
 }

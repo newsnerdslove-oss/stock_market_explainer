@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { StaxShell } from "@/components/kit/StaxShell";
 import { A } from "@/components/kit/theme";
 import { Icon } from "@/components/kit/Icon";
 import { Card } from "@/components/kit/Card";
@@ -71,7 +70,7 @@ export default function TodayPage() {
   }
 
   return (
-    <StaxShell>
+    <>
       {/* greeting */}
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 22, flexWrap: "wrap", gap: 12 }}>
         <div>
@@ -170,6 +169,6 @@ export default function TodayPage() {
           </Card>
         ))}
       </div>
-    </StaxShell>
+    </>
   );
 }

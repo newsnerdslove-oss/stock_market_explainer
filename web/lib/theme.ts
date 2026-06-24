@@ -1,10 +1,9 @@
 "use client";
 
-// Single source of truth for the app theme. Both token systems read it: the
-// trading tokens key off `.light` (dark is the bare :root), the Stax "Warm Campus"
-// tokens key off `.dark` (light is the bare :root). So a theme switch must drive
-// BOTH classes — light → `.light`, dark → `.dark` — to keep them in lockstep during
-// the redesign. The pre-paint inline script in app/layout.tsx applies the same rule.
+// Single source of truth for the app theme. The whole app (semantic tokens AND the
+// --stax-* kit tokens) now keys off one class: `.dark` = dark, bare `:root` = the
+// Warm Campus light default. The pre-paint inline script in app/layout.tsx applies
+// the same rule.
 import { useEffect, useState } from "react";
 
 export type Theme = "light" | "dark";
@@ -13,8 +12,8 @@ const listeners = new Set<() => void>();
 
 export function applyTheme(t: Theme) {
   const el = document.documentElement;
-  el.classList.toggle("light", t === "light");
   el.classList.toggle("dark", t === "dark");
+  el.classList.remove("light"); // legacy class — light is now the bare :root
   try {
     localStorage.setItem("theme", t);
   } catch {

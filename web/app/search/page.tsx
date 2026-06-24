@@ -2,7 +2,6 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { StaxShell } from "@/components/kit/StaxShell";
 import { A } from "@/components/kit/theme";
 import { Icon } from "@/components/kit/Icon";
 import { Card } from "@/components/kit/Card";
@@ -56,7 +55,7 @@ export default function SearchPage() {
   const goStock = (s: string) => router.push(`/symbol/${encodeURIComponent(s)}`);
 
   return (
-    <StaxShell maxWidth={820}>
+    <div style={{ maxWidth: 820, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
         <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-.02em", margin: 0 }}>Search</h1>
       </div>
@@ -160,6 +159,6 @@ export default function SearchPage() {
           </Section>
         )}
       </div>
-    </StaxShell>
+    </div>
   );
 }

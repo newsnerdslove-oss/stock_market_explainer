@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { StaxShell } from "@/components/kit/StaxShell";
 import { A } from "@/components/kit/theme";
 import { Icon } from "@/components/kit/Icon";
 import { Card } from "@/components/kit/Card";
@@ -44,7 +43,7 @@ export default function SettingsPage() {
   const mobile = useIsMobile();
 
   return (
-    <StaxShell maxWidth={980}>
+    <div style={{ maxWidth: 980, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
         <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-.02em", margin: 0 }}>Settings</h1>
       </div>
@@ -233,6 +232,6 @@ export default function SettingsPage() {
           )}
         </div>
       </div>
-    </StaxShell>
+    </div>
   );
 }

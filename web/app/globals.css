@@ -5,38 +5,24 @@
 /* Design tokens — see docs/DESIGN_SYSTEM.md. Stored as space-separated RGB
    CHANNELS (not hex) so Tailwind's `rgb(var(--x) / <alpha-value>)` can apply
    opacity modifiers (bg-up/10, border-strong/40, …) and a theme can swap them. */
+/* Unified with the Stax "Warm Campus" palette: the semantic tokens now resolve to
+   the same warm light/dark values the kit uses (light is the default `:root`; the
+   `.dark` block below flips both these channels AND the --stax-* vars). Channels
+   sourced from templates/stax-ui/stax-kit.jsx (page/card/ink/muted/border/...). */
 :root {
-  color-scheme: dark;
-  --bg-canvas: 11 14 20;
-  --bg-surface: 20 25 34;
-  --bg-surface-2: 27 33 44;
-  --border-hairline: 30 37 48;
-  --border-strong: 35 42 54;
-  --text-primary: 232 237 244;
-  --text-secondary: 138 148 166;
-  --text-tertiary: 90 99 118;
-  --up: 43 209 126;
-  --down: 255 92 92;
-  --learn: 139 124 246;
-  --streak: 245 166 35;
-}
-
-/* Light theme: the neutral ramp inverted. Semantic hues stay recognizable but are
-   shaded darker so text/buttons clear WCAG AA contrast on the light canvas. */
-.light {
   color-scheme: light;
-  --bg-canvas: 244 246 250;
+  --bg-canvas: 251 247 240;
   --bg-surface: 255 255 255;
-  --bg-surface-2: 234 238 244;
-  --border-hairline: 226 231 238;
-  --border-strong: 207 214 224;
-  --text-primary: 16 21 31;
-  --text-secondary: 88 96 114;
-  --text-tertiary: 107 116 132;
-  --up: 11 122 68;
-  --down: 201 42 42;
-  --learn: 91 71 196;
-  --streak: 180 83 9;
+  --bg-surface-2: 242 238 231;
+  --border-hairline: 244 238 227;
+  --border-strong: 239 231 218;
+  --text-primary: 35 32 38;
+  --text-secondary: 131 124 136;
+  --text-tertiary: 171 164 176;
+  --up: 31 169 104;
+  --down: 240 89 76;
+  --learn: 46 123 230;
+  --streak: 245 166 35;
 }
 
 body {
@@ -79,6 +65,19 @@ body {
   --stax-shadow-lg: 0 16px 44px rgba(80, 60, 30, 0.12);
 }
 .dark {
+  color-scheme: dark;
+  --bg-canvas: 19 21 26;
+  --bg-surface: 28 31 38;
+  --bg-surface-2: 35 38 46;
+  --border-hairline: 35 39 48;
+  --border-strong: 43 48 57;
+  --text-primary: 244 242 238;
+  --text-secondary: 156 160 168;
+  --text-tertiary: 107 112 122;
+  --up: 52 194 125;
+  --down: 244 112 101;
+  --learn: 91 155 240;
+  --streak: 245 181 61;
   --stax-page: #13151a;
   --stax-card: #1c1f26;
   --stax-ink: #f4f2ee;
