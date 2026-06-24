@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stax — Style Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  html, body { margin: 0; padding: 0; }
+  body { background: #FBF7F0; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  * { box-sizing: border-box; }
+  #app { min-height: 100vh; }
+  svg.lucide { stroke-width: 2; }
+  #app svg[viewBox] { display: block; max-width: 100%; height: auto; }
+  a[href^="#"]:hover { color: var(--sg-hover, #2E7BE6) !important; }
+</style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="../_ds_bundle.js"></script>
+
+  <script type="text/babel" src="shared.jsx"></script>
+  <script type="text/babel" src="aKit.jsx"></script>
+  <script type="text/babel" src="styleguide.jsx"></script>
+
+  <script type="text/babel" data-presets="react">
+    // small sample dataset for the PatternChart specimen
+    window.hammerCandles = window.hammerCandles || function () {
+      return [
+        { open: 118, high: 120, low: 116, close: 117 },
+        { open: 117, high: 118, low: 112, close: 113 },
+        { open: 113, high: 114, low: 108, close: 109 },
+        { open: 109, high: 110, low: 101, close: 108 },
+        { open: 108, high: 113, low: 107, close: 112 },
+        { open: 112, high: 117, low: 111, close: 116 },
+      ];
+    };
+    const TKEY = 'stax.sg.theme';
+
+    function Root() {
+      const [theme, setThemeState] = React.useState(() => localStorage.getItem(TKEY) || 'light');
+      if (window.applyTheme) window.applyTheme(theme);
+      const setTheme = React.useCallback((t) => {
+        if (window.applyTheme) window.applyTheme(t);
+        try { localStorage.setItem(TKEY, t); } catch (e) {}
+        setThemeState(t);
+      }, []);
+      React.useEffect(() => {
+        const draw = () => window.lucide && window.lucide.createIcons();
+        draw(); const t = [60, 250, 600].map(ms => setTimeout(draw, ms));
+        return () => t.forEach(clearTimeout);
+      }, [theme]);
+      const SG = window.StyleGuide;
+      return SG ? <SG key={theme} theme={theme} setTheme={setTheme} /> : null;
+    }
+
+    ReactDOM.createRoot(document.getElementById('app')).render(<Root />);
+  </script>
+</body>
+</html>

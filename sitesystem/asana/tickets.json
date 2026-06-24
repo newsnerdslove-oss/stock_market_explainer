@@ -1,0 +1,217 @@
+{
+  "project": "Stax — Product Build",
+  "description": "Build the Stax stock-market learning + paper-trading app from the validated design prototype (site-system/). Each ticket references the prototype file that specifies the intended UX.",
+  "customFields": [
+    { "name": "Priority", "type": "enum", "options": ["High", "Medium", "Low"] },
+    { "name": "Estimate (days)", "type": "number" },
+    { "name": "Epic", "type": "enum", "options": ["DS & Kit", "Daily Hub", "Lessons", "Achievements & Leaderboard", "Paper Trading", "Options", "Social & Clubs", "Account & Nav", "Mobile", "Cross-cutting"] }
+  ],
+  "epics": [
+    {
+      "key": "DS", "name": "DS & Kit",
+      "tickets": [
+        { "id": "DS-1", "title": "Graduate UI kit to Storybook components", "priority": "High", "estimateDays": 5,
+          "description": "Promote the prototype kit (Btn, Card, Pill, Badge, AppShell, SectionTitle, LessonCard, Field, Toggle, Ring, Bar, Avatar, WeekDots, Icon) into real components with .stories.tsx so /design-sync exposes them.",
+          "acceptanceCriteria": ["Each component has a story and TS types", "design-sync lists them under the StocksDS namespace", "Light/dark theming preserved"],
+          "prototype": ["templates/stax-ui/stax-kit.jsx", "templates/stax-ui/README.md"], "dependsOn": [] },
+        { "id": "DS-2", "title": "ResearchChart: add fixtures / demo-data mode", "priority": "High", "estimateDays": 2,
+          "description": "Add a prop so ResearchChart renders from passed candle fixtures when no /api/candles backend is present. Unblocks composing it in design screens and Storybook.",
+          "acceptanceCriteria": ["<ResearchChart symbol fixtures={...}/> renders fully with no network", "Falls back to fixtures when API absent"],
+          "prototype": ["site-system/s_chart.jsx"], "dependsOn": [] },
+        { "id": "DS-3", "title": "Write ResearchChart.stories.tsx", "priority": "Medium", "estimateDays": 2,
+          "description": "Sized wrapper + MSW candles handler + seeded localStorage (drawings/alerts) + variants (EMAs, RSI/MACD, supply-demand zones).",
+          "acceptanceCriteria": ["Story renders all canvas layers with no console errors", "Variants: default, indicators on, zones"],
+          "prototype": [], "dependsOn": ["DS-2"] },
+        { "id": "DS-4", "title": "Publish App Screen starter template", "priority": "Low", "estimateDays": 1,
+          "description": "Ship the kit-based starter as a real scaffolding starting point.",
+          "acceptanceCriteria": ["New screen can be scaffolded with nav shell + cards + chart"],
+          "prototype": ["templates/stax-ui/StaxScreen.dc.html"], "dependsOn": ["DS-1"] }
+      ]
+    },
+    {
+      "key": "DH", "name": "Daily Hub",
+      "tickets": [
+        { "id": "DH-1", "title": "Daily content selection service", "priority": "High", "estimateDays": 3,
+          "description": "Date-seeded job that picks chart-of-the-day (dataset + correct candle index + pattern) and question-of-the-day (prompt/options/correct/explanation). Same for all users per calendar day.",
+          "acceptanceCriteria": ["Deterministic per date", "API returns today's payload", "Content authorable"],
+          "prototype": ["site-system/s_daily.jsx"], "dependsOn": [] },
+        { "id": "DH-2", "title": "Per-user daily state + streak reset", "priority": "High", "estimateDays": 3,
+          "description": "Model dailyCompleted, dailyGoal {done,target}, lastCompletedDate, streakCount with timezone-aware break logic.",
+          "acceptanceCriteria": ["Streak increments once/day", "Breaks on a missed day in user timezone"],
+          "prototype": ["site-system/s_daily.jsx"], "dependsOn": [] },
+        { "id": "DH-3", "title": "XP + streak mutation service", "priority": "High", "estimateDays": 2,
+          "description": "Award XP and advance streak on daily challenge / QOTD / lesson completion; define bonuses (double-XP daily, +10 QOTD).",
+          "acceptanceCriteria": ["Idempotent per action", "Auditable XP ledger"],
+          "prototype": [], "dependsOn": ["DH-2"] },
+        { "id": "DH-4", "title": "Today screen UI", "priority": "Medium", "estimateDays": 3,
+          "description": "Chart-of-day hero, QOTD with reveal, daily-goal ring, streak strip, what-to-test launcher.",
+          "acceptanceCriteria": ["Matches prototype", "Wired to DH-1/DH-2/DH-3"],
+          "prototype": ["site-system/s_daily.jsx"], "dependsOn": ["DH-1", "DH-2", "DH-3"] },
+        { "id": "DH-5", "title": "Reminders & streak notifications", "priority": "Medium", "estimateDays": 2,
+          "description": "Daily reminder at user-set time + streak-about-to-break nudge.",
+          "acceptanceCriteria": ["Respects per-type toggles and quiet hours"],
+          "prototype": ["site-system/s_settings.jsx", "site-system/s_alerts.jsx"], "dependsOn": ["DH-2"] }
+      ]
+    },
+    {
+      "key": "LE", "name": "Lessons",
+      "tickets": [
+        { "id": "LE-1", "title": "Lesson content model", "priority": "High", "estimateDays": 2,
+          "description": "Schema for a lesson as ordered steps (teach | choice | tap) with chart refs, options, correct, explain.",
+          "acceptanceCriteria": ["Authorable + validated", "Versioned"],
+          "prototype": ["site-system/s_player.jsx"], "dependsOn": [] },
+        { "id": "LE-2", "title": "Lesson player UI", "priority": "High", "estimateDays": 4,
+          "description": "Full-bleed step-through: progress bar, hearts, select->check->feedback->continue, completion (XP/accuracy/hearts).",
+          "acceptanceCriteria": ["Matches prototype incl. tap-the-candle exercise", "No crash on inline-check transitions"],
+          "prototype": ["site-system/s_player.jsx"], "dependsOn": ["LE-1"] },
+        { "id": "LE-3", "title": "Hearts / lives mechanic", "priority": "Medium", "estimateDays": 2,
+          "description": "Decide model (gate progress? refill over time? gems?). Wrong inline check costs a heart.",
+          "acceptanceCriteria": ["Configurable cap + refill", "Defined retry rules"],
+          "prototype": ["site-system/s_player.jsx"], "dependsOn": ["LE-2"] }
+      ]
+    },
+    {
+      "key": "AC", "name": "Achievements & Leaderboard",
+      "tickets": [
+        { "id": "AC-1", "title": "Achievement catalog + criteria engine", "priority": "Medium", "estimateDays": 3,
+          "description": "Define badge taxonomy (tiers, categories) + a rules engine evaluating progress/goal.",
+          "acceptanceCriteria": ["Badges award automatically on criteria met", "Progress queryable"],
+          "prototype": ["site-system/s_badges.jsx"], "dependsOn": ["DH-3"] },
+        { "id": "AC-2", "title": "Achievements grid UI", "priority": "Low", "estimateDays": 2,
+          "description": "Category filter, closest-to-unlocking spotlight, earned/locked tiles with progress.",
+          "acceptanceCriteria": ["Matches prototype", "Live progress"],
+          "prototype": ["site-system/s_badges.jsx"], "dependsOn": ["AC-1"] },
+        { "id": "LB-1", "title": "Weekly league cohort + reset job", "priority": "Medium", "estimateDays": 4,
+          "description": "Assign users to weekly cohorts, compute standings, promote top-N / demote bottom-N, reset weekly.",
+          "acceptanceCriteria": ["Fair cohorts", "Scheduled reset", "Anti-cheat on XP"],
+          "prototype": ["site-system/s_leaderboard.jsx"], "dependsOn": ["DH-3"] },
+        { "id": "LB-2", "title": "Leaderboard UI", "priority": "Low", "estimateDays": 2,
+          "description": "Podium, promotion/demotion zones, League/Friends toggle, countdown.",
+          "acceptanceCriteria": ["Matches prototype"],
+          "prototype": ["site-system/s_leaderboard.jsx"], "dependsOn": ["LB-1"] }
+      ]
+    },
+    {
+      "key": "PT", "name": "Paper Trading",
+      "tickets": [
+        { "id": "PT-1", "title": "Market data service", "priority": "High", "estimateDays": 5,
+          "description": "Quotes + candles for stocks/ETFs/crypto. Decide real-time vs delayed, market hours vs 24/7, corporate actions.",
+          "acceptanceCriteria": ["/api/{candles,quote,snapshot} with documented latency", "Asset universe defined"],
+          "prototype": ["site-system/trade_store.js"], "dependsOn": [] },
+        { "id": "PT-2", "title": "Positions/orders service + order engine", "priority": "High", "estimateDays": 6,
+          "description": "Virtual cash + positions + orders. Support market/limit/stop/stop-limit, buy/sell; fills incl. resting orders crossing price; avg-cost + realized/unrealized P&L.",
+          "acceptanceCriteria": ["Balances reconcile", "Fills match the prototype spec", "P&L correct"],
+          "prototype": ["site-system/trade_store.js"], "dependsOn": ["PT-1"] },
+        { "id": "PT-3", "title": "Trading desk UI", "priority": "Medium", "estimateDays": 3,
+          "description": "Account header, stat tiles, portfolio chart, positions table, watchlist, open orders, missions strip, tilt nudge.",
+          "acceptanceCriteria": ["Matches prototype", "Live updates"],
+          "prototype": ["site-system/s_trade.jsx"], "dependsOn": ["PT-2"] },
+        { "id": "PT-4", "title": "Stock detail + order ticket UI", "priority": "High", "estimateDays": 4,
+          "description": "Search, ResearchChart, key stats, news, position card, order ticket (types, qty, limit/stop, TIF, trade-thesis journaling), review->confirm->post-trade scoring.",
+          "acceptanceCriteria": ["Matches prototype", "Order ticket drives PT-2"],
+          "prototype": ["site-system/s_stock.jsx"], "dependsOn": ["PT-2", "DS-2"] },
+        { "id": "PT-5", "title": "Order history", "priority": "Low", "estimateDays": 1,
+          "description": "All/Open/Filled/Cancelled with journaled thesis inline; cancel open orders.",
+          "acceptanceCriteria": ["Matches prototype"],
+          "prototype": ["site-system/s_orders.jsx"], "dependsOn": ["PT-2"] },
+        { "id": "PT-6", "title": "Tilt / overtrading guardrails", "priority": "Medium", "estimateDays": 2,
+          "description": "Detect rapid trading / loss-chasing; show nudge + optional timeout. Deliberate divergence from engagement-maximizing apps.",
+          "acceptanceCriteria": ["Configurable thresholds", "Events logged"],
+          "prototype": ["site-system/s_trade.jsx"], "dependsOn": ["PT-2"] },
+        { "id": "PT-7", "title": "Trade-quality scoring + XP", "priority": "Medium", "estimateDays": 2,
+          "description": "Reward discipline (journaled thesis, price-controlled order, measured pace), not churn.",
+          "acceptanceCriteria": ["Score + XP per fill", "Feeds the XP service"],
+          "prototype": ["site-system/s_stock.jsx"], "dependsOn": ["PT-2", "DH-3"] }
+      ]
+    },
+    {
+      "key": "OP", "name": "Options",
+      "tickets": [
+        { "id": "OP-1", "title": "Options chain data + pricing", "priority": "Medium", "estimateDays": 3,
+          "description": "Expiries + strikes around spot with a premium model.",
+          "acceptanceCriteria": ["Chain API", "Reasonable premiums"],
+          "prototype": ["site-system/s_options.jsx"], "dependsOn": ["PT-1"] },
+        { "id": "OP-2", "title": "Options multi-leg builder + payoff", "priority": "Medium", "estimateDays": 3,
+          "description": "Tap-to-add legs, long/short, net debit/credit, payoff curve (DS PayoffDiagram).",
+          "acceptanceCriteria": ["Matches prototype"],
+          "prototype": ["site-system/s_options.jsx"], "dependsOn": ["OP-1"] },
+        { "id": "OP-3", "title": "Wire options into positions / P&L", "priority": "Medium", "estimateDays": 3,
+          "description": "Integrate option positions into the trade store so they affect buying power + P&L.",
+          "acceptanceCriteria": ["Option fills appear in positions", "P&L correct at expiry"],
+          "prototype": ["site-system/s_options.jsx"], "dependsOn": ["OP-2", "PT-2"] }
+      ]
+    },
+    {
+      "key": "CL", "name": "Social & Clubs",
+      "tickets": [
+        { "id": "CL-1", "title": "Clubs data model", "priority": "Medium", "estimateDays": 3,
+          "description": "Clubs + membership; a user belongs to many clubs and friend circles.",
+          "acceptanceCriteria": ["Many-to-many membership", "Roles", "Holdings privacy"],
+          "prototype": ["site-system/s_clubs.jsx"], "dependsOn": [] },
+        { "id": "CL-2", "title": "Club + friend leaderboards", "priority": "Low", "estimateDays": 2,
+          "description": "Per-club and friends standings tied to weekly returns.",
+          "acceptanceCriteria": ["Consistent with global league rules"],
+          "prototype": ["site-system/s_clubs.jsx"], "dependsOn": ["CL-1", "LB-1"] },
+        { "id": "CL-3", "title": "Invite friends / create club flows", "priority": "Low", "estimateDays": 3,
+          "description": "Replace prototype stubs with real invites (link/contacts) + club creation.",
+          "acceptanceCriteria": ["Invite link works", "Club created with members"],
+          "prototype": ["site-system/s_clubs.jsx"], "dependsOn": ["CL-1"] },
+        { "id": "CL-4", "title": "Weekly trading challenge", "priority": "Low", "estimateDays": 2,
+          "description": "Best paper return wins; ties into league. Framed as play-smart.",
+          "acceptanceCriteria": ["Cohort + reset + rewards defined"],
+          "prototype": ["site-system/s_clubs.jsx"], "dependsOn": ["LB-1"] }
+      ]
+    },
+    {
+      "key": "AN", "name": "Account & Nav",
+      "tickets": [
+        { "id": "AN-1", "title": "Auth + SSO", "priority": "High", "estimateDays": 5,
+          "description": "Google, Apple, Microsoft, GitHub, and company SSO (SAML).",
+          "acceptanceCriteria": ["Each provider signs in", "Session persisted", "Profile fields captured"],
+          "prototype": ["site-system/s_auth.jsx"], "dependsOn": [] },
+        { "id": "AN-2", "title": "Settings sub-pages", "priority": "Medium", "estimateDays": 3,
+          "description": "Account, Notifications (reminder time + toggles), Plan & billing (Free/Pro), Appearance, Security.",
+          "acceptanceCriteria": ["Each pane persists"],
+          "prototype": ["site-system/s_settings.jsx"], "dependsOn": ["AN-1"] },
+        { "id": "AN-3", "title": "Global search", "priority": "Low", "estimateDays": 2,
+          "description": "Symbols + lessons + glossary terms; trending + empty/loading/error states.",
+          "acceptanceCriteria": ["Ranked results", "Deep-links to stock/lesson"],
+          "prototype": ["site-system/s_search.jsx"], "dependsOn": [] },
+        { "id": "AN-4", "title": "Notifications inbox", "priority": "Low", "estimateDays": 2,
+          "description": "Typed feed (price/learning/social), read/unread, filters, mark-all-read, deep-links.",
+          "acceptanceCriteria": ["Matches prototype"],
+          "prototype": ["site-system/s_alerts.jsx"], "dependsOn": [] },
+        { "id": "AN-5", "title": "Legal / About pages", "priority": "Low", "estimateDays": 1,
+          "description": "About, Terms, Privacy. Replace placeholder copy with legal-approved text.",
+          "acceptanceCriteria": ["Final copy", "Linked from auth + footer"],
+          "prototype": ["site-system/s_legal.jsx"], "dependsOn": [] }
+      ]
+    },
+    {
+      "key": "MO", "name": "Mobile",
+      "tickets": [
+        { "id": "MO-1", "title": "Mobile responsive layouts", "priority": "Medium", "estimateDays": 5,
+          "description": "Phone layouts for Today, Lesson, Invest, Stock.",
+          "acceptanceCriteria": ["Core loop usable at 390px", "44px hit targets"],
+          "prototype": ["site-system/Stax Mobile.html", "site-system/m_screens.jsx"], "dependsOn": ["DH-4", "LE-2", "PT-3", "PT-4"] },
+        { "id": "MO-2", "title": "Bottom tab navigation", "priority": "Low", "estimateDays": 1,
+          "description": "Today / Learn / Invest / You tab bar on mobile.",
+          "acceptanceCriteria": ["Routes between core screens"],
+          "prototype": ["site-system/m_screens.jsx"], "dependsOn": ["MO-1"] },
+        { "id": "MO-3", "title": "Mobile chart touch interactions", "priority": "Medium", "estimateDays": 3,
+          "description": "ResearchChart with touch crosshair, pinch-zoom, tap tools on mobile.",
+          "acceptanceCriteria": ["Usable on touch", "No jank"],
+          "prototype": ["site-system/s_chart.jsx"], "dependsOn": ["DS-2"] }
+      ]
+    },
+    {
+      "key": "XC", "name": "Cross-cutting",
+      "tickets": [
+        { "id": "XC-1", "title": "Empty / loading / error states", "priority": "Medium", "estimateDays": 3,
+          "description": "Define + build across screens (empty portfolio, loading quotes, failed order, no results, offline).",
+          "acceptanceCriteria": ["Every async surface has all three states"],
+          "prototype": [], "dependsOn": [] }
+      ]
+    }
+  ]
+}

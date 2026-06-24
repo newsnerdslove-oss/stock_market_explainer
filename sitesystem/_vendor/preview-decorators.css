@@ -1,0 +1,81 @@
+/* web/app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+:root {
+  color-scheme: dark;
+  --bg-canvas: 11 14 20;
+  --bg-surface: 20 25 34;
+  --bg-surface-2: 27 33 44;
+  --border-hairline: 30 37 48;
+  --border-strong: 35 42 54;
+  --text-primary: 232 237 244;
+  --text-secondary: 138 148 166;
+  --text-tertiary: 90 99 118;
+  --up: 43 209 126;
+  --down: 255 92 92;
+  --learn: 139 124 246;
+  --streak: 245 166 35;
+}
+.light {
+  color-scheme: light;
+  --bg-canvas: 244 246 250;
+  --bg-surface: 255 255 255;
+  --bg-surface-2: 234 238 244;
+  --border-hairline: 226 231 238;
+  --border-strong: 207 214 224;
+  --text-primary: 16 21 31;
+  --text-secondary: 88 96 114;
+  --text-tertiary: 107 116 132;
+  --up: 11 122 68;
+  --down: 201 42 42;
+  --learn: 91 71 196;
+  --streak: 180 83 9;
+}
+body {
+  background: rgb(var(--bg-canvas));
+  color: rgb(var(--text-primary));
+}
+.tabular,
+.font-mono {
+  font-variant-numeric: tabular-nums;
+}
+summary::-webkit-details-marker {
+  display: none;
+}
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(var(--learn) / 0.45);
+  border-radius: 6px;
+}
+@keyframes tickFlash {
+  from {
+    opacity: 0.6;
+  }
+  to {
+    opacity: 0;
+  }
+}
+.animate-tick-flash {
+  animation: tickFlash 600ms ease-out forwards;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 200ms;
+  animation-timing-function: ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

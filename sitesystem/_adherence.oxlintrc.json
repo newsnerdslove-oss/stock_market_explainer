@@ -1,0 +1,105 @@
+{
+  "plugins": [
+    "react",
+    "import"
+  ],
+  "rules": {
+    "react/forbid-elements": [
+      "warn",
+      {
+        "forbid": []
+      }
+    ],
+    "no-restricted-imports": [
+      "warn",
+      {
+        "patterns": [
+          {
+            "group": [
+              "components/charts/CandleAnatomy/**",
+              "components/charts/EquityCurve/**",
+              "components/charts/PatternChart/**",
+              "components/charts/PayoffDiagram/**",
+              "site-system/**"
+            ],
+            "message": "Import design-system components from 'index.js', not component internals."
+          }
+        ]
+      }
+    ],
+    "no-restricted-syntax": [
+      "warn",
+      {
+        "selector": "Literal[value=/#[0-9a-fA-F]{3,8}\\b/]",
+        "message": "Raw hex color — use a design-system color token via var()."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='EquityCurve'] > JSXAttribute > JSXIdentifier[name!=/^(?:equity|key|ref|className|style|children)$/]",
+        "message": "<EquityCurve> doesn't accept that prop. Declared props: equity."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='PatternChart'] > JSXAttribute > JSXIdentifier[name!=/^(?:candles|onPick|picked|correctIndex|key|ref|className|style|children)$/]",
+        "message": "<PatternChart> doesn't accept that prop. Declared props: candles, onPick, picked, correctIndex."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='PayoffDiagram'] > JSXAttribute > JSXIdentifier[name!=/^(?:legs|title|key|ref|className|style|children)$/]",
+        "message": "<PayoffDiagram> doesn't accept that prop. Declared props: legs, title."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/index.js"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ],
+  "x-omelette": {
+    "components": {
+      "CandleAnatomy": {
+        "replaces": []
+      },
+      "EquityCurve": {
+        "replaces": []
+      },
+      "PatternChart": {
+        "replaces": []
+      },
+      "PayoffDiagram": {
+        "replaces": []
+      }
+    },
+    "tokens": [
+      "--bg-canvas",
+      "--bg-surface",
+      "--bg-surface-2",
+      "--border-hairline",
+      "--border-strong",
+      "--down",
+      "--learn",
+      "--streak",
+      "--text-primary",
+      "--text-secondary",
+      "--text-tertiary",
+      "--up"
+    ],
+    "tokenKinds": {
+      "--bg-canvas": "color",
+      "--bg-surface": "color",
+      "--bg-surface-2": "color",
+      "--border-hairline": "color",
+      "--border-strong": "color",
+      "--text-primary": "font",
+      "--text-secondary": "font",
+      "--text-tertiary": "font",
+      "--up": "color",
+      "--down": "color",
+      "--learn": "color",
+      "--streak": "color"
+    },
+    "fontFamilies": []
+  }
+}

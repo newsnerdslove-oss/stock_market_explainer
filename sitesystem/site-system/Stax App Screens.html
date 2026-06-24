@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stax — App Screens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Nunito:wght@500;600;700;800&family=Manrope:wght@500;600;700;800&family=Inter:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  html, body { margin: 0; padding: 0; }
+  body { background: #FBF7F0; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  * { box-sizing: border-box; }
+  #app { min-height: 100vh; }
+  svg.lucide { stroke-width: 2; }
+  /* DS charts come in as className="w-full" — let them fill their box */
+  #app svg[viewBox] { display: block; max-width: 100%; height: auto; }
+
+  /* floating screen picker */
+  .picker {
+    position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+    display: flex; gap: 4px; padding: 6px; z-index: 999;
+    max-width: calc(100vw - 32px); overflow-x: auto; scrollbar-width: none;
+    background: rgba(35,32,38,.9); backdrop-filter: blur(10px);
+    border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.28);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  .picker::-webkit-scrollbar { display: none; }
+  .picker button {
+    border: none; background: transparent; color: #C9C3CE; cursor: pointer;
+    font-family: inherit; font-weight: 700; font-size: 13px; padding: 8px 13px; border-radius: 11px;
+    transition: background .15s ease, color .15s ease; white-space: nowrap;
+  }
+  .picker button:hover { color: #fff; }
+  .picker button.on { background: #2E7BE6; color: #fff; }
+  .picker .sep { width: 1px; background: rgba(255,255,255,.14); margin: 6px 3px; }
+</style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="../_ds_bundle.js"></script>
+  <script src="trade_store.js"></script>
+
+  <script type="text/babel" src="shared.jsx"></script>
+  <script type="text/babel" src="aKit.jsx"></script>
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+  <script type="text/babel" src="s_marketing.jsx"></script>
+  <script type="text/babel" src="s_onboarding.jsx"></script>
+  <script type="text/babel" src="s_daily.jsx"></script>
+  <script type="text/babel" src="s_dashboard.jsx"></script>
+  <script type="text/babel" src="s_lesson.jsx"></script>
+  <script type="text/babel" src="s_player.jsx"></script>
+  <script type="text/babel" src="s_catalog.jsx"></script>
+  <script type="text/babel" src="s_quiz.jsx"></script>
+  <script type="text/babel" src="s_profile.jsx"></script>
+  <script type="text/babel" src="s_badges.jsx"></script>
+  <script type="text/babel" src="s_leaderboard.jsx"></script>
+  <script type="text/babel" src="s_auth.jsx"></script>
+  <script type="text/babel" src="s_legal.jsx"></script>
+  <script type="text/babel" src="s_trade.jsx"></script>
+  <script type="text/babel" src="s_stock.jsx"></script>
+  <script type="text/babel" src="s_orders.jsx"></script>
+  <script type="text/babel" src="s_clubs.jsx"></script>
+  <script type="text/babel" src="s_chart.jsx"></script>
+  <script type="text/babel" src="s_search.jsx"></script>
+  <script type="text/babel" src="s_settings.jsx"></script>
+  <script type="text/babel" src="s_alerts.jsx"></script>
+  <script type="text/babel" src="s_options.jsx"></script>
+
+  <script type="text/babel" data-presets="react">
+    const SCREENS = [
+      { id: 'marketing', label: 'Landing', Comp: () => window.ScreenMarketing },
+      { id: 'auth', label: 'Log in', Comp: () => window.ScreenAuth },
+      { id: 'onboarding', label: 'Onboarding', Comp: () => window.ScreenOnboarding },
+      { id: 'daily', label: 'Today', Comp: () => window.ScreenDaily },
+      { id: 'dashboard', label: 'Dashboard', Comp: () => window.ScreenDashboard },
+      { id: 'lesson', label: 'Lesson', Comp: () => window.ScreenLesson },
+      { id: 'player', label: 'Player', Comp: () => window.ScreenPlayer },
+      { id: 'catalog', label: 'Catalog', Comp: () => window.ScreenCatalog },
+      { id: 'quiz', label: 'Practice', Comp: () => window.ScreenQuiz },
+      { id: 'badges', label: 'Badges', Comp: () => window.ScreenBadges },
+      { id: 'leaderboard', label: 'Leaderboard', Comp: () => window.ScreenLeaderboard },
+      { id: 'profile', label: 'Profile', Comp: () => window.ScreenProfile },
+      { id: 'legal', label: 'Legal', Comp: () => window.ScreenLegal },
+      { id: 'trade', label: 'Invest', Comp: () => window.ScreenTrade },
+      { id: 'stock', label: 'Stock', Comp: () => window.ScreenStock },
+      { id: 'orders', label: 'Orders', Comp: () => window.ScreenOrders },
+      { id: 'clubs', label: 'Clubs', Comp: () => window.ScreenClubs },
+      { id: 'options', label: 'Options', Comp: () => window.ScreenOptions },
+      { id: 'search', label: 'Search', Comp: () => window.ScreenSearch },
+      { id: 'alerts', label: 'Alerts', Comp: () => window.ScreenAlerts },
+      { id: 'settings', label: 'Settings', Comp: () => window.ScreenSettings },
+    ];
+    const KEY = 'stax.screen';
+    const TKEY = 'stax.theme';
+
+    // Accent options — each carries a full light + dark sub-palette so the swap is cohesive.
+    const ACCENTS = {
+      'Warm blue': { sw: '#2E7BE6',
+        light: { primary:'#2E7BE6', primaryDeep:'#1F5DC0', primarySoft:'#E7F1FD', gradA:'#2E7BE6', gradB:'#6BA6F5', heroShadow:'rgba(46,123,230,.28)' },
+        dark:  { primary:'#5B9BF0', primaryDeep:'#9AC2F7', primarySoft:'#1E2A3D', gradA:'#2456A0', gradB:'#3E7BD0', heroShadow:'rgba(0,0,0,.45)' } },
+      'Indigo': { sw: '#6C5CE7',
+        light: { primary:'#6C5CE7', primaryDeep:'#4B3CC4', primarySoft:'#ECE9FC', gradA:'#6C5CE7', gradB:'#9D8BF2', heroShadow:'rgba(108,92,231,.28)' },
+        dark:  { primary:'#8E7BF0', primaryDeep:'#B9AEF7', primarySoft:'#241E3A', gradA:'#4A3AA0', gradB:'#6C5CE7', heroShadow:'rgba(0,0,0,.45)' } },
+      'Teal': { sw: '#0E9E96',
+        light: { primary:'#0E9E96', primaryDeep:'#0A7A73', primarySoft:'#E0F4F2', gradA:'#0E9E96', gradB:'#45C2B8', heroShadow:'rgba(14,158,150,.28)' },
+        dark:  { primary:'#2BBFB4', primaryDeep:'#6FD8CF', primarySoft:'#123230', gradA:'#0A6E68', gradB:'#1E9C93', heroShadow:'rgba(0,0,0,.45)' } },
+      'Coral': { sw: '#E2683C',
+        light: { primary:'#E2683C', primaryDeep:'#BE4F28', primarySoft:'#FCEBE3', gradA:'#E2683C', gradB:'#F2956E', heroShadow:'rgba(226,104,60,.28)' },
+        dark:  { primary:'#F2825A', primaryDeep:'#F7AA8C', primarySoft:'#36211A', gradA:'#A8472A', gradB:'#E2683C', heroShadow:'rgba(0,0,0,.45)' } },
+    };
+    const FONTS = {
+      'Plus Jakarta Sans': "'Plus Jakarta Sans', sans-serif",
+      'Nunito': "'Nunito', sans-serif",
+      'Manrope': "'Manrope', sans-serif",
+      'Inter': "'Inter', sans-serif",
+    };
+    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "accent": "Warm blue",
+      "radius": 22,
+      "font": "Plus Jakarta Sans"
+    }/*EDITMODE-END*/;
+
+    function App() {
+      const [screen, setScreen] = React.useState(() => localStorage.getItem(KEY) || 'marketing');
+      const [theme, setThemeState] = React.useState(() => localStorage.getItem(TKEY) || 'light');
+      const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+      // Apply palette before children render (idempotent mutation of window.A).
+      if (window.applyTheme) {
+        window.applyTheme(theme);
+        const acc = ACCENTS[t.accent] || ACCENTS['Warm blue'];
+        Object.assign(window.A, acc[theme] || acc.light);
+        window.A.radius = t.radius;
+        window.A.font = FONTS[t.font] || FONTS['Plus Jakarta Sans'];
+      }
+      const setTheme = React.useCallback((tv) => {
+        if (window.applyTheme) window.applyTheme(tv);
+        try { localStorage.setItem(TKEY, tv); } catch (e) {}
+        setThemeState(tv);
+      }, []);
+      const go = React.useCallback((id) => {
+        setScreen(id);
+        try { localStorage.setItem(KEY, id); } catch (e) {}
+        window.scrollTo(0, 0);
+      }, []);
+      React.useEffect(() => {
+        const draw = () => window.lucide && window.lucide.createIcons();
+        draw(); const t = [60, 250, 600].map(ms => setTimeout(draw, ms));
+        return () => t.forEach(clearTimeout);
+      }, [screen, theme]);
+
+      const entry = SCREENS.find(s => s.id === screen) || SCREENS[0];
+      const Comp = entry.Comp();
+      const tweakKey = theme + '|' + t.accent + '|' + t.radius + '|' + t.font;
+      return (
+        <React.Fragment>
+          {Comp ? <Comp key={tweakKey} go={go} theme={theme} setTheme={setTheme} /> : null}
+          <TweaksPanel title="Tweaks">
+            <TweakSection label="Brand" />
+            <TweakColor label="Accent" value={(ACCENTS[t.accent]||ACCENTS['Warm blue']).sw}
+              options={Object.values(ACCENTS).map(a => a.sw)}
+              onChange={(hex) => { const name = Object.keys(ACCENTS).find(k => ACCENTS[k].sw === hex); setTweak('accent', name || 'Warm blue'); }} />
+            <TweakSelect label="Font" value={t.font} options={Object.keys(FONTS)}
+              onChange={(v) => setTweak('font', v)} />
+            <TweakSlider label="Card radius" value={t.radius} min={8} max={28} step={1} unit="px"
+              onChange={(v) => setTweak('radius', v)} />
+            <TweakSection label="Theme" />
+            <TweakRadio label="Mode" value={theme} options={['light', 'dark']}
+              onChange={(v) => setTheme(v)} />
+          </TweaksPanel>
+          <div className="picker">
+            {SCREENS.map((s, i) => (
+              <React.Fragment key={s.id}>
+                {(i === 2 || s.id === 'trade') && <div className="sep"></div>}
+                <button className={screen === s.id ? 'on' : ''} onClick={() => go(s.id)}>{s.label}</button>
+              </React.Fragment>
+            ))}
+          </div>
+        </React.Fragment>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('app')).render(<App />);
+  </script>
+</body>
+</html>

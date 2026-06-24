@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { ViewTransition } from "react";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { ProgressProvider } from "@/lib/progress/useProgress";
 import { ToastProvider } from "@/components/Toast";
@@ -17,6 +17,12 @@ const inter = Inter({
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-jetbrains-mono",
+  display: "swap",
+});
+// Stax "Warm Campus" brand face for the UI kit (Plus Jakarta Sans).
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-jakarta",
   display: "swap",
 });
 
@@ -56,7 +62,7 @@ const THEME_INIT = `(function(){try{var t=localStorage.getItem('theme');if(!t){t
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} ${jakarta.variable}`} suppressHydrationWarning>
       <body className="min-h-screen font-sans antialiased">
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
         <ProgressProvider>

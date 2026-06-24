@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stax — Look &amp; Feel Directions</title>
+<meta name="design_doc_mode" content="canvas" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: #DEDCD8;
+    -webkit-font-smoothing: antialiased;
+  }
+  * { box-sizing: border-box; }
+  .stack {
+    max-width: 1260px; margin: 0 auto; padding: 48px 40px 80px;
+    display: flex; flex-direction: column; gap: 56px;
+  }
+  .intro { font-family: 'Inter', sans-serif; color: #2A2620; }
+  .intro h1 { font-size: 26px; font-weight: 800; letter-spacing: -.02em; margin: 0 0 6px; }
+  .intro p { font-size: 15px; color: #6B655E; margin: 0; font-weight: 500; }
+  .frame { position: absolute; top: 0; width: 1240px; }
+  .frame-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #6B655E;
+    margin-bottom: 14px; display: flex; align-items: baseline; gap: 10px;
+  }
+  .frame-label b { font-family: 'Inter', sans-serif; font-size: 16px; color: #2A2620; font-weight: 800; }
+  .frame-card {
+    width: 100%; border-radius: 20px; overflow: hidden;
+    box-shadow: 0 18px 50px rgba(40,30,15,.14); background: #fff;
+  }
+  /* lucide icons inherit size + color from the placeholder's inline style */
+  svg.lucide { stroke-width: 2; }
+</style>
+</head>
+<body>
+  <div class="frame" data-drags-parent="1" style="left: 40px;">
+    <div class="frame-label"><b>Direction A</b> Warm Campus — light · friendly · rounded</div>
+    <div class="frame-card" id="mountA"></div>
+  </div>
+  <div class="frame" data-drags-parent="1" style="left: 1320px;">
+    <div class="frame-label"><b>Direction B</b> Night Trader — dark · energetic · data-forward</div>
+    <div class="frame-card" id="mountB" style="background:#0B0E14;"></div>
+  </div>
+  <div class="frame" data-drags-parent="1" style="left: 2600px;">
+    <div class="frame-label"><b>Direction C</b> Editorial Coach — light · minimal · airy</div>
+    <div class="frame-card" id="mountC"></div>
+  </div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="../_ds_bundle.js"></script>
+
+  <script type="text/babel" src="shared.jsx"></script>
+  <script type="text/babel" src="dirA.jsx"></script>
+  <script type="text/babel" src="dirB.jsx"></script>
+  <script type="text/babel" src="dirC.jsx"></script>
+  <script type="text/babel" data-presets="react">
+    function mount(id, Comp) {
+      ReactDOM.createRoot(document.getElementById(id)).render(<Comp />);
+    }
+    mount('mountA', window.DirectionA);
+    mount('mountB', window.DirectionB);
+    mount('mountC', window.DirectionC);
+    // icons render after React paints
+    const draw = () => window.lucide && window.lucide.createIcons();
+    setTimeout(draw, 60); setTimeout(draw, 300); setTimeout(draw, 800);
+  </script>
+</body>
+</html>
