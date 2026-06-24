@@ -32,12 +32,17 @@ import {
   loadDrawings,
   saveDrawings,
   newDrawing,
+  newZone,
   POINTS_FOR,
   TOOL_COLOR,
+  ZONE_DEMAND,
+  ZONE_SUPPLY,
   type Drawing,
   type DrawingType,
+  type ZoneKind,
 } from "@/lib/charts/drawings";
 import { loadAlerts, saveAlerts, newAlert, crossed, type Alert } from "@/lib/charts/alerts";
+import { detectZones } from "@/lib/charts/zones";
 import { DrawingsPrimitive, type Draft } from "@/components/charts/drawingsPrimitive";
 import { AddTicker } from "@/components/home/AddTicker";
 import { useToast } from "@/components/Toast";
@@ -93,12 +98,14 @@ const INDICATORS: { id: IndId; label: string; color: string }[] = [
   { id: "macd", label: "MACD", color: MACD_LINE },
 ];
 
-type Tool = "cursor" | DrawingType | "alert";
+type Tool = "cursor" | DrawingType | "alert" | "demand" | "supply";
 const TOOLS: { id: Tool; label: string; hint?: string }[] = [
   { id: "cursor", label: "Cursor" },
   { id: "trend", label: "Trend", hint: "click two points" },
   { id: "horizontal", label: "H-Line", hint: "click a price" },
   { id: "fib", label: "Fib", hint: "click two points" },
+  { id: "demand", label: "Demand", hint: "click two corners" },
+  { id: "supply", label: "Supply", hint: "click two corners" },
   { id: "alert", label: "Alert", hint: "click a price level" },
 ];
 
@@ -191,6 +198,9 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
   const prevPriceRef = useRef<number | null>(null);
   const compareRef = useRef<ISeriesApi<"Line"> | null>(null);
   const cmpCandlesRef = useRef<Candle[]>([]);
+  // Auto-detected supply/demand zones (read-only overlay, recomputed live).
+  const autoZonesRef = useRef<Drawing[]>([]);
+  const autoOnRef = useRef(false);
   const lastLegendIdxRef = useRef<number>(-1);
   const pendingLegendRef = useRef<Legend | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -216,6 +226,7 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [compareSym, setCompareSym] = useState<string | null>(null);
   const [compareChange, setCompareChange] = useState<number | null>(null);
+  const [autoZones, setAutoZones] = useState(false);
   const [legend, setLegend] = useState<Legend | null>(null);
   const [stale, setStale] = useState(false);
   const [tool, setTool] = useState<Tool>("cursor");
@@ -285,6 +296,23 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
     compareRef.current.setData(dedupeSort(cmp.map((c) => ({ time: toSec(c.time), value: mainFirst * (c.close / cmpFirst) }))));
     const last = cmp[cmp.length - 1]?.close ?? cmpFirst;
     setCompareChange((last / cmpFirst - 1) * 100);
+  }
+
+  // Recompute the read-only auto supply/demand overlay from the current candles.
+  function recomputeAutoZones(candles: Candle[]) {
+    autoZonesRef.current = autoOnRef.current
+      ? detectZones(candles).map((z, k) => ({
+          id: `auto-${k}`,
+          type: "zone" as DrawingType,
+          points: [
+            { time: z.t1, price: z.hi },
+            { time: z.t2, price: z.lo },
+          ],
+          color: z.kind === "demand" ? ZONE_DEMAND : ZONE_SUPPLY,
+          kind: z.kind,
+        }))
+      : [];
+    primitiveRef.current?.requestUpdate();
   }
 
   // ----- derived legend helpers (read precomputed caches; no per-move recompute) -----
@@ -438,10 +466,14 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
     }
     const pt = pointFromEvent(param);
     if (!pt) return;
-    const draft = draftRef.current ?? { type: active, color: TOOL_COLOR[active], points: [], preview: null };
+    const isZone = active === "demand" || active === "supply";
+    const dType: DrawingType = isZone ? "zone" : (active as DrawingType);
+    const color = isZone ? (active === "demand" ? ZONE_DEMAND : ZONE_SUPPLY) : TOOL_COLOR[active as DrawingType];
+    const draft = draftRef.current ?? { type: dType, color, points: [], preview: null };
     const points = [...draft.points, pt];
-    if (points.length >= POINTS_FOR[active]) {
-      applyDrawings([...drawingsRef.current, newDrawing(active, points)]);
+    if (points.length >= POINTS_FOR[dType]) {
+      const drawing = isZone ? newZone(active as ZoneKind, points) : newDrawing(active as DrawingType, points);
+      applyDrawings([...drawingsRef.current, drawing]);
       draftRef.current = null;
       setTool("cursor");
     } else {
@@ -525,6 +557,7 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
       () => drawingsRef.current,
       () => draftRef.current,
       () => selectedRef.current,
+      () => autoZonesRef.current,
     );
     candleRef.current.attachPrimitive(primitive);
     primitiveRef.current = primitive;
@@ -668,6 +701,8 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
         }
         // Keep the compare overlay rebased to the latest main window.
         rebaseCompare();
+        // Refresh the auto supply/demand overlay against the new candles.
+        recomputeAutoZones(next);
 
         lastLegendIdxRef.current = -1; // force the idle legend to refresh
         scheduleLegend(latestLegendFor());
@@ -743,6 +778,13 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
     // rebaseCompare reads refs; safe to omit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [compareSym, timeframe]);
+
+  // Auto supply/demand overlay: recompute from current candles when toggled.
+  useEffect(() => {
+    autoOnRef.current = autoZones;
+    recomputeAutoZones(candlesRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoZones]);
 
   // Create/remove the RSI & MACD panes on toggle (lazy — empty panes auto-collapse).
   useEffect(() => {
@@ -864,6 +906,15 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
             </button>
           ))}
         </div>
+        <button
+          type="button"
+          onClick={() => setAutoZones((v) => !v)}
+          aria-pressed={autoZones}
+          title="Auto-detect supply/demand zones"
+          className={`rounded-full border px-2 py-0.5 transition ${autoZones ? "border-strong text-ink" : "border-hairline text-faint"}`}
+        >
+          Auto-zones{autoZones ? " ●" : ""}
+        </button>
         {activeTool?.hint && tool !== "cursor" && <span className="text-faint">{activeTool.hint} · Esc to cancel</span>}
         {drawings.length > 0 && (
           <div className="ml-auto flex flex-wrap items-center gap-1">
@@ -877,7 +928,15 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
                 title={d.id === selectedId ? "Selected — press Delete to remove" : "Select"}
               >
                 <span className="inline-block h-2 w-2 rounded-full" style={{ background: d.color }} />
-                {d.type === "horizontal" ? `H ${money(d.points[0].price)}` : d.type === "fib" ? "Fib" : "Trend"}
+                {d.type === "horizontal"
+                  ? `H ${money(d.points[0].price)}`
+                  : d.type === "fib"
+                    ? "Fib"
+                    : d.type === "zone"
+                      ? d.kind === "supply"
+                        ? "Supply"
+                        : "Demand"
+                      : "Trend"}
                 <span
                   role="button"
                   tabIndex={-1}

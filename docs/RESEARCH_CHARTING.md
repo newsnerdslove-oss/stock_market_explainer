@@ -96,6 +96,9 @@ technical-analysis curriculum (the 200-level `markets-technical` module).
    ✅ Bollinger Bands + VWAP price-pane overlays; ✅ chart types (candles/bars/line/area/
    Heikin-Ashi, persisted); ✅ price alerts (click-a-price → dashed 🔔 line, toast on
    crossing, per-symbol persist); ✅ compare overlay (percent-rebased second symbol).
+7. **Supply/demand zones (done)** — ✅ manual Demand/Supply box tools (two-corner draw,
+   extend right, persisted via the drawings store) + ✅ an "Auto-zones" toggle that live-
+   detects base+impulse zones (`lib/charts/zones.ts`) and renders them read-only (dashed).
 
 ## Scope decisions to make when we pick this up
 1. **Indicator set for v1** — EMAs + volume + VWAP first (matches the screenshot),

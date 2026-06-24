@@ -49,7 +49,7 @@ describe("newDrawing", () => {
   });
 
   it("declares the right point count per tool", () => {
-    expect(POINTS_FOR).toEqual({ horizontal: 1, trend: 2, fib: 2 });
+    expect(POINTS_FOR).toEqual({ horizontal: 1, trend: 2, fib: 2, zone: 2 });
   });
 });
 
