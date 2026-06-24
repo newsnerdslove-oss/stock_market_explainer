@@ -31,8 +31,8 @@ palette. **Polished** = re-skinned with kit components to match the prototype (P
 | `/learn` | ✅ | ✅ | ✅ | s_catalog | warm unit-cards |
 | `/learn/[slug]` | ✅ | ✅ | ⬜ | s_lesson | lesson + 4 interactive widgets |
 | `/exam` | ✅ | ✅ | ⬜ | s_quiz | state machine |
-| `/study` | ✅ | ✅ | ⬜ | — | |
-| `/progress` | ✅ | ✅ | ⬜ | — | |
+| `/study` | ✅ | ✅ | ✅ | — | warm chrome (no template; content on kit tokens) |
+| `/progress` | ✅ | ✅ | ✅ | — | warm chrome (no template; content on kit tokens) |
 | `/review` | ✅ | ✅ | ⬜ | s_quiz | spaced-repetition queue |
 | `/simulator` | ✅ | ✅ | ⬜ | s_trade | charts now theme-aware |
 | `/symbol/[ticker]` | ✅ | ✅ | ⬜ | s_stock | charts now theme-aware |
