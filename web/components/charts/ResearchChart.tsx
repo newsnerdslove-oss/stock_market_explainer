@@ -46,13 +46,11 @@ import { detectZones } from "@/lib/charts/zones";
 import { DrawingsPrimitive, type Draft } from "@/components/charts/drawingsPrimitive";
 import { AddTicker } from "@/components/home/AddTicker";
 import { useToast } from "@/components/Toast";
+import { chartColors } from "@/lib/charts/theme";
+import { currentTheme, useThemeState } from "@/lib/theme";
 
 const UP = "#2BD17E";
 const DOWN = "#FF5C5C";
-const CANVAS = "#0B0E14";
-const GRID = "#1E2530";
-const BORDER = "#232A36";
-const TEXT = "#8A94A6";
 const POLL_MS = 10_000;
 
 // Indicator-pane colours.
@@ -68,7 +66,6 @@ const BB_MID = "rgba(138,148,166,0.9)";
 const VWAP_COLOR = "#FF9500";
 
 // Price-series type (candles is the default; switching toggles visibility).
-const PRICE_LINE = "#9FB3C8";
 type PriceType = "candles" | "bars" | "line" | "area" | "heikin";
 const PRICE_TYPES: { id: PriceType; label: string }[] = [
   { id: "candles", label: "Candles" },
@@ -157,6 +154,7 @@ function dedupeSort<T extends { time: UTCTimestamp }>(rows: T[]): T[] {
 }
 
 export default function ResearchChart({ symbol }: { symbol: string }) {
+  const [theme] = useThemeState();
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candleRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
@@ -521,13 +519,14 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
     const el = containerRef.current;
     if (!el) return;
 
+    const k = chartColors(currentTheme());
     const chart = createChart(el, {
       autoSize: true,
-      layout: { background: { type: ColorType.Solid, color: CANVAS }, textColor: TEXT, fontFamily: "JetBrains Mono, ui-monospace, monospace" },
-      grid: { vertLines: { color: GRID }, horzLines: { color: GRID } },
+      layout: { background: { type: ColorType.Solid, color: k.canvas }, textColor: k.text, fontFamily: "JetBrains Mono, ui-monospace, monospace" },
+      grid: { vertLines: { color: k.grid }, horzLines: { color: k.grid } },
       crosshair: { mode: CrosshairMode.Normal },
-      timeScale: { borderColor: BORDER, timeVisible: true, secondsVisible: false },
-      rightPriceScale: { borderColor: BORDER, scaleMargins: { top: 0.08, bottom: 0.26 } },
+      timeScale: { borderColor: k.border, timeVisible: true, secondsVisible: false },
+      rightPriceScale: { borderColor: k.border, scaleMargins: { top: 0.08, bottom: 0.26 } },
     });
     chartRef.current = chart;
 
@@ -535,8 +534,8 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
     // overlays/EMAs render on top); only the active type is visible.
     candleRef.current = chart.addSeries(CandlestickSeries, { upColor: UP, downColor: DOWN, borderVisible: false, wickUpColor: UP, wickDownColor: DOWN, visible: priceType === "candles" });
     barRef.current = chart.addSeries(BarSeries, { upColor: UP, downColor: DOWN, visible: priceType === "bars" });
-    lineRef.current = chart.addSeries(LineSeries, { color: PRICE_LINE, lineWidth: 2, visible: priceType === "line" });
-    areaRef.current = chart.addSeries(AreaSeries, { lineColor: PRICE_LINE, topColor: "rgba(159,179,200,0.35)", bottomColor: "rgba(159,179,200,0.02)", lineWidth: 2, visible: priceType === "area" });
+    lineRef.current = chart.addSeries(LineSeries, { color: k.priceLine, lineWidth: 2, visible: priceType === "line" });
+    areaRef.current = chart.addSeries(AreaSeries, { lineColor: k.priceLine, topColor: "rgba(159,179,200,0.35)", bottomColor: "rgba(159,179,200,0.02)", lineWidth: 2, visible: priceType === "area" });
     haRef.current = chart.addSeries(CandlestickSeries, { upColor: UP, downColor: DOWN, borderVisible: false, wickUpColor: UP, wickDownColor: DOWN, visible: priceType === "heikin" });
 
     volumeRef.current = chart.addSeries(HistogramSeries, { priceScaleId: "volume", priceFormat: { type: "volume" }, lastValueVisible: false, priceLineVisible: false });
@@ -573,6 +572,20 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
       primitiveRef.current = null;
     };
   }, []);
+
+  // Re-tint the chart chrome when the app theme flips (no rebuild — series keep their
+  // vivid accent colours, which read on either background).
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+    const k = chartColors(theme);
+    chart.applyOptions({
+      layout: { background: { type: ColorType.Solid, color: k.canvas }, textColor: k.text },
+      grid: { vertLines: { color: k.grid }, horzLines: { color: k.grid } },
+      timeScale: { borderColor: k.border },
+      rightPriceScale: { borderColor: k.border },
+    });
+  }, [theme]);
 
   // Keyboard: Esc cancels an in-progress draft; Delete removes the selection.
   useEffect(() => {
@@ -797,8 +810,8 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
         { color: RSI_COLOR, lineWidth: 1, lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false },
         chart.panes().length,
       );
-      s.createPriceLine({ price: 70, color: BORDER, lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: "70" });
-      s.createPriceLine({ price: 30, color: BORDER, lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: "30" });
+      s.createPriceLine({ price: 70, color: chartColors(currentTheme()).border, lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: "70" });
+      s.createPriceLine({ price: 30, color: chartColors(currentTheme()).border, lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: "30" });
       s.getPane().setStretchFactor(1);
       rsiRef.current = s;
     } else if (!shownInd.rsi && rsiRef.current) {

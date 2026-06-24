@@ -18,17 +18,15 @@ import {
   type UTCTimestamp,
 } from "lightweight-charts";
 import { getCandlesViaApi, type Candle } from "@/lib/marketService";
+import { chartColors } from "@/lib/charts/theme";
+import { currentTheme, useThemeState } from "@/lib/theme";
 
 type Bar = CandlestickData<UTCTimestamp>;
 
-// Design tokens (see tailwind.config.ts) — the canvas isn't CSS-styleable, so the
-// chart needs the raw hex.
+// Candle body colours (vivid — readable on either theme). The chart "chrome"
+// (canvas/grid/border/text) comes from chartColors(theme) and flips with the app.
 const UP = "#2BD17E";
 const DOWN = "#FF5C5C";
-const CANVAS = "#0B0E14";
-const GRID = "#1E2530"; // hairline
-const BORDER = "#232A36"; // strong
-const TEXT = "#8A94A6"; // muted
 
 const POLL_MS = 5000;
 
@@ -63,7 +61,9 @@ export default function LiveCandleChart({
   initialCandles: Candle[];
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<IChartApi | null>(null);
   const [stale, setStale] = useState(false);
+  const [theme] = useThemeState();
 
   // Seed via a ref so the init effect can depend on [symbol] alone — re-allocating
   // the initialCandles prop on a parent re-render must not tear down the live chart.
@@ -74,18 +74,20 @@ export default function LiveCandleChart({
     const el = containerRef.current;
     if (!el) return;
 
+    const k = chartColors(currentTheme());
     const chart: IChartApi = createChart(el, {
       autoSize: true, // built-in ResizeObserver; torn down by chart.remove()
       layout: {
-        background: { type: ColorType.Solid, color: CANVAS },
-        textColor: TEXT,
+        background: { type: ColorType.Solid, color: k.canvas },
+        textColor: k.text,
         fontFamily: "JetBrains Mono, ui-monospace, monospace",
       },
-      grid: { vertLines: { color: GRID }, horzLines: { color: GRID } },
+      grid: { vertLines: { color: k.grid }, horzLines: { color: k.grid } },
       crosshair: { mode: CrosshairMode.Normal },
-      timeScale: { borderColor: BORDER, timeVisible: true, secondsVisible: false },
-      rightPriceScale: { borderColor: BORDER },
+      timeScale: { borderColor: k.border, timeVisible: true, secondsVisible: false },
+      rightPriceScale: { borderColor: k.border },
     });
+    chartRef.current = chart;
 
     const series: ISeriesApi<"Candlestick"> = chart.addSeries(CandlestickSeries, {
       upColor: UP,
@@ -139,8 +141,22 @@ export default function LiveCandleChart({
       cancelled = true;
       clearInterval(id);
       chart.remove();
+      chartRef.current = null;
     };
   }, [symbol]);
+
+  // Re-tint the chart chrome when the app theme flips (no rebuild).
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+    const k = chartColors(theme);
+    chart.applyOptions({
+      layout: { background: { type: ColorType.Solid, color: k.canvas }, textColor: k.text },
+      grid: { vertLines: { color: k.grid }, horzLines: { color: k.grid } },
+      timeScale: { borderColor: k.border },
+      rightPriceScale: { borderColor: k.border },
+    });
+  }, [theme]);
 
   return (
     <div className="relative">
