@@ -4,6 +4,11 @@ import React from "react";
 // `.light` class swaps it). Importing globals.css is what makes the token utilities
 // (bg-surface, border-strong, text-up …) and the dark canvas render in Storybook.
 import "../app/globals.css";
+import { initialize, mswLoader } from "msw-storybook-addon";
+import { handlers } from "./msw-handlers";
+
+// Start the MSW worker so components' /api/* fetches resolve to fixtures.
+initialize({ onUnhandledRequest: "bypass" });
 
 // Every story renders on the app's dark canvas, in the sans font stack, with room
 // to breathe — matching how these components appear in the product.
@@ -26,6 +31,7 @@ const preview: Preview = {
     },
     backgrounds: { disable: true }, // the canvas decorator paints the background
     a11y: { test: "todo" },
+    msw: { handlers }, // default API mocks; override per-story via parameters.msw.handlers
   },
   // A toolbar toggle to preview the light theme (flips the `.light` token set).
   globalTypes: {
@@ -43,6 +49,7 @@ const preview: Preview = {
       },
     },
   },
+  loaders: [mswLoader],
   decorators: [withCanvas],
 };
 
