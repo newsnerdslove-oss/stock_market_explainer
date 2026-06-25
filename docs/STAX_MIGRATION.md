@@ -30,7 +30,7 @@ palette. **Polished** = re-skinned with kit components to match the prototype (P
 | `/` (home) | ✅ | ✅ | ✅ | s_marketing | warm in-app dashboard (hero + features + live markets; not the logged-out landing) |
 | `/learn` | ✅ | ✅ | ✅ | s_catalog | warm unit-cards |
 | `/learn/[slug]` | ✅ | ✅ | ⬜ | s_lesson | lesson + 4 interactive widgets |
-| `/exam` | ✅ | ✅ | ⬜ | s_quiz | state machine |
+| `/exam` | ✅ | ✅ | ✅ | s_quiz | warm setup/runner/results; shared QuestionRunner (lessons+review) re-skinned to s_quiz cards |
 | `/study` | ✅ | ✅ | ✅ | — | warm chrome (no template; content on kit tokens) |
 | `/progress` | ✅ | ✅ | ✅ | — | warm chrome (no template; content on kit tokens) |
 | `/review` | ✅ | ✅ | ✅ | s_quiz | warm stat tiles + state cards |
