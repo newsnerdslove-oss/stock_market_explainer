@@ -29,7 +29,7 @@ palette. **Polished** = re-skinned with kit components to match the prototype (P
 | `/login` | n/a (full-screen) | ✅ | ✅ | s_auth | |
 | `/` (home) | ✅ | ✅ | ✅ | s_marketing | warm in-app dashboard (hero + features + live markets; not the logged-out landing) |
 | `/learn` | ✅ | ✅ | ✅ | s_catalog | warm unit-cards |
-| `/learn/[slug]` | ✅ | ✅ | ⬜ | s_lesson | lesson + 4 interactive widgets |
+| `/learn/[slug]` | ✅ | ✅ | ✅ | s_lesson | focused prose column; warm header + kit-radius tie-in; quiz uses re-skinned QuestionRunner |
 | `/exam` | ✅ | ✅ | ✅ | s_quiz | warm setup/runner/results; shared QuestionRunner (lessons+review) re-skinned to s_quiz cards |
 | `/study` | ✅ | ✅ | ✅ | — | warm chrome (no template; content on kit tokens) |
 | `/progress` | ✅ | ✅ | ✅ | — | warm chrome (no template; content on kit tokens) |
@@ -45,8 +45,9 @@ palette. **Polished** = re-skinned with kit components to match the prototype (P
   palette; `ResearchChart` + `LiveCandleChart` read it and `applyOptions` on theme flip (no
   rebuild). Candle/EMA/RSI/etc. accents stay vivid (read on either background). `SymbolChart`
   is a thin `ResearchChart` wrapper — no change.
-- **Phase 3 — Prototype polish:** re-skin each old page's content with kit components, quick
-  wins first (`/learn`, `/study`, `/progress` → … → `/simulator`, `/symbol`).
+- **Phase 3 — Prototype polish ✅:** every page re-skinned to the kit / its template
+  (`/learn`, `/study`, `/progress`, `/`, `/review`, `/exam`, `/symbol`, `/simulator`,
+  `/learn/[slug]`). Shared `QuestionRunner` re-skinned to the s_quiz card flow.
 - **Phase 4 — Cleanup:** delete `NavBar.tsx` + `PageContainer.tsx`, remove residual `.light`
   refs, re-sync the design system.
 

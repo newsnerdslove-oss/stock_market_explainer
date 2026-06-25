@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { PageContainer } from "@/components/layout/PageContainer";
 import { getAllLessons, getLesson, getOrderedLessons } from "@/lib/lessons";
 import { moduleById, trackById } from "@/lib/lessons/taxonomy";
 import { getQuiz } from "@/lib/quiz";
@@ -47,17 +46,17 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
   const track = trackById[mod.trackId];
 
   return (
-    <PageContainer size="wide" className="py-16">
-      <Link href="/learn" className="text-sm text-muted transition hover:text-ink">
+    <div className="mx-auto max-w-3xl">
+      <Link href="/learn" className="text-sm font-semibold text-muted transition hover:text-ink">
         ← All lessons
       </Link>
 
       <header className="mt-4">
-        <p className="font-mono text-xs text-faint">
+        <p className="font-mono text-xs font-semibold uppercase tracking-wide text-faint">
           {track.title} › {mod.title} · {lesson.estMinutes} min read
         </p>
-        <h1 className="mt-2 text-4xl font-medium tracking-tight">{lesson.title}</h1>
-        <p className="mt-3 text-lg text-muted">{lesson.summary}</p>
+        <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-ink">{lesson.title}</h1>
+        <p className="mt-3 text-lg font-medium text-muted">{lesson.summary}</p>
       </header>
 
       <article className="mt-8">
@@ -78,13 +77,13 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
       {STRATEGY_BUILDER_LESSONS.has(lesson.slug) && <StrategyBuilder />}
 
       {OPTIONS_MODULES.has(lesson.moduleId) && (
-        <section className="mt-12 rounded-lg border border-up/30 bg-up/5 p-5">
-          <h2 className="text-sm font-medium text-ink">Practice in the simulator</h2>
-          <p className="mt-1 text-sm text-muted">
+        <section className="mt-12 rounded-[22px] border border-up/30 bg-up/5 p-5 shadow-sm">
+          <h2 className="text-base font-extrabold text-ink">Practice in the simulator</h2>
+          <p className="mt-1 font-medium text-muted">
             Trade calls and puts at live Black-Scholes prices, build the strategies you just learned, and watch the Greeks and P&amp;L
             move — paper money only.
           </p>
-          <Link href="/simulator" className="mt-3 inline-block rounded-md bg-up px-4 py-2 text-sm font-medium text-canvas transition hover:opacity-90">
+          <Link href="/simulator" className="mt-3 inline-flex items-center gap-2 rounded-xl bg-up px-5 py-2.5 text-sm font-extrabold text-white shadow-sm transition hover:opacity-90">
             Open the options simulator →
           </Link>
         </section>
@@ -92,7 +91,7 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
 
       <AskTutor slug={lesson.slug} />
 
-      <nav className="mt-16 flex items-stretch justify-between gap-4 border-t border-hairline pt-6">
+      <nav className="mt-16 flex items-stretch justify-between gap-4 border-t border-strong pt-6">
         {prev ? (
           <Link href={`/learn/${prev.slug}`} className="group max-w-[48%] text-left">
             <span className="block text-xs text-faint">← Previous</span>
@@ -111,9 +110,9 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
         )}
       </nav>
 
-      <footer className="mt-12 text-xs text-faint">
+      <footer className="mt-12 text-xs font-semibold text-faint">
         Educational only · paper trading only · not financial advice.
       </footer>
-    </PageContainer>
+    </div>
   );
 }
