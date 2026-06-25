@@ -12,6 +12,7 @@ import { WeekDots } from "@/components/kit/WeekDots";
 import { SectionTitle } from "@/components/kit/SectionTitle";
 import { PatternChart } from "@/components/charts/PatternChart";
 import { isCorrectPick } from "@/lib/charts/generate";
+import { todayInTz } from "@/lib/review/schedule";
 import { chartOfDayFor, qotdFor } from "@/lib/daily/content";
 import { useProgress } from "@/lib/progress/useProgress";
 import { useThemeState } from "@/lib/theme";
@@ -51,7 +52,10 @@ export default function TodayPage() {
   // A rough week strip: past days in this week count as done if the streak reaches
   // back that far; today is done once the chart challenge is solved.
   const dayIdx = (new Date().getDay() + 6) % 7; // Mon=0 … Sun=6
-  const completedToday = found || progress.streak.lastActiveDate === dateKey;
+  // Compare against the streak's local-tz date (lastActiveDate is stored in the user's
+  // tz), not the UTC content key — otherwise UTC-offset users near midnight read wrong.
+  const todayLocal = progress.tz ? todayInTz(progress.tz) : dateKey;
+  const completedToday = found || progress.streak.lastActiveDate === todayLocal;
   const week = ["M", "T", "W", "T", "F", "S", "S"].map((l, i) => ({
     l,
     done: i < dayIdx ? dayIdx - i <= streak : i === dayIdx ? completedToday : false,
