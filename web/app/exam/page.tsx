@@ -1,6 +1,5 @@
 import { getAllQuestions } from "@/lib/quiz";
 import { ExamApp } from "@/components/exam/ExamApp";
-import { PageContainer } from "@/components/layout/PageContainer";
 
 export const metadata = {
   title: "Exam — Stock Market Explainer",
@@ -13,18 +12,20 @@ export default function ExamPage() {
   const allQuestions = getAllQuestions();
 
   return (
-    <PageContainer size="wide" className="pb-16 pt-10">
-      <h1 className="text-4xl font-medium tracking-tight">Exam</h1>
-      <p className="mt-3 text-muted">
+    <>
+      <h1 className="text-3xl font-extrabold tracking-tight text-ink">Exam</h1>
+      <p className="mt-2 font-semibold text-muted">
         Timed, Series 7-style practice exams over the mastery curriculum — weighted by exam function,
         scored at <span className="font-mono">72%</span>, with a breakdown of where to study next.
       </p>
 
-      <ExamApp allQuestions={allQuestions} />
+      <div className="mt-8">
+        <ExamApp allQuestions={allQuestions} />
+      </div>
 
       <footer className="mt-16 border-t border-hairline pt-6 text-xs text-faint">
         Educational only · not financial advice · not affiliated with FINRA.
       </footer>
-    </PageContainer>
+    </>
   );
 }
