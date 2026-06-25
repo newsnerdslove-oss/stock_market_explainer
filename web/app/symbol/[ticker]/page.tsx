@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { PageContainer } from "@/components/layout/PageContainer";
 import { SymbolChart } from "@/components/charts/SymbolChart";
 import { ResearchBar } from "@/components/research/ResearchBar";
 import { getCandles, getQuote, type Candle, type Quote } from "@/lib/marketService";
@@ -33,47 +32,47 @@ export default async function SymbolPage({ params }: { params: Promise<{ ticker:
   }
 
   return (
-    <PageContainer size="wide" className="py-16">
-      <div className="flex items-center justify-between">
-        <Link href="/simulator" className="text-sm text-muted transition hover:text-ink">
+    <>
+      <div className="flex items-center justify-between text-sm font-semibold text-muted">
+        <Link href="/simulator" className="transition hover:text-ink">
           ← Simulator
         </Link>
-        <Link href="/" className="text-sm text-muted transition hover:text-ink">
+        <Link href="/" className="transition hover:text-ink">
           Home →
         </Link>
       </div>
 
       <div className="mt-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h1 className="font-mono text-4xl font-medium tracking-tight">{symbol}</h1>
+        <h1 className="font-mono text-4xl font-extrabold tracking-tight text-ink">{symbol}</h1>
         {quote && (
           <div className="flex items-baseline gap-2">
-            <span className="font-mono text-2xl text-ink">{money(quote.price)}</span>
-            <span className="rounded-md bg-surface-2 px-2 py-0.5 text-xs text-faint">{quote.source}</span>
+            <span className="font-mono text-2xl font-bold text-ink">{money(quote.price)}</span>
+            <span className="rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-semibold text-faint">{quote.source}</span>
           </div>
         )}
       </div>
-      <p className="mt-2 text-sm text-muted">
+      <p className="mt-2 font-semibold text-muted">
         Candlestick chart with EMAs, volume, and multiple timeframes. <span className="text-faint">Green = close above open, red = below.</span>
       </p>
 
       <ResearchBar symbol={symbol} />
 
-      <section className="mt-4 rounded-lg border border-strong bg-surface p-3">
+      <section className="mt-4 rounded-[22px] border border-strong bg-surface p-3 shadow-sm">
         <SymbolChart symbol={symbol} initialCandles={initialCandles} />
       </section>
 
       <div className="mt-6">
         <Link
           href={`/simulator?symbol=${encodeURIComponent(symbol)}`}
-          className="inline-block rounded-md bg-up px-4 py-2 text-sm font-medium text-canvas transition hover:opacity-90"
+          className="inline-flex items-center gap-2 rounded-xl bg-learn px-5 py-2.5 text-sm font-extrabold text-white shadow-sm transition hover:opacity-90"
         >
           Trade {symbol} →
         </Link>
       </div>
 
-      <footer className="mt-16 border-t border-hairline pt-6 text-xs text-faint">
+      <footer className="mt-16 border-t border-strong pt-6 text-xs font-semibold text-faint">
         Educational only · paper trading only · not financial advice.
       </footer>
-    </PageContainer>
+    </>
   );
 }

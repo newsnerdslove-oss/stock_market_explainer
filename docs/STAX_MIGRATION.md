@@ -35,7 +35,7 @@ palette. **Polished** = re-skinned with kit components to match the prototype (P
 | `/progress` | ✅ | ✅ | ✅ | — | warm chrome (no template; content on kit tokens) |
 | `/review` | ✅ | ✅ | ✅ | s_quiz | warm stat tiles + state cards |
 | `/simulator` | ✅ | ✅ | ⬜ | s_trade | charts now theme-aware |
-| `/symbol/[ticker]` | ✅ | ✅ | ⬜ | s_stock | charts now theme-aware |
+| `/symbol/[ticker]` | ✅ | ✅ | ✅ | s_stock | warm chrome + theme-aware chart in a kit-radius card |
 
 ## Phases
 
