@@ -48,9 +48,18 @@ palette. **Polished** = re-skinned with kit components to match the prototype (P
 - **Phase 3 — Prototype polish ✅:** every page re-skinned to the kit / its template
   (`/learn`, `/study`, `/progress`, `/`, `/review`, `/exam`, `/symbol`, `/simulator`,
   `/learn/[slug]`). Shared `QuestionRunner` re-skinned to the s_quiz card flow.
-- **Phase 4 — Cleanup:** delete `NavBar.tsx` + `PageContainer.tsx`, remove residual `.light`
-  refs, re-sync the design system.
+- **Phase 4 — Cleanup ✅:** deleted the dead `NavBar.tsx` (+ story) and `PageContainer.tsx`;
+  confirmed no residual `.light` *class* refs (theme is a single `.dark` class; `"light"`/
+  `"dark"` only appear as theme values); design system re-synced (AppShell update pushed).
+
+**Migration complete** — Phases 1–4 done. The app renders entirely on the unified Stax
+design system; remaining work is the parked `[UI/UX]` polish tickets (radius/shadow on the
+non-kit surfaces, etc.) and feature epics, not migration.
 
 ## Known follow-ups
-- Old pages still wrap content in `PageContainer` inside `StaxShell` (a harmless double
-  container — extra inset). Removed as each page is polished in Phase 3.
+- **[design-sync] Plus Jakarta Sans webfont** not shipped to claude.ai/design (the pane
+  substitutes system sans). Ship the woff2 via `cfg.extraFonts` — see `.design-sync/NOTES.md`.
+- **Resync hygiene:** clear `web/node_modules/.cache`, `.design-sync/sb-reference`, and
+  `.design-sync/.cache` before a re-sync, or the reference Storybook serves a stale render.
+- The 9 parked `[UI/UX]` tickets (Asana Backlog) — the kit-vs-Tailwind radius/shadow gap is
+  the high-leverage one.
