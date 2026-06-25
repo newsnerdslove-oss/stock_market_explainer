@@ -127,7 +127,7 @@ function SimulatorBody() {
       </section>
 
       {/* stocks vs options ticket */}
-      <section className="rounded-lg border border-learn/30 bg-learn/5 p-5">
+      <section className="rounded-[22px] border border-learn/30 bg-learn/5 p-5">
         <div className="mb-4 inline-flex rounded-md border border-strong p-0.5 text-sm">
           {(["stocks", "options"] as const).map((m) => (
             <button
@@ -144,7 +144,7 @@ function SimulatorBody() {
       </section>
 
       {/* positions */}
-      <section className="rounded-lg border border-strong bg-surface p-5">
+      <section className="rounded-[22px] border border-strong bg-surface shadow-sm p-5">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-sm font-medium text-ink">Positions</h2>
           <div className="flex items-center gap-3">
@@ -180,7 +180,7 @@ function SimulatorBody() {
 
       {/* recent orders */}
       {portfolio.orders.length > 0 && (
-        <section className="rounded-lg border border-strong bg-surface p-5">
+        <section className="rounded-[22px] border border-strong bg-surface shadow-sm p-5">
           <h2 className="text-sm font-medium text-ink">Recent orders</h2>
           <ul className="mt-3 space-y-1.5 font-mono text-xs">
             {portfolio.orders.slice(0, 8).map((o) => (
@@ -211,7 +211,7 @@ function SimulatorBody() {
 
 function Stat({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
-    <div className="rounded-lg border border-strong bg-surface p-4">
+    <div className="rounded-[22px] border border-strong bg-surface shadow-sm p-4">
       <p className={`font-mono text-lg ${color ?? "text-ink"}`}>{value}</p>
       <p className="mt-1 text-xs text-muted">{label}</p>
     </div>
@@ -285,7 +285,7 @@ function OrderTicket({ onPlaced, bare = false }: { onPlaced: () => void; bare?: 
 
   const Wrapper = bare ? "div" : "section";
   return (
-    <Wrapper className={bare ? "" : "rounded-lg border border-learn/30 bg-learn/5 p-5"}>
+    <Wrapper className={bare ? "" : "rounded-[22px] border border-learn/30 bg-learn/5 p-5"}>
       <div className="flex items-center justify-between">
         {!bare && <h2 className="text-sm font-medium text-ink">Place an order</h2>}
         {symbol.trim() && (
