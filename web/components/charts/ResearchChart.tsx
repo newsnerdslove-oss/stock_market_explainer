@@ -169,6 +169,8 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
 
   // Lower-pane indicator series (created lazily on toggle; null when hidden).
   const rsiRef = useRef<ISeriesApi<"Line"> | null>(null);
+  const rsiLine70Ref = useRef<IPriceLine | null>(null);
+  const rsiLine30Ref = useRef<IPriceLine | null>(null);
   const macdLineRef = useRef<ISeriesApi<"Line"> | null>(null);
   const macdSignalRef = useRef<ISeriesApi<"Line"> | null>(null);
   const macdHistRef = useRef<ISeriesApi<"Histogram"> | null>(null);
@@ -585,6 +587,9 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
       timeScale: { borderColor: k.border },
       rightPriceScale: { borderColor: k.border },
     });
+    // Price lines (RSI 70/30 guides) don't follow applyOptions on the chart — re-tint them.
+    rsiLine70Ref.current?.applyOptions({ color: k.border });
+    rsiLine30Ref.current?.applyOptions({ color: k.border });
   }, [theme]);
 
   // Keyboard: Esc cancels an in-progress draft; Delete removes the selection.
@@ -810,13 +815,15 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
         { color: RSI_COLOR, lineWidth: 1, lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false },
         chart.panes().length,
       );
-      s.createPriceLine({ price: 70, color: chartColors(currentTheme()).border, lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: "70" });
-      s.createPriceLine({ price: 30, color: chartColors(currentTheme()).border, lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: "30" });
+      rsiLine70Ref.current = s.createPriceLine({ price: 70, color: chartColors(currentTheme()).border, lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: "70" });
+      rsiLine30Ref.current = s.createPriceLine({ price: 30, color: chartColors(currentTheme()).border, lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: "30" });
       s.getPane().setStretchFactor(1);
       rsiRef.current = s;
     } else if (!shownInd.rsi && rsiRef.current) {
       chart.removeSeries(rsiRef.current);
       rsiRef.current = null;
+      rsiLine70Ref.current = null;
+      rsiLine30Ref.current = null;
     }
 
     if (shownInd.macd && !macdLineRef.current) {
