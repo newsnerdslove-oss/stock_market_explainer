@@ -4,6 +4,7 @@ import { getAllLessons, getLesson, getOrderedLessons } from "@/lib/lessons";
 import { moduleById, trackById } from "@/lib/lessons/taxonomy";
 import { getQuiz } from "@/lib/quiz";
 import { LessonRenderer } from "@/components/LessonRenderer";
+import { Icon } from "@/components/kit/Icon";
 import { AskTutor } from "@/components/AskTutor";
 import { QuizCard } from "@/components/QuizCard";
 import { PatternSpotter } from "@/components/PatternSpotter";
@@ -47,14 +48,18 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
 
   return (
     <div className="mx-auto max-w-3xl">
-      <Link href="/learn" className="text-sm font-semibold text-muted transition hover:text-ink">
-        ← All lessons
-      </Link>
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        <Link href="/learn/units" className="text-sm font-bold text-muted transition hover:text-ink">
+          {track.title} · {mod.title}
+        </Link>
+        <span className="flex-1" />
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-learn/10 px-3 py-1 text-xs font-extrabold text-learn">
+          <Icon name="zap" size={14} /> +{questions.length > 0 ? 40 : 20} XP
+        </span>
+      </div>
 
-      <header className="mt-4">
-        <p className="font-mono text-xs font-semibold uppercase tracking-wide text-faint">
-          {track.title} › {mod.title} · {lesson.estMinutes} min read
-        </p>
+      <header>
+        <p className="font-mono text-xs font-semibold uppercase tracking-wide text-faint">{lesson.estMinutes} min read</p>
         <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-ink">{lesson.title}</h1>
         <p className="mt-3 text-lg font-medium text-muted">{lesson.summary}</p>
       </header>
