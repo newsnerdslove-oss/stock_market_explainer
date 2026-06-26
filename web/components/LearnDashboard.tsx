@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useProgress } from "@/lib/progress/useProgress";
-import { loadLocalPortfolio } from "@/lib/trading/store";
-import { emptyPortfolio, type Order, type Position } from "@/lib/trading/schema";
+import { TradingProvider, useTrading } from "@/lib/trading/useTrading";
+import { equity } from "@/lib/trading/ledger";
+import { STARTING_CASH } from "@/lib/trading/schema";
 import { computeCurriculum } from "@/lib/progress/moduleProgression";
 import { todayInTz } from "@/lib/review/schedule";
 import type { LearnListItem } from "@/components/LearnList";
@@ -16,8 +17,6 @@ import { Ring } from "@/components/kit/Ring";
 import { WeekDots } from "@/components/kit/WeekDots";
 import { SectionTitle } from "@/components/kit/SectionTitle";
 import { LessonCard } from "@/components/kit/LessonCard";
-import { Icon } from "@/components/kit/Icon";
-import { EquityCurve } from "@/components/charts/EquityCurve";
 import { useIsMobile } from "@/lib/useIsMobile";
 
 const TINTS: [string, string][] = [
@@ -27,46 +26,54 @@ const TINTS: [string, string][] = [
   [A.amberSoft, A.amberInk],
 ];
 const ICONS = ["sprout", "chart-candlestick", "git-branch", "wallet"];
-const NO_PRICES: Record<string, number> = {}; // no live provider here — mark at avg cost
 
-// Equity-over-time indexed to 100 ($100k start), replayed from filled orders and
-// marked at current prices (best-effort: marks are live, not historical).
-function equitySeries(orders: Order[], positions: Record<string, Position>, prices: Record<string, number>): number[] {
-  const START = 100_000;
-  const filled = orders
-    .filter((o) => o.status === "filled" && o.filledPrice != null)
-    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-  if (!filled.length) return [];
-  const mark = (s: string) => prices[s] ?? positions[s]?.avgCost ?? 0;
-  let cash = START;
-  const shares: Record<string, number> = {};
-  const series = [100];
-  for (const o of filled) {
-    const fp = o.filledPrice as number;
-    if (o.side === "buy") {
-      cash -= fp * o.qty;
-      shares[o.symbol] = (shares[o.symbol] ?? 0) + o.qty;
-    } else {
-      cash += fp * o.qty;
-      shares[o.symbol] = (shares[o.symbol] ?? 0) - o.qty;
-    }
-    let posVal = 0;
-    for (const s in shares) posVal += shares[s] * mark(s);
-    series.push((cash + posVal) / (START / 100));
-  }
-  return series;
+const money = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+// Practice-portfolio teaser. Reads the real portfolio via the trading context (which
+// syncs the server-side portfolio for signed-in users), marked at live prices — current
+// value + total return only, NOT a fabricated time-series.
+function PortfolioTeaser() {
+  const router = useRouter();
+  const { portfolio, prices } = useTrading();
+  const hasActivity = portfolio.orders.length > 0 || Object.keys(portfolio.positions).length > 0;
+  const value = equity(portfolio, prices);
+  const totalReturn = value - STARTING_CASH;
+  const pct = (totalReturn / STARTING_CASH) * 100;
+
+  return (
+    <Card>
+      <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 4 }}>Practice portfolio</div>
+      <div style={{ fontSize: 13, color: A.muted, fontWeight: 600, marginBottom: 12 }}>Your paper trades</div>
+      {hasActivity ? (
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 12, color: A.muted, fontWeight: 700 }}>Value</div>
+            <div style={{ fontFamily: A.mono, fontSize: 20, fontWeight: 800, color: A.ink }}>{money(value)}</div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 12, color: A.muted, fontWeight: 700 }}>Total return</div>
+            <div style={{ fontFamily: A.mono, fontSize: 16, fontWeight: 800, color: totalReturn >= 0 ? A.green : A.red }}>
+              {totalReturn >= 0 ? "+" : ""}
+              {pct.toFixed(1)}%
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start", padding: "4px 0" }}>
+          <div style={{ fontSize: 13, color: A.faint, fontWeight: 600 }}>No paper trades yet — practice what you learn, risk-free.</div>
+          <Btn kind="soft" size="sm" icon="line-chart" onClick={() => router.push("/simulator")}>
+            Open the simulator
+          </Btn>
+        </div>
+      )}
+    </Card>
+  );
 }
 
 export function LearnDashboard({ lessons }: { lessons: LearnListItem[] }) {
   const router = useRouter();
   const mobile = useIsMobile();
   const { progress, hydrated } = useProgress();
-  // Read-only portfolio teaser — load from localStorage (no live TradingProvider here).
-  const [portfolio, setPortfolio] = useState(emptyPortfolio);
-  useEffect(() => {
-    const pf = loadLocalPortfolio();
-    if (pf) setPortfolio(pf);
-  }, []);
 
   const itemBySlug = useMemo(() => new Map(lessons.map((l) => [l.slug, l])), [lessons]);
   const modules = useMemo(() => computeCurriculum(lessons, progress).flatMap((t) => t.modules), [lessons, progress]);
@@ -87,9 +94,6 @@ export function LearnDashboard({ lessons }: { lessons: LearnListItem[] }) {
     l,
     done: i < dayIdx ? dayIdx - i <= streak : i === dayIdx ? doneToday : false,
   }));
-
-  const equity = useMemo(() => equitySeries(portfolio.orders, portfolio.positions, NO_PRICES), [portfolio]);
-  const ret = equity.length >= 2 ? equity[equity.length - 1] - 100 : 0;
 
   const start = (slug?: string) => router.push(slug ? `/learn/${slug}` : "/learn/units");
 
@@ -153,7 +157,10 @@ export function LearnDashboard({ lessons }: { lessons: LearnListItem[] }) {
           <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 14 }}>Today&apos;s goal</div>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <Ring size={88} stroke={10} pct={doneToday ? 1 : 0} color={A.green} track={A.barTrack}>
-              <div style={{ fontWeight: 800, fontSize: 22, color: A.ink }}>{doneToday ? "✓" : "0"}{!doneToday && <span style={{ color: A.faint, fontSize: 14 }}>/1</span>}</div>
+              <div style={{ fontWeight: 800, fontSize: 22, color: A.ink }}>
+                {doneToday ? "✓" : "0"}
+                {!doneToday && <span style={{ color: A.faint, fontSize: 14 }}>/1</span>}
+              </div>
             </Ring>
             <div>
               <div style={{ fontWeight: 800, fontSize: 15 }}>{doneToday ? "Done for today!" : "Keep your streak"}</div>
@@ -181,29 +188,9 @@ export function LearnDashboard({ lessons }: { lessons: LearnListItem[] }) {
           <WeekDots today={dayIdx} on={A.amber} off={A.barTrack} txt={A.faint} days={week} />
         </Card>
 
-        <Card>
-          <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 4 }}>Practice portfolio</div>
-          <div style={{ fontSize: 13, color: A.muted, fontWeight: 600, marginBottom: 10 }}>Your paper trades</div>
-          {equity.length >= 2 ? (
-            <>
-              <EquityCurve equity={equity} />
-              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12 }}>
-                <span style={{ fontSize: 13, color: A.muted, fontWeight: 600 }}>Return</span>
-                <span style={{ fontFamily: A.mono, fontSize: 14, fontWeight: 700, color: ret >= 0 ? A.green : A.red }}>
-                  {ret >= 0 ? "+" : ""}
-                  {ret.toFixed(1)}%
-                </span>
-              </div>
-            </>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start", padding: "8px 0 4px" }}>
-              <div style={{ fontSize: 13, color: A.faint, fontWeight: 600 }}>No paper trades yet — practice what you learn, risk-free.</div>
-              <Btn kind="soft" size="sm" icon="line-chart" onClick={() => router.push("/simulator")}>
-                Open the simulator
-              </Btn>
-            </div>
-          )}
-        </Card>
+        <TradingProvider>
+          <PortfolioTeaser />
+        </TradingProvider>
       </div>
     </div>
   );

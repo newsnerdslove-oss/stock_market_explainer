@@ -121,5 +121,8 @@
       "Bash(./deploy/run-benchmark.sh)",
       "Bash(python3 -c \"import json;m=json.load\\(open\\('bench/models.json'\\)\\);print\\({x['key']:x['enabled'] for x in m['models']}\\)\")"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "storybook"
+  ]
 }

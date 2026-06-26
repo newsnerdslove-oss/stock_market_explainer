@@ -8,6 +8,7 @@ const ALIASES: Record<string, string> = {
   "line-chart": "chart-line",
   "candlestick-chart": "chart-candlestick",
   "bar-chart-3": "chart-bar-big",
+  "pie-chart": "chart-pie",
   "help-circle": "circle-question-mark",
   "check-circle-2": "circle-check-big",
   github: "git-branch", // lucide removed the brand mark
