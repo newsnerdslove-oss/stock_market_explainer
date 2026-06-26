@@ -190,3 +190,49 @@ export function tradesFromOrders(orders: Order[]): Record<string, Trade[]> {
   }
   return bySymbol;
 }
+
+export interface SymbolClose extends RealizedClose {
+  symbol: string;
+}
+
+/** Every closing sell across all symbols (round-trip outcomes), newest first. */
+export function closesFromOrders(orders: Order[]): SymbolClose[] {
+  const out: SymbolClose[] = [];
+  for (const [symbol, trades] of Object.entries(tradesFromOrders(orders))) {
+    for (const c of realizedCloses(trades)) out.push({ ...c, symbol });
+  }
+  return out.sort((a, b) => b.at.localeCompare(a.at));
+}
+
+export interface TradeStats {
+  closes: number;
+  wins: number;
+  losses: number;
+  winRate: number; // 0..1
+  avgWin: number;
+  avgLoss: number; // ≤ 0
+  expectancy: number; // expected realized $ per close
+  profitFactor: number; // gross win / gross loss
+  totalRealized: number;
+}
+
+/** Win rate, expectancy, profit factor, etc. over a set of round-trip closes. */
+export function tradeStats(closes: { realized: number }[]): TradeStats {
+  const wins = closes.filter((c) => c.realized > 0);
+  const losses = closes.filter((c) => c.realized < 0);
+  const grossWin = wins.reduce((s, c) => s + c.realized, 0);
+  const grossLoss = Math.abs(losses.reduce((s, c) => s + c.realized, 0));
+  const n = closes.length;
+  const total = grossWin - grossLoss;
+  return {
+    closes: n,
+    wins: wins.length,
+    losses: losses.length,
+    winRate: n ? wins.length / n : 0,
+    avgWin: wins.length ? grossWin / wins.length : 0,
+    avgLoss: losses.length ? -grossLoss / losses.length : 0,
+    expectancy: n ? total / n : 0,
+    profitFactor: grossLoss > 0 ? grossWin / grossLoss : grossWin > 0 ? Infinity : 0,
+    totalRealized: total,
+  };
+}
