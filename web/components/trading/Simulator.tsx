@@ -18,7 +18,7 @@ import { legUnrealized, CONTRACT_MULTIPLIER } from "@/lib/options/ledger";
 import { markPremium } from "@/lib/options/sim";
 import { Icon } from "@/components/kit/Icon";
 import { A } from "@/components/kit/theme";
-import { STARTING_CASH, type OrderSide, type OrderType } from "@/lib/trading/schema";
+import type { OrderSide, OrderType } from "@/lib/trading/schema";
 
 const money = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const fmtQty = (n: number) => (Number.isInteger(n) ? String(n) : n.toLocaleString("en-US", { maximumFractionDigits: 6 }));
@@ -116,9 +116,20 @@ function SimulatorBody() {
   }
   const eq = equity(portfolio, marked) + optionValue;
   const totalPL = portfolio.realized + unreal;
-  const totalPLPct = (totalPL / STARTING_CASH) * 100;
-  const invested = eq - portfolio.cash;
   const posCount = positions.length + Object.keys(portfolio.optionLegs).length;
+
+  // Today's change: (mark − prior close) × qty over stock positions that have a snapshot.
+  // Options are excluded (no prior-premium mark), matching the per-position drilldown.
+  let dayPL = 0;
+  let dayHasData = false;
+  for (const p of positions) {
+    const prev = snapshots[p.symbol]?.prevClose;
+    if (prev == null) continue;
+    dayPL += ((marked[p.symbol] ?? p.avgCost) - prev) * p.qty;
+    dayHasData = true;
+  }
+  const dayPriorVal = eq - dayPL;
+  const dayPLPct = dayHasData && dayPriorVal > 0 ? (dayPL / dayPriorVal) * 100 : 0;
 
   return (
     <div className="mt-8 space-y-6">
@@ -131,10 +142,14 @@ function SimulatorBody() {
             <span className="text-sm font-bold text-muted">Paper portfolio</span>
             <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <span className="font-mono text-4xl font-extrabold tracking-tight text-ink">{money(eq)}</span>
-              <span className={`text-base font-extrabold ${pnlColor(totalPL)}`}>
-                {signed(totalPL)} ({totalPL >= 0 ? "+" : ""}
-                {totalPLPct.toFixed(1)}%) total
-              </span>
+              {dayHasData ? (
+                <span className={`text-base font-extrabold ${pnlColor(dayPL)}`}>
+                  {signed(dayPL)} ({dayPL >= 0 ? "+" : ""}
+                  {dayPLPct.toFixed(1)}%) today
+                </span>
+              ) : (
+                <span className="text-base font-bold text-faint">— today</span>
+              )}
             </div>
           </div>
         </div>
@@ -142,9 +157,9 @@ function SimulatorBody() {
 
       {/* stat tiles */}
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Tile icon="wallet" color={A.primary} label="Buying power" value={money(portfolio.cash)} />
-        <Tile icon="pie-chart" color={A.blue} label="Invested" value={money(invested)} />
+        <Tile icon="activity" color={dayHasData ? (dayPL >= 0 ? A.green : A.red) : A.faint} label="Day P&L" value={dayHasData ? signed(dayPL) : "—"} valueClass={dayHasData ? pnlColor(dayPL) : "text-faint"} />
         <Tile icon="trending-up" color={totalPL >= 0 ? A.green : A.red} label="Total P&L" value={signed(totalPL)} valueClass={pnlColor(totalPL)} />
+        <Tile icon="wallet" color={A.primary} label="Buying power" value={money(portfolio.cash)} />
         <Tile icon="layers" color={A.amberInk} label="Positions" value={String(posCount)} />
       </section>
 
