@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { StaxShell } from "@/components/kit/StaxShell";
 
 // Routes that render full-screen with no app shell (their own layout).
-const FULLSCREEN = ["/login"];
+const FULLSCREEN = ["/login", "/sie"];
 
 /**
  * The single app chrome: wraps every page in the Stax shell (top tabs + bottom tab
