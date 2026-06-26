@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { createClient, supabaseConfigured } from "@/lib/supabase/client";
 import { ensureSession } from "@/lib/progress/serverSync";
-import { getQuoteViaApi } from "@/lib/marketService";
+import { getQuoteViaApi, type Quote } from "@/lib/marketService";
 import { evaluateOrder, type FillResult, type OrderRequest } from "@/lib/trading/ledger";
 import { evaluateOptionOrder, settleExpirations, type OptionAction, type OptionResult, type OptionsBook } from "@/lib/options/ledger";
 import { markPremium } from "@/lib/options/sim";
@@ -28,7 +28,7 @@ interface TradingContextValue {
   prices: Record<string, number>;
   ready: boolean;
   configured: boolean;
-  placeOrder: (req: OrderRequest) => Promise<FillResult>;
+  placeOrder: (req: OrderRequest, quoteOverride?: Quote) => Promise<FillResult>;
   /** Buy-to-open / sell-to-close an option; filled at a Black-Scholes premium. */
   placeOptionOrder: (req: OptionTradeRequest) => Promise<OptionResult>;
   /** Re-fetch prices for held + pending symbols and fill any crossed limit orders. */
@@ -100,10 +100,12 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     };
   }, [configured, refreshPrices]);
 
-  const placeOrder = useCallback(async (req: OrderRequest): Promise<FillResult> => {
-    const quote = await getQuoteViaApi(req.symbol).catch(() => null);
+  const placeOrder = useCallback(async (req: OrderRequest, quoteOverride?: Quote): Promise<FillResult> => {
+    // Replay passes a quote synthesized from the replay bar (fill at that bar) instead
+    // of the live quote; we also don't move the live `prices` map in that case.
+    const quote = quoteOverride ?? (await getQuoteViaApi(req.symbol).catch(() => null));
     if (!quote) return { status: "rejected", reason: `Couldn't get a quote for ${req.symbol}.` };
-    setPrices((p) => ({ ...p, [req.symbol]: quote.price }));
+    if (!quoteOverride) setPrices((p) => ({ ...p, [req.symbol]: quote.price }));
 
     const { portfolio: next, result } = evaluateOrder(pfRef.current, req, quote);
     if (result.status === "rejected") return result;
@@ -118,6 +120,7 @@ export function TradingProvider({ children }: { children: ReactNode }) {
       status: result.status,
       filledPrice: result.filledPrice ?? null,
       createdAt: new Date().toISOString(),
+      replay: req.replay ?? false,
     };
     const withOrder: Portfolio = { ...next, orders: [order, ...next.orders].slice(0, ORDER_HISTORY_LIMIT) };
     setPortfolio(withOrder);
@@ -256,4 +259,10 @@ export function useTrading(): TradingContextValue {
   const c = useContext(Ctx);
   if (!c) throw new Error("useTrading must be used within a TradingProvider");
   return c;
+}
+
+/** Like useTrading but returns null instead of throwing when there's no provider
+ *  (so a component can offer trading only when mounted inside one — e.g. the chart). */
+export function useOptionalTrading(): TradingContextValue | null {
+  return useContext(Ctx);
 }

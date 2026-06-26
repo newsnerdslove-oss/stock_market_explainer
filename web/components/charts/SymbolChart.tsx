@@ -8,6 +8,7 @@
 
 import dynamic from "next/dynamic";
 import type { Candle } from "@/lib/marketService";
+import { TradingProvider } from "@/lib/trading/useTrading";
 
 const ResearchChart = dynamic(() => import("./ResearchChart"), {
   ssr: false,
@@ -17,5 +18,10 @@ const ResearchChart = dynamic(() => import("./ResearchChart"), {
 });
 
 export function SymbolChart({ symbol }: { symbol: string; initialCandles?: Candle[] }) {
-  return <ResearchChart symbol={symbol} />;
+  // TradingProvider lets the chart's replay mode place practice trades at the replay bar.
+  return (
+    <TradingProvider>
+      <ResearchChart symbol={symbol} />
+    </TradingProvider>
+  );
 }

@@ -13,6 +13,8 @@ export interface OrderRequest {
   type: OrderType;
   qty: number;
   limitPrice: number | null;
+  /** Placed during a chart replay session (filled at a replay bar, not live). */
+  replay?: boolean;
 }
 
 export interface FillResult {
