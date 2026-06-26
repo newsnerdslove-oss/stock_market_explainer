@@ -16,7 +16,9 @@ import { TradingProvider, useTrading } from "@/lib/trading/useTrading";
 import { equity, unrealizedPnL } from "@/lib/trading/ledger";
 import { legUnrealized, CONTRACT_MULTIPLIER } from "@/lib/options/ledger";
 import { markPremium } from "@/lib/options/sim";
-import type { OrderSide, OrderType } from "@/lib/trading/schema";
+import { Icon } from "@/components/kit/Icon";
+import { A } from "@/components/kit/theme";
+import { STARTING_CASH, type OrderSide, type OrderType } from "@/lib/trading/schema";
 
 const money = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const fmtQty = (n: number) => (Number.isInteger(n) ? String(n) : n.toLocaleString("en-US", { maximumFractionDigits: 6 }));
@@ -113,17 +115,37 @@ function SimulatorBody() {
     unreal += legUnrealized(l, mark);
   }
   const eq = equity(portfolio, marked) + optionValue;
+  const totalPL = portfolio.realized + unreal;
+  const totalPLPct = (totalPL / STARTING_CASH) * 100;
+  const invested = eq - portfolio.cash;
+  const posCount = positions.length + Object.keys(portfolio.optionLegs).length;
 
   return (
     <div className="mt-8 space-y-6">
       <DailyChallengeCard />
 
-      {/* account summary */}
+      {/* account header — Paper portfolio */}
+      <section>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <span className="text-sm font-bold text-muted">Paper portfolio</span>
+            <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span className="font-mono text-4xl font-extrabold tracking-tight text-ink">{money(eq)}</span>
+              <span className={`text-base font-extrabold ${pnlColor(totalPL)}`}>
+                {signed(totalPL)} ({totalPL >= 0 ? "+" : ""}
+                {totalPLPct.toFixed(1)}%) total
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* stat tiles */}
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="Equity" value={money(eq)} />
-        <Stat label="Cash" value={money(portfolio.cash)} />
-        <Stat label="Realized P&L" value={signed(portfolio.realized)} color={pnlColor(portfolio.realized)} />
-        <Stat label="Unrealized P&L" value={signed(unreal)} color={pnlColor(unreal)} />
+        <Tile icon="wallet" color={A.primary} label="Buying power" value={money(portfolio.cash)} />
+        <Tile icon="pie-chart" color={A.blue} label="Invested" value={money(invested)} />
+        <Tile icon="trending-up" color={totalPL >= 0 ? A.green : A.red} label="Total P&L" value={signed(totalPL)} valueClass={pnlColor(totalPL)} />
+        <Tile icon="layers" color={A.amberInk} label="Positions" value={String(posCount)} />
       </section>
 
       {/* stocks vs options ticket */}
@@ -209,11 +231,13 @@ function SimulatorBody() {
   );
 }
 
-function Stat({ label, value, color }: { label: string; value: string; color?: string }) {
+function Tile({ icon, color, label, value, valueClass }: { icon: string; color: string; label: string; value: string; valueClass?: string }) {
   return (
-    <div className="rounded-[22px] border border-strong bg-surface shadow-sm p-4">
-      <p className={`font-mono text-lg ${color ?? "text-ink"}`}>{value}</p>
-      <p className="mt-1 text-xs text-muted">{label}</p>
+    <div className="rounded-[22px] border border-strong bg-surface p-[18px] shadow-sm">
+      <div className="mb-2 flex items-center gap-2 text-xs font-bold text-muted">
+        <Icon name={icon} size={16} color={color} /> {label}
+      </div>
+      <p className={`font-mono text-[22px] font-extrabold ${valueClass ?? "text-ink"}`}>{value}</p>
     </div>
   );
 }
