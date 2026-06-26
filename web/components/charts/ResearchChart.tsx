@@ -237,6 +237,15 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
   const [drawings, setDrawings] = useState<Drawing[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
+  // ----- replay (bar-by-bar practice; no lookahead) -----
+  const replayDeepRef = useRef<Candle[]>([]); // the deep history we replay through
+  const replayFitRef = useRef(false); // fit the time scale on the first draw of a session
+  const [replayActive, setReplayActive] = useState(false);
+  const [replayCursor, setReplayCursor] = useState(0);
+  const [replayPlaying, setReplayPlaying] = useState(false);
+  const [replaySpeed, setReplaySpeed] = useState(2);
+  const [replayRevealed, setReplayRevealed] = useState(false);
+
   // Replace the drawing set (ref + state + persistence + redraw) in one place.
   function applyDrawings(next: Drawing[]) {
     drawingsRef.current = next;
@@ -406,6 +415,27 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
       if (m.histogram[i] != null)
         macdHistRef.current?.update({ time: t, value: m.histogram[i] as number, color: (m.histogram[i] as number) >= 0 ? HIST_UP : HIST_DOWN });
     }
+  }
+
+  // Full redraw of every series from a candle array (price/volume/EMAs/indicators).
+  // Shared by the live load and replay mode; caller runs rebuildDerived(candles) first.
+  function renderFull(candles: Candle[]) {
+    setPriceData(candles);
+    const k = chartColors(currentTheme());
+    volumeRef.current?.setData(
+      dedupeSort(candles.map((c) => ({ time: toSec(c.time), value: c.volume, color: hexToRgba(c.close >= c.open ? k.up : k.down, k.volAlpha) }))),
+    );
+    for (const e of EMAS) {
+      const series = emaRefs.current[e.period];
+      if (!series) continue;
+      const vals = emaCacheRef.current[e.period];
+      const line = candles
+        .map((c, i) => ({ time: toSec(c.time), value: vals?.[i] }))
+        .filter((p) => p.value != null) as { time: UTCTimestamp; value: number }[];
+      series.setData(dedupeSort(line));
+      series.applyOptions({ visible: shownEmas[e.period] ?? false });
+    }
+    setIndicatorData(candles);
   }
 
   // All price-series variants are populated; only the active one is visible, so a
@@ -656,25 +686,6 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
     let cancelled = false;
     let initial = true;
 
-    function setFullData(candles: Candle[]) {
-      setPriceData(candles);
-      const k = chartColors(currentTheme());
-      volumeRef.current?.setData(
-        dedupeSort(candles.map((c) => ({ time: toSec(c.time), value: c.volume, color: hexToRgba(c.close >= c.open ? k.up : k.down, k.volAlpha) }))),
-      );
-      for (const e of EMAS) {
-        const series = emaRefs.current[e.period];
-        if (!series) continue;
-        const vals = emaCacheRef.current[e.period];
-        const line = candles
-          .map((c, i) => ({ time: toSec(c.time), value: vals?.[i] }))
-          .filter((p) => p.value != null) as { time: UTCTimestamp; value: number }[];
-        series.setData(dedupeSort(line));
-        series.applyOptions({ visible: shownEmas[e.period] ?? false });
-      }
-      setIndicatorData(candles);
-    }
-
     function updateLastBar(candles: Candle[]) {
       const i = candles.length - 1;
       const c = candles[i];
@@ -710,7 +721,7 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
         if (sameWindow) {
           updateLastBar(next);
         } else {
-          setFullData(next);
+          renderFull(next);
           if (initial) chartRef.current?.timeScale().fitContent();
         }
 
@@ -748,6 +759,13 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
       }
     }
 
+    if (replayActive) {
+      // Replay owns the chart — don't poll live data over the top of it. Flipping
+      // replayActive back off re-runs this effect, which reloads the live view.
+      return () => {
+        cancelled = true;
+      };
+    }
     void load();
     const id = setInterval(() => void load(), POLL_MS);
     return () => {
@@ -756,7 +774,82 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
     };
     // shownEmas intentionally omitted — toggling visibility is handled below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [symbol, timeframe]);
+  }, [symbol, timeframe, replayActive]);
+
+  // ----- replay controls -----
+  async function startReplay() {
+    if (!chartRef.current) return;
+    try {
+      const data = await getCandlesViaApi(symbol, 1000, timeframe);
+      const deep = data.candles;
+      if (deep.length < 40) {
+        toast("Not enough history to replay this timeframe.", "info");
+        return;
+      }
+      replayDeepRef.current = deep;
+      // Blind start: a random bar in the middle so the future is genuinely hidden.
+      const lo = Math.floor(deep.length * 0.35);
+      const span = Math.max(1, Math.floor(deep.length * 0.3));
+      replayFitRef.current = true;
+      setReplayRevealed(false);
+      setReplayPlaying(false);
+      setReplayCursor(lo + Math.floor(Math.random() * span));
+      setReplayActive(true);
+      setTool("cursor");
+    } catch {
+      toast("Could not load replay history.", "info");
+    }
+  }
+
+  function stopReplay() {
+    setReplayPlaying(false);
+    setReplayActive(false); // re-runs the data effect → restores the live view
+  }
+
+  function stepReplay() {
+    const deep = replayDeepRef.current;
+    setReplayPlaying(false);
+    setReplayCursor((c) => Math.min(c + 1, deep.length - 1));
+  }
+
+  // Draw the replay slice up to the cursor (no lookahead). Re-runs as the cursor moves.
+  useEffect(() => {
+    if (!replayActive) return;
+    const deep = replayDeepRef.current;
+    if (!deep.length) return;
+    const slice = deep.slice(0, Math.min(replayCursor, deep.length - 1) + 1);
+    candlesRef.current = slice;
+    rebuildDerived(slice);
+    renderFull(slice);
+    lastLegendIdxRef.current = -1;
+    scheduleLegend(latestLegendFor());
+    if (replayFitRef.current) {
+      chartRef.current?.timeScale().fitContent();
+      replayFitRef.current = false;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [replayActive, replayCursor]);
+
+  // Auto-advance while playing.
+  useEffect(() => {
+    if (!replayActive || !replayPlaying) return;
+    const deep = replayDeepRef.current;
+    const id = setInterval(() => {
+      setReplayCursor((c) => {
+        if (c >= deep.length - 1) {
+          setReplayPlaying(false);
+          return c;
+        }
+        return c + 1;
+      });
+    }, Math.max(120, 700 / replaySpeed));
+    return () => clearInterval(id);
+  }, [replayActive, replayPlaying, replaySpeed]);
+
+  // Blind: hide the date axis until reveal (removes recency/recognition bias).
+  useEffect(() => {
+    chartRef.current?.applyOptions({ timeScale: { visible: !(replayActive && !replayRevealed) } });
+  }, [replayActive, replayRevealed]);
 
   // Toggle EMA visibility without refetching.
   useEffect(() => {
@@ -951,6 +1044,15 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
         >
           Auto-zones{autoZones ? " ●" : ""}
         </button>
+        <button
+          type="button"
+          onClick={() => (replayActive ? stopReplay() : startReplay())}
+          aria-pressed={replayActive}
+          title="Replay history bar-by-bar with no lookahead — practice entries and exits"
+          className={`rounded-full border px-2 py-0.5 transition ${replayActive ? "border-learn text-learn" : "border-hairline text-faint hover:text-muted"}`}
+        >
+          {replayActive ? "Replay ●" : "▸ Replay"}
+        </button>
         {activeTool?.hint && tool !== "cursor" && <span className="text-faint">{activeTool.hint} · Esc to cancel</span>}
         {drawings.length > 0 && (
           <div className="ml-auto flex flex-wrap items-center gap-1">
@@ -994,6 +1096,47 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
           </div>
         )}
       </div>
+
+      {/* replay transport */}
+      {replayActive && (
+        <div className="mb-2 flex flex-wrap items-center gap-2 rounded-lg border border-learn/40 bg-learn/5 px-2.5 py-1.5 text-xs">
+          <button type="button" onClick={() => setReplayPlaying((p) => !p)} className="rounded bg-learn px-2 py-0.5 font-semibold text-canvas">
+            {replayPlaying ? "❚❚ Pause" : "▸ Play"}
+          </button>
+          <button type="button" onClick={stepReplay} className="rounded border border-strong px-2 py-0.5 text-muted transition hover:text-ink">
+            Step ▸
+          </button>
+          <div className="inline-flex items-center gap-1">
+            {[1, 2, 4].map((s) => (
+              <button key={s} type="button" onClick={() => setReplaySpeed(s)} className={`rounded px-1.5 py-0.5 transition ${replaySpeed === s ? "bg-learn text-canvas" : "text-muted hover:text-ink"}`}>
+                {s}×
+              </button>
+            ))}
+          </div>
+          <input
+            type="range"
+            min={1}
+            max={Math.max(1, replayDeepRef.current.length - 1)}
+            value={Math.min(replayCursor, Math.max(1, replayDeepRef.current.length - 1))}
+            onChange={(e) => {
+              setReplayPlaying(false);
+              setReplayCursor(Number(e.target.value));
+            }}
+            className="h-1 min-w-[120px] flex-1 accent-learn"
+            aria-label="Replay position"
+          />
+          <span className="font-mono text-faint">
+            bar {Math.min(replayCursor, replayDeepRef.current.length - 1) + 1}/{replayDeepRef.current.length}
+          </span>
+          {!replayRevealed ? (
+            <button type="button" onClick={() => setReplayRevealed(true)} className="rounded-full border border-strong px-2 py-0.5 text-muted transition hover:text-ink" title="Blind — date hidden until you reveal">
+              👁 Reveal
+            </button>
+          ) : (
+            <span className="rounded-full border border-hairline px-2 py-0.5 font-mono text-faint">{symbol.toUpperCase()}</span>
+          )}
+        </div>
+      )}
 
       {/* alerts + compare */}
       <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
