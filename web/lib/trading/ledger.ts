@@ -15,6 +15,8 @@ export interface OrderRequest {
   limitPrice: number | null;
   /** Placed during a chart replay session (filled at a replay bar, not live). */
   replay?: boolean;
+  /** Optional "why this trade" note, for the journal. */
+  thesis?: string;
 }
 
 export interface FillResult {

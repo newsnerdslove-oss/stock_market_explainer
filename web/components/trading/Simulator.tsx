@@ -152,6 +152,9 @@ function SimulatorBody() {
               )}
             </div>
           </div>
+          <Link href="/journal" className="text-sm font-bold text-learn transition hover:underline">
+            Trade journal →
+          </Link>
         </div>
       </section>
 
@@ -265,6 +268,7 @@ function OrderTicket({ onPlaced, bare = false }: { onPlaced: () => void; bare?: 
   const [type, setType] = useState<OrderType>("market");
   const [qty, setQty] = useState("10");
   const [limit, setLimit] = useState("");
+  const [thesis, setThesis] = useState("");
   const [busy, setBusy] = useState(false);
   // Pre-fill from ?symbol= (trade-from-chart). Client-only; no Suspense needed.
   useEffect(() => {
@@ -303,6 +307,7 @@ function OrderTicket({ onPlaced, bare = false }: { onPlaced: () => void; bare?: 
       type,
       qty: Number(qty),
       limitPrice: type === "limit" ? Number(limit) : null,
+      thesis: thesis.trim() || undefined,
     });
     setBusy(false);
     if (res.status === "rejected") {
@@ -311,6 +316,7 @@ function OrderTicket({ onPlaced, bare = false }: { onPlaced: () => void; bare?: 
       setMsg({ kind: "warn", text: "Limit order placed — it'll fill when the price crosses. Use Refresh to re-check." });
     } else {
       setMsg({ kind: "ok", text: `Filled at ${money(res.filledPrice ?? 0)}.` });
+      setThesis("");
       toast(
         `Filled: ${side === "buy" ? "bought" : "sold"} ${qty} ${symbol.trim().toUpperCase()} @ ${money(res.filledPrice ?? 0)}`,
         "ok",
@@ -381,6 +387,12 @@ function OrderTicket({ onPlaced, bare = false }: { onPlaced: () => void; bare?: 
             <input value={limit} onChange={(e) => setLimit(e.target.value)} inputMode="decimal" placeholder="0.00" className={`${inputCls} font-mono`} />
           </label>
         )}
+        <label className="col-span-2 flex flex-col gap-1">
+          <span className={labelCls}>
+            Why this trade? <span className="normal-case text-faint">(optional · for your journal)</span>
+          </span>
+          <input value={thesis} onChange={(e) => setThesis(e.target.value)} placeholder="The setup, your risk, your exit…" className={inputCls} />
+        </label>
         <button
           type="submit"
           disabled={busy}

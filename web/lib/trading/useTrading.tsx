@@ -121,6 +121,7 @@ export function TradingProvider({ children }: { children: ReactNode }) {
       filledPrice: result.filledPrice ?? null,
       createdAt: new Date().toISOString(),
       replay: req.replay ?? false,
+      thesis: req.thesis,
     };
     const withOrder: Portfolio = { ...next, orders: [order, ...next.orders].slice(0, ORDER_HISTORY_LIMIT) };
     setPortfolio(withOrder);

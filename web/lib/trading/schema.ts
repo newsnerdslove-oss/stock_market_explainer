@@ -37,6 +37,8 @@ export interface Order {
   createdAt: string;
   /** Filled during a chart replay session (practice, at a historical bar). */
   replay?: boolean;
+  /** Optional "why this trade" note, for the journal. */
+  thesis?: string;
 }
 
 export interface Portfolio {
