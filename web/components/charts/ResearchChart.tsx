@@ -49,9 +49,13 @@ import { useToast } from "@/components/Toast";
 import { chartColors } from "@/lib/charts/theme";
 import { currentTheme, useThemeState } from "@/lib/theme";
 
-const UP = "#2BD17E";
-const DOWN = "#FF5C5C";
 const POLL_MS = 10_000;
+
+// rgba() string from a #rrggbb hex + alpha (lightweight-charts wants a CSS colour).
+function hexToRgba(hex: string, a: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+}
 
 // Indicator-pane colours.
 const RSI_COLOR = "#00D9FF";
@@ -534,11 +538,11 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
 
     // All price-series variants live on the default scale (created before overlays so
     // overlays/EMAs render on top); only the active type is visible.
-    candleRef.current = chart.addSeries(CandlestickSeries, { upColor: UP, downColor: DOWN, borderVisible: false, wickUpColor: UP, wickDownColor: DOWN, visible: priceType === "candles" });
-    barRef.current = chart.addSeries(BarSeries, { upColor: UP, downColor: DOWN, visible: priceType === "bars" });
+    candleRef.current = chart.addSeries(CandlestickSeries, { upColor: k.up, downColor: k.down, borderVisible: false, wickUpColor: k.up, wickDownColor: k.down, visible: priceType === "candles" });
+    barRef.current = chart.addSeries(BarSeries, { upColor: k.up, downColor: k.down, visible: priceType === "bars" });
     lineRef.current = chart.addSeries(LineSeries, { color: k.priceLine, lineWidth: 2, visible: priceType === "line" });
     areaRef.current = chart.addSeries(AreaSeries, { lineColor: k.priceLine, topColor: "rgba(159,179,200,0.35)", bottomColor: "rgba(159,179,200,0.02)", lineWidth: 2, visible: priceType === "area" });
-    haRef.current = chart.addSeries(CandlestickSeries, { upColor: UP, downColor: DOWN, borderVisible: false, wickUpColor: UP, wickDownColor: DOWN, visible: priceType === "heikin" });
+    haRef.current = chart.addSeries(CandlestickSeries, { upColor: k.up, downColor: k.down, borderVisible: false, wickUpColor: k.up, wickDownColor: k.down, visible: priceType === "heikin" });
 
     volumeRef.current = chart.addSeries(HistogramSeries, { priceScaleId: "volume", priceFormat: { type: "volume" }, lastValueVisible: false, priceLineVisible: false });
     chart.priceScale("volume").applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
@@ -587,6 +591,16 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
       timeScale: { borderColor: k.border },
       rightPriceScale: { borderColor: k.border },
     });
+    // Candle/HA/bar series carry theme-specific up/down colours — re-tint them.
+    const candleOpts = { upColor: k.up, downColor: k.down, wickUpColor: k.up, wickDownColor: k.down };
+    candleRef.current?.applyOptions(candleOpts);
+    haRef.current?.applyOptions(candleOpts);
+    barRef.current?.applyOptions({ upColor: k.up, downColor: k.down });
+    // Volume bar colours live in the data, not series options — re-colour from the cache.
+    const candles = candlesRef.current;
+    if (candles.length && volumeRef.current) {
+      volumeRef.current.setData(dedupeSort(candles.map((c) => ({ time: toSec(c.time), value: c.volume, color: hexToRgba(c.close >= c.open ? k.up : k.down, k.volAlpha) }))));
+    }
     // Price lines (RSI 70/30 guides) don't follow applyOptions on the chart — re-tint them.
     rsiLine70Ref.current?.applyOptions({ color: k.border });
     rsiLine30Ref.current?.applyOptions({ color: k.border });
@@ -644,8 +658,9 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
 
     function setFullData(candles: Candle[]) {
       setPriceData(candles);
+      const k = chartColors(currentTheme());
       volumeRef.current?.setData(
-        dedupeSort(candles.map((c) => ({ time: toSec(c.time), value: c.volume, color: c.close >= c.open ? "rgba(43,209,126,0.4)" : "rgba(255,92,92,0.4)" }))),
+        dedupeSort(candles.map((c) => ({ time: toSec(c.time), value: c.volume, color: hexToRgba(c.close >= c.open ? k.up : k.down, k.volAlpha) }))),
       );
       for (const e of EMAS) {
         const series = emaRefs.current[e.period];
@@ -665,7 +680,8 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
       const c = candles[i];
       const t = toSec(c.time);
       updatePriceLast(candles, i, t);
-      volumeRef.current?.update({ time: t, value: c.volume, color: c.close >= c.open ? "rgba(43,209,126,0.4)" : "rgba(255,92,92,0.4)" });
+      const k = chartColors(currentTheme());
+      volumeRef.current?.update({ time: t, value: c.volume, color: hexToRgba(c.close >= c.open ? k.up : k.down, k.volAlpha) });
       for (const e of EMAS) {
         const v = emaCacheRef.current[e.period]?.[i];
         if (v != null) emaRefs.current[e.period]?.update({ time: t, value: v });
