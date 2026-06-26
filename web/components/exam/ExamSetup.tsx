@@ -3,6 +3,7 @@
 import { EXAM_MODES, examModeById, FUNCTIONS, MINUTES_PER_QUESTION } from "@/lib/exam/blueprint";
 import type { ExamAttempt } from "@/lib/progress/schema";
 import { ReadinessDashboard } from "@/components/exam/ReadinessDashboard";
+import { Icon } from "@/components/kit/Icon";
 
 /** Availability of the bank, per function tag (count of exam-eligible questions). */
 export type Availability = Record<string, number>;
@@ -73,20 +74,27 @@ export function ExamSetup({
               type="button"
               onClick={() => onStart(mode.id)}
               disabled={deliverable === 0}
-              className="block w-full rounded-lg border border-strong bg-surface p-4 text-left transition hover:border-learn/50 hover:bg-surface-2 disabled:opacity-40"
+              className="group block w-full rounded-[18px] border border-strong bg-surface p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-learn/60 hover:shadow-md disabled:pointer-events-none disabled:opacity-40"
             >
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="text-sm font-medium text-ink">{mode.title}</h3>
-                <span className="shrink-0 font-mono text-xs text-muted">
-                  {deliverable} Q · ~{estMinutes(deliverable)} min
+              <div className="flex items-center gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <h3 className="text-sm font-bold text-ink">{mode.title}</h3>
+                    <span className="shrink-0 font-mono text-xs text-muted">
+                      {deliverable} Q · ~{estMinutes(deliverable)} min
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-sm text-muted">{mode.description}</p>
+                  {short && (
+                    <p className="mt-1.5 text-xs text-faint">
+                      Bank currently fields {deliverable} of {mode.total} for this mode.
+                    </p>
+                  )}
+                </div>
+                <span className="shrink-0 text-faint transition group-hover:translate-x-0.5 group-hover:text-learn group-disabled:opacity-0">
+                  <Icon name="chevron-right" size={20} />
                 </span>
               </div>
-              <p className="mt-1.5 text-sm text-muted">{mode.description}</p>
-              {short && (
-                <p className="mt-1.5 text-xs text-faint">
-                  Bank currently fields {deliverable} of {mode.total} for this mode.
-                </p>
-              )}
             </button>
           );
         })}
