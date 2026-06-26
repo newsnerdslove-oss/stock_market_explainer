@@ -35,6 +35,8 @@ export interface Order {
   /** Price the order filled at, or null if not (yet) filled. */
   filledPrice: number | null;
   createdAt: string;
+  /** Filled during a chart replay session (practice, at a historical bar). */
+  replay?: boolean;
 }
 
 export interface Portfolio {

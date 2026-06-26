@@ -25,7 +25,8 @@ import {
   type UTCTimestamp,
   type MouseEventParams,
 } from "lightweight-charts";
-import { getCandlesViaApi, TIMEFRAMES, type Candle, type Timeframe } from "@/lib/marketService";
+import { getCandlesViaApi, TIMEFRAMES, type Candle, type Quote, type Timeframe } from "@/lib/marketService";
+import { useOptionalTrading } from "@/lib/trading/useTrading";
 import { ema, rsi, macd, bollinger, vwap } from "@/lib/indicators";
 import { heikinAshi, type HACandle } from "@/lib/charts/heikinAshi";
 import {
@@ -245,6 +246,12 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
   const [replayPlaying, setReplayPlaying] = useState(false);
   const [replaySpeed, setReplaySpeed] = useState(2);
   const [replayRevealed, setReplayRevealed] = useState(false);
+  // Replay trading (only when the chart is mounted inside a TradingProvider).
+  const trading = useOptionalTrading();
+  const replayNetRef = useRef(0); // net shares opened this session
+  const replayCashRef = useRef(0); // net session cash flow (proceeds − cost)
+  const [replayQty, setReplayQty] = useState(10);
+  const [, bumpReplayTrade] = useState(0); // force a P&L re-render on each trade
 
   // Replace the drawing set (ref + state + persistence + redraw) in one place.
   function applyDrawings(next: Drawing[]) {
@@ -787,6 +794,9 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
         return;
       }
       replayDeepRef.current = deep;
+      replayNetRef.current = 0;
+      replayCashRef.current = 0;
+      bumpReplayTrade((n) => n + 1);
       // Blind start: a random bar in the middle so the future is genuinely hidden.
       const lo = Math.floor(deep.length * 0.35);
       const span = Math.max(1, Math.floor(deep.length * 0.3));
@@ -801,7 +811,48 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
     }
   }
 
-  function stopReplay() {
+  // A quote that fills at the current replay bar's close (practice fill).
+  function replayQuoteAt(idx: number): Quote | null {
+    const c = replayDeepRef.current[Math.min(idx, replayDeepRef.current.length - 1)];
+    if (!c) return null;
+    return { symbol, price: c.close, bid: c.close, ask: c.close, timestamp: c.time, source: "replay" };
+  }
+
+  async function placeReplayTrade(side: "buy" | "sell") {
+    if (!trading) return;
+    const q = replayQuoteAt(replayCursor);
+    if (!q) return;
+    const res = await trading.placeOrder({ symbol, side, type: "market", qty: replayQty, limitPrice: null, replay: true }, q);
+    if (res.status === "rejected") {
+      toast(res.reason ?? "Order rejected.", "info");
+      return;
+    }
+    const fp = res.filledPrice ?? q.price;
+    replayCashRef.current += (side === "buy" ? -1 : 1) * fp * replayQty;
+    replayNetRef.current += (side === "buy" ? 1 : -1) * replayQty;
+    bumpReplayTrade((n) => n + 1);
+  }
+
+  // Close the session's net position at the last replay bar, so a historical-basis
+  // position never leaks into live mark-to-market.
+  async function flattenReplay() {
+    if (!trading) return;
+    const net = replayNetRef.current;
+    if (Math.abs(net) < 1e-9) return;
+    const q = replayQuoteAt(replayCursor);
+    if (!q) return;
+    const side = net > 0 ? "sell" : "buy";
+    const res = await trading.placeOrder({ symbol, side, type: "market", qty: Math.abs(net), limitPrice: null, replay: true }, q);
+    if (res.status !== "rejected") {
+      const fp = res.filledPrice ?? q.price;
+      replayCashRef.current += (side === "sell" ? 1 : -1) * fp * Math.abs(net);
+      replayNetRef.current = 0;
+      bumpReplayTrade((n) => n + 1);
+    }
+  }
+
+  async function stopReplay() {
+    await flattenReplay(); // auto-flatten the practice position before returning to live
     setReplayPlaying(false);
     setReplayActive(false); // re-runs the data effect → restores the live view
   }
@@ -958,6 +1009,8 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
   }, [shownInd]);
 
   const activeTool = TOOLS.find((t) => t.id === tool);
+  const replayClose = replayDeepRef.current[Math.min(replayCursor, replayDeepRef.current.length - 1)]?.close ?? 0;
+  const replaySessionPnl = replayCashRef.current + replayNetRef.current * replayClose;
 
   return (
     <div>
@@ -1128,6 +1181,34 @@ export default function ResearchChart({ symbol }: { symbol: string }) {
           <span className="font-mono text-faint">
             bar {Math.min(replayCursor, replayDeepRef.current.length - 1) + 1}/{replayDeepRef.current.length}
           </span>
+          {trading && (
+            <div className="flex items-center gap-1.5">
+              <input
+                type="number"
+                min={1}
+                value={replayQty}
+                onChange={(e) => setReplayQty(Math.max(1, Math.floor(Number(e.target.value) || 1)))}
+                className="w-12 rounded border border-strong bg-canvas px-1 py-0.5 text-center font-mono text-ink"
+                aria-label="Replay quantity"
+              />
+              <button type="button" onClick={() => placeReplayTrade("buy")} className="rounded bg-up px-2 py-0.5 font-semibold text-white">
+                Buy
+              </button>
+              <button type="button" onClick={() => placeReplayTrade("sell")} className="rounded bg-down px-2 py-0.5 font-semibold text-white">
+                Sell
+              </button>
+              {Math.abs(replayNetRef.current) > 1e-9 && (
+                <span className="font-mono text-faint">
+                  pos {replayNetRef.current > 0 ? "+" : ""}
+                  {replayNetRef.current}
+                </span>
+              )}
+              <span className={`font-mono font-semibold ${replaySessionPnl >= 0 ? "text-up" : "text-down"}`} title="Replay session P&L (mark-to-bar)">
+                {replaySessionPnl >= 0 ? "+" : ""}
+                {replaySessionPnl.toFixed(0)}
+              </span>
+            </div>
+          )}
           {!replayRevealed ? (
             <button type="button" onClick={() => setReplayRevealed(true)} className="rounded-full border border-strong px-2 py-0.5 text-muted transition hover:text-ink" title="Blind — date hidden until you reveal">
               👁 Reveal
